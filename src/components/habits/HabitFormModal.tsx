@@ -388,7 +388,6 @@ export function HabitFormModal({
                       )}
                       style={{
                         backgroundColor: c.hex,
-                        ringColor: isSelected ? c.hex : undefined,
                         boxShadow: isSelected ? `0 0 0 2px ${c.hex}` : undefined,
                       }}
                     />
