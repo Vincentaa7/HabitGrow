@@ -1,0 +1,64 @@
+// src/types/index.ts
+export * from './database';
+
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+}
+
+export interface TodayHabitItem {
+  id: string;
+  name: string;
+  description: string | null;
+  icon: string;
+  color: string;
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  frequency_type: 'DAILY' | 'SELECTED_DAYS' | 'WEEKLY_TARGET';
+  target_value: number;
+  target_unit: string;
+  category_name?: string;
+  is_completed_today: boolean;
+  today_completion_id?: string;
+  current_streak: number;
+  xp_reward: number;
+}
+
+export interface DashboardSummary {
+  profile: {
+    display_name: string | null;
+    avatar_url: string | null;
+  };
+  today_habits: TodayHabitItem[];
+  completed_count: number;
+  total_scheduled_today: number;
+  completion_percentage: number;
+  user_level: {
+    level: number;
+    total_xp: number;
+    current_level_xp: number;
+    next_level_xp: number;
+    progress_percentage: number;
+  };
+  streak: {
+    current_streak: number;
+    longest_streak: number;
+  };
+  tree: {
+    stage: 'Seed' | 'Sprout' | 'Young Tree' | 'Healthy Tree' | 'Mature Tree';
+    health: number;
+    consistency_score: number;
+    growth_points: number;
+  };
+  recent_achievements: Array<{
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    unlocked_at: string;
+  }>;
+}
