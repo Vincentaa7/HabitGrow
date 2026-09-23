@@ -1,6 +1,12 @@
 // src/lib/services/streak.service.ts
 import { SupabaseClient } from '@supabase/supabase-js';
-import { calculateStreak, detectBrokenStreak, StreakResult } from '@/lib/algorithms/streak';
+import {
+  calculateStreak,
+  detectBrokenStreak,
+  calculateGlobalDailyStreak,
+  StreakResult,
+  GlobalStreakResult,
+} from '@/lib/algorithms/streak';
 import { Habit, HabitSchedule } from '@/types/database';
 import { BrokenStreakInfo } from '@/types';
 
@@ -171,5 +177,23 @@ export class StreakService {
     }
 
     return brokenStreaks;
+  }
+
+  /**
+   * Calculates user's Global Daily Streak based on the "Non-Zero Day" principle:
+   * As long as AT LEAST ONE habit is completed on each consecutive day, the global streak stays alive.
+   */
+  static async calculateUserGlobalStreak(
+    supabase: SupabaseClient,
+    userId: string,
+    evalDate: Date = new Date()
+  ): Promise<GlobalStreakResult> {
+    const { data: completions } = await supabase
+      .from('habit_completions')
+      .select('date')
+      .eq('user_id', userId);
+
+    const activeDatesSet = new Set<string>((completions || []).map((c) => c.date));
+    return calculateGlobalDailyStreak(activeDatesSet, evalDate);
   }
 }

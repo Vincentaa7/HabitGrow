@@ -73,10 +73,20 @@ export default function DashboardPage() {
           ? Math.round((newCompletedCount / previousSummary.total_scheduled_today) * 100)
           : 0;
 
+        // If this is the first habit completed today, increment current streak optimistically
+        const isFirstCompletionToday = previousSummary.completed_count === 0;
+        const newCurrentStreak = isFirstCompletionToday
+          ? previousSummary.streak.current_streak + 1
+          : previousSummary.streak.current_streak;
+
         queryClient.setQueryData<DashboardSummary>(['dashboard-summary'], {
           ...previousSummary,
           completed_count: newCompletedCount,
           completion_percentage: newPercentage,
+          streak: {
+            current_streak: newCurrentStreak,
+            longest_streak: Math.max(previousSummary.streak.longest_streak, newCurrentStreak),
+          },
           user_level: {
             ...previousSummary.user_level,
             total_xp: previousSummary.user_level.total_xp + xpEarned,

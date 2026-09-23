@@ -64,30 +64,10 @@ export async function GET() {
       };
     }
 
-    // 5. Fetch Global / Top Streak
-    let { data: streaks } = await supabase
-      .from('user_streaks')
-      .select('current_streak, longest_streak')
-      .eq('user_id', user.id)
-      .order('current_streak', { ascending: false })
-      .limit(1);
-
-    let currentStreak = streaks?.[0]?.current_streak ?? 0;
-    let longestStreak = streaks?.[0]?.longest_streak ?? 0;
-
-    // Self-healing / sync: if user completed habits today or previously, but streak is 0, auto-sync
-    if (completedCount > 0 && currentStreak === 0) {
-      const syncResult = await StreakService.recalculateAllUserStreaks(supabase, user.id);
-      currentStreak = syncResult.maxCurrentStreak;
-      longestStreak = Math.max(longestStreak, syncResult.maxLongestStreak);
-
-      // Also ensure todayHabits reflect the updated streak
-      todayHabits.forEach((th) => {
-        if (th.is_completed_today && th.current_streak === 0) {
-          th.current_streak = 1;
-        }
-      });
-    }
+    // 5. Calculate Global Daily Streak (Non-Zero Day: >= 1 habit completed per day)
+    const globalStreak = await StreakService.calculateUserGlobalStreak(supabase, user.id);
+    const currentStreak = globalStreak.currentStreak;
+    const longestStreak = globalStreak.longestStreak;
 
     // 6. Fetch Recent Achievements
     const { data: recentAchievements } = await supabase

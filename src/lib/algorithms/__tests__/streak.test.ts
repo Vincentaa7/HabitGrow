@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { calculateStreak, detectBrokenStreak } from '../streak';
+import { calculateStreak, detectBrokenStreak, calculateGlobalDailyStreak } from '../streak';
 import { Habit, HabitSchedule } from '@/types/database';
 
 describe('calculateStreak Algorithm', () => {
@@ -116,6 +116,47 @@ describe('calculateStreak Algorithm', () => {
       const broken = detectBrokenStreak(baseHabit, [], completed, evalDate);
 
       expect(broken.isBroken).toBe(false);
+    });
+  });
+
+  describe('calculateGlobalDailyStreak (Non-Zero Day Principle)', () => {
+    it('yields 1 day streak when at least 1 habit is completed today', () => {
+      const activeDates = new Set(['2026-09-23']);
+      const evalDate = new Date('2026-09-23T12:00:00');
+      const res = calculateGlobalDailyStreak(activeDates, evalDate);
+
+      expect(res.currentStreak).toBe(1);
+      expect(res.longestStreak).toBe(1);
+    });
+
+    it('keeps streak alive across consecutive days as long as at least 1 habit was completed each day', () => {
+      // Completed at least one habit on Sep 21, Sep 22, Sep 23
+      const activeDates = new Set(['2026-09-21', '2026-09-22', '2026-09-23']);
+      const evalDate = new Date('2026-09-23T18:00:00');
+      const res = calculateGlobalDailyStreak(activeDates, evalDate);
+
+      expect(res.currentStreak).toBe(3);
+      expect(res.longestStreak).toBe(3);
+    });
+
+    it('preserves active streak if today has 0 completions yet (in progress)', () => {
+      // Completed yesterday (Sep 22) and 2 days ago (Sep 21). Today is Sep 23 morning.
+      const activeDates = new Set(['2026-09-21', '2026-09-22']);
+      const evalDate = new Date('2026-09-23T08:00:00');
+      const res = calculateGlobalDailyStreak(activeDates, evalDate);
+
+      expect(res.currentStreak).toBe(2);
+      expect(res.longestStreak).toBe(2);
+    });
+
+    it('resets global streak to 0 if yesterday had zero completions', () => {
+      // Completed Sep 20, Sep 21. Sep 22 had 0 completions. Today is Sep 23.
+      const activeDates = new Set(['2026-09-20', '2026-09-21']);
+      const evalDate = new Date('2026-09-23T12:00:00');
+      const res = calculateGlobalDailyStreak(activeDates, evalDate);
+
+      expect(res.currentStreak).toBe(0);
+      expect(res.longestStreak).toBe(2);
     });
   });
 });
