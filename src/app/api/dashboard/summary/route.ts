@@ -110,6 +110,9 @@ export async function GET() {
         };
       });
 
+    // 7. Detect Broken Streaks (missed scheduled days)
+    const brokenStreaks = await StreakService.detectBrokenStreaks(supabase, user.id);
+
     const summary: DashboardSummary = {
       profile: {
         display_name: profile?.display_name || user.email?.split('@')[0] || 'Teman',
@@ -137,6 +140,7 @@ export async function GET() {
         growth_points: treeData.growth_points || 0,
       },
       recent_achievements: formattedAchievements,
+      broken_streaks: brokenStreaks,
     };
 
     return NextResponse.json({ success: true, data: summary });

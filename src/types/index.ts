@@ -61,4 +61,14 @@ export interface DashboardSummary {
     icon: string;
     unlocked_at: string;
   }>;
+  broken_streaks?: BrokenStreakInfo[];
+}
+
+export interface BrokenStreakInfo {
+  habit_id: string;
+  habit_name: string;
+  icon: string;
+  color: string;
+  lost_streak: number;
+  missed_date: string;
 }

@@ -1,7 +1,8 @@
 // src/lib/services/streak.service.ts
 import { SupabaseClient } from '@supabase/supabase-js';
-import { calculateStreak, StreakResult } from '@/lib/algorithms/streak';
+import { calculateStreak, detectBrokenStreak, StreakResult } from '@/lib/algorithms/streak';
 import { Habit, HabitSchedule } from '@/types/database';
+import { BrokenStreakInfo } from '@/types';
 
 export class StreakService {
   /**
@@ -117,5 +118,58 @@ export class StreakService {
     }
 
     return { maxCurrentStreak, maxLongestStreak };
+  }
+
+  /**
+   * Identifies any active habits whose streak was broken recently (e.g. yesterday).
+   */
+  static async detectBrokenStreaks(
+    supabase: SupabaseClient,
+    userId: string,
+    evalDate: Date = new Date()
+  ): Promise<BrokenStreakInfo[]> {
+    const { data: habits } = await supabase
+      .from('habits')
+      .select('id, name, icon, color, frequency_type, start_date, end_date, is_active, is_archived, habit_schedules(*)')
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .eq('is_archived', false);
+
+    if (!habits || habits.length === 0) return [];
+
+    const { data: allCompletions } = await supabase
+      .from('habit_completions')
+      .select('habit_id, date')
+      .eq('user_id', userId);
+
+    const completionsByHabit = new Map<string, Set<string>>();
+    (allCompletions || []).forEach((c) => {
+      if (!completionsByHabit.has(c.habit_id)) {
+        completionsByHabit.set(c.habit_id, new Set());
+      }
+      completionsByHabit.get(c.habit_id)!.add(c.date);
+    });
+
+    const brokenStreaks: BrokenStreakInfo[] = [];
+
+    for (const h of habits) {
+      const habitObj = h as unknown as Habit;
+      const schedules = (h.habit_schedules || []) as unknown as HabitSchedule[];
+      const completedSet = completionsByHabit.get(h.id) || new Set<string>();
+
+      const check = detectBrokenStreak(habitObj, schedules, completedSet, evalDate);
+      if (check.isBroken && check.missedDate) {
+        brokenStreaks.push({
+          habit_id: h.id,
+          habit_name: h.name,
+          icon: h.icon || 'sparkles',
+          color: h.color || '#10b981',
+          lost_streak: check.lostStreak,
+          missed_date: check.missedDate,
+        });
+      }
+    }
+
+    return brokenStreaks;
   }
 }

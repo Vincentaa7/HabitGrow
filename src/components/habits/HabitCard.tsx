@@ -26,24 +26,33 @@ export function HabitCard({ habit, onComplete }: HabitCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isCompleted, setIsCompleted] = useState(habit.is_completed_today);
 
+  // Sync state if habit prop changes from server
+  React.useEffect(() => {
+    setIsCompleted(habit.is_completed_today);
+  }, [habit.is_completed_today]);
+
   const IconComp = ICON_MAP[habit.icon] || Sparkles;
 
   const handleCheck = async () => {
     if (isCompleted || isLoading) return;
 
+    // 1. OPTIMISTIC UPDATE: update visual state instantly (0ms delay)
+    setIsCompleted(true);
+
+    // 2. Trigger celebratory confetti burst immediately!
+    confetti({
+      particleCount: 50,
+      spread: 60,
+      origin: { y: 0.8 },
+      colors: ['#10b981', '#34d399', '#f59e0b', '#ec4899'],
+    });
+
     try {
       setIsLoading(true);
       await onComplete(habit.id);
-      setIsCompleted(true);
-
-      // Trigger celebratory confetti burst!
-      confetti({
-        particleCount: 50,
-        spread: 60,
-        origin: { y: 0.8 },
-        colors: ['#10b981', '#34d399', '#f59e0b', '#ec4899'],
-      });
     } catch (error) {
+      // 3. Rollback if server request fails
+      setIsCompleted(false);
       console.error('Error marking habit complete:', error);
     } finally {
       setIsLoading(false);

@@ -8,6 +8,7 @@ import { HabitCategory } from '@/types/database';
 import { HabitCard } from '@/components/habits/HabitCard';
 import { TreeVisualization } from '@/components/tree/TreeVisualization';
 import { HabitFormModal } from '@/components/habits/HabitFormModal';
+import { StreakAlertBanner } from '@/components/habits/StreakAlertBanner';
 import { getGreeting } from '@/lib/utils';
 import Link from 'next/link';
 import {
@@ -45,7 +46,7 @@ export default function DashboardPage() {
     },
   });
 
-  // 3. Complete Habit Mutation
+  // 3. Complete Habit Mutation with Optimistic UI updates
   const completeMutation = useMutation({
     mutationFn: async (habitId: string) => {
       const res = await fetch(`/api/habits/${habitId}/complete`, {
@@ -56,8 +57,52 @@ export default function DashboardPage() {
       if (!json.success) throw new Error(json.error?.message || 'Gagal menyelesaikan kebiasaan');
       return json.data;
     },
-    onSuccess: () => {
-      // Invalidate queries so dashboard and tree stats update immediately!
+    onMutate: async (habitId: string) => {
+      // Cancel outgoing refetches so they don't overwrite optimistic update
+      await queryClient.cancelQueries({ queryKey: ['dashboard-summary'] });
+
+      // Snapshot previous value for rollback
+      const previousSummary = queryClient.getQueryData<DashboardSummary>(['dashboard-summary']);
+
+      // Optimistically update dashboard cache immediately
+      if (previousSummary) {
+        const targetHabit = previousSummary.today_habits.find((h) => h.id === habitId);
+        const xpEarned = targetHabit?.xp_reward || 10;
+        const newCompletedCount = previousSummary.completed_count + 1;
+        const newPercentage = previousSummary.total_scheduled_today > 0
+          ? Math.round((newCompletedCount / previousSummary.total_scheduled_today) * 100)
+          : 0;
+
+        queryClient.setQueryData<DashboardSummary>(['dashboard-summary'], {
+          ...previousSummary,
+          completed_count: newCompletedCount,
+          completion_percentage: newPercentage,
+          user_level: {
+            ...previousSummary.user_level,
+            total_xp: previousSummary.user_level.total_xp + xpEarned,
+          },
+          today_habits: previousSummary.today_habits.map((h) =>
+            h.id === habitId
+              ? {
+                  ...h,
+                  is_completed_today: true,
+                  current_streak: h.current_streak + 1,
+                }
+              : h
+          ),
+        });
+      }
+
+      return { previousSummary };
+    },
+    onError: (_err, _habitId, context) => {
+      // Rollback to previous state on failure
+      if (context?.previousSummary) {
+        queryClient.setQueryData(['dashboard-summary'], context.previousSummary);
+      }
+    },
+    onSettled: () => {
+      // Background re-sync to ensure exact server consistency
       queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
     },
   });
@@ -125,6 +170,9 @@ export default function DashboardPage() {
           Kebiasaan Baru
         </button>
       </div>
+
+      {/* Broken Streak Alert Banner (Points 1 & 4) */}
+      <StreakAlertBanner brokenStreaks={summary.broken_streaks} />
 
       {/* Gamification Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

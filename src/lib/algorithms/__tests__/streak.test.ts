@@ -1,6 +1,5 @@
-// src/lib/algorithms/__tests__/streak.test.ts
 import { describe, it, expect } from 'vitest';
-import { calculateStreak } from '../streak';
+import { calculateStreak, detectBrokenStreak } from '../streak';
 import { Habit, HabitSchedule } from '@/types/database';
 
 describe('calculateStreak Algorithm', () => {
@@ -86,5 +85,37 @@ describe('calculateStreak Algorithm', () => {
     expect(res.currentStreak).toBe(1);
     expect(res.longestStreak).toBe(1);
     expect(res.lastCompletedDate).toBe('2026-09-01');
+  });
+
+  describe('detectBrokenStreak', () => {
+    it('detects when yesterday was missed after having an active streak', () => {
+      // Completed Sep 1, Sep 2 (streak 2). Missed Sep 3. Evaluated on Sep 4.
+      const completed = new Set(['2026-09-01', '2026-09-02']);
+      const evalDate = new Date('2026-09-04T10:00:00');
+      const broken = detectBrokenStreak(baseHabit, [], completed, evalDate);
+
+      expect(broken.isBroken).toBe(true);
+      expect(broken.lostStreak).toBe(2);
+      expect(broken.missedDate).toBe('2026-09-03');
+    });
+
+    it('does NOT flag broken if yesterday was completed', () => {
+      // Completed Sep 1, Sep 2, Sep 3. Evaluated on Sep 4.
+      const completed = new Set(['2026-09-01', '2026-09-02', '2026-09-03']);
+      const evalDate = new Date('2026-09-04T10:00:00');
+      const broken = detectBrokenStreak(baseHabit, [], completed, evalDate);
+
+      expect(broken.isBroken).toBe(false);
+      expect(broken.lostStreak).toBe(0);
+    });
+
+    it('does NOT flag broken if habit never had an active streak previously', () => {
+      // Never completed anything. Evaluated on Sep 4.
+      const completed = new Set<string>();
+      const evalDate = new Date('2026-09-04T10:00:00');
+      const broken = detectBrokenStreak(baseHabit, [], completed, evalDate);
+
+      expect(broken.isBroken).toBe(false);
+    });
   });
 });

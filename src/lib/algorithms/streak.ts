@@ -101,3 +101,79 @@ export function calculateStreak(
     lastCompletedDate,
   };
 }
+
+export interface BrokenStreakDetail {
+  isBroken: boolean;
+  lostStreak: number;
+  missedDate: string | null;
+}
+
+/**
+ * Detects if a habit's streak was recently broken (e.g. yesterday).
+ * Only flags as broken if user had an active streak (>0) immediately before the missed day.
+ */
+export function detectBrokenStreak(
+  habit: Pick<Habit, 'frequency_type' | 'start_date' | 'end_date' | 'is_active' | 'is_archived'>,
+  schedules: HabitSchedule[],
+  completedDatesSet: Set<string>,
+  evaluationDate: Date = new Date()
+): BrokenStreakDetail {
+  const evalDate = new Date(evaluationDate);
+  evalDate.setHours(0, 0, 0, 0);
+
+  const startDate = parseDateString(habit.start_date);
+  startDate.setHours(0, 0, 0, 0);
+
+  if (evalDate <= startDate) {
+    return { isBroken: false, lostStreak: 0, missedDate: null };
+  }
+
+  // Find all scheduled dates strictly before evalDate
+  const pastScheduledDates: string[] = [];
+  const cur = new Date(startDate);
+  while (cur < evalDate) {
+    if (isHabitScheduledOnDate(habit, schedules, cur)) {
+      pastScheduledDates.push(toDateString(cur));
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  if (pastScheduledDates.length === 0) {
+    return { isBroken: false, lostStreak: 0, missedDate: null };
+  }
+
+  const latestPast = pastScheduledDates[pastScheduledDates.length - 1];
+
+  // If latest past scheduled date was completed, streak is not broken
+  if (completedDatesSet.has(latestPast)) {
+    return { isBroken: false, lostStreak: 0, missedDate: null };
+  }
+
+  // Only notify if the missed date was recent (within last 3 days)
+  const missedDateObj = parseDateString(latestPast);
+  const diffDays = Math.round((evalDate.getTime() - missedDateObj.getTime()) / (1000 * 3600 * 24));
+  if (diffDays > 3) {
+    return { isBroken: false, lostStreak: 0, missedDate: null };
+  }
+
+  // Walk backwards from the date prior to latestPast to calculate how many consecutive days were lost
+  let lostStreak = 0;
+  for (let i = pastScheduledDates.length - 2; i >= 0; i--) {
+    const sDate = pastScheduledDates[i];
+    if (completedDatesSet.has(sDate)) {
+      lostStreak += 1;
+    } else {
+      break;
+    }
+  }
+
+  if (lostStreak > 0) {
+    return {
+      isBroken: true,
+      lostStreak,
+      missedDate: latestPast,
+    };
+  }
+
+  return { isBroken: false, lostStreak: 0, missedDate: null };
+}
