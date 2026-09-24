@@ -9,6 +9,7 @@ import { HabitCard } from '@/components/habits/HabitCard';
 import { TreeVisualization } from '@/components/tree/TreeVisualization';
 import { HabitFormModal } from '@/components/habits/HabitFormModal';
 import { StreakAlertBanner } from '@/components/habits/StreakAlertBanner';
+import { PredictionAlertBanner } from '@/components/habits/PredictionAlertBanner';
 import {
   formatIndonesianDate,
   formatFirstName,
@@ -281,6 +282,9 @@ export default function DashboardPage() {
 
       {/* 2. Broken Streak Alert Banner (Conditional) */}
       <StreakAlertBanner brokenStreaks={summary.broken_streaks} />
+
+      {/* 2.5 Smart Predictive Nudge (Machine Learning Early Warning) */}
+      <PredictionAlertBanner predictions={summary.at_risk_habits} />
 
       {/* 3. Differentiated Gamification Deck (Warmth, Personality, No Uniform Boxes) */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-5">

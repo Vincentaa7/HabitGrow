@@ -5,6 +5,7 @@ import { HabitService } from '@/lib/services/habit.service';
 import { calculateLevel } from '@/lib/algorithms/level';
 import { ConsistencyService } from '@/lib/services/consistency.service';
 import { StreakService } from '@/lib/services/streak.service';
+import { PredictionService } from '@/lib/services/prediction.service';
 import { DashboardSummary } from '@/types';
 
 export async function GET() {
@@ -93,6 +94,9 @@ export async function GET() {
     // 7. Detect Broken Streaks (missed scheduled days)
     const brokenStreaks = await StreakService.detectBrokenStreaks(supabase, user.id);
 
+    // 8. Predict Habits at Risk of Failure / Churn Today (Machine Learning Sigmoid Classifier)
+    const atRiskHabits = await PredictionService.getAtRiskHabitsToday(supabase, user.id);
+
     const summary: DashboardSummary = {
       profile: {
         display_name: profile?.display_name || user.email?.split('@')[0] || 'Teman',
@@ -121,6 +125,7 @@ export async function GET() {
       },
       recent_achievements: formattedAchievements,
       broken_streaks: brokenStreaks,
+      at_risk_habits: atRiskHabits,
     };
 
     return NextResponse.json({ success: true, data: summary });

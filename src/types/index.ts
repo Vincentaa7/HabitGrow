@@ -62,6 +62,7 @@ export interface DashboardSummary {
     unlocked_at: string;
   }>;
   broken_streaks?: BrokenStreakInfo[];
+  at_risk_habits?: HabitRiskPrediction[];
 }
 
 export interface BrokenStreakInfo {
@@ -71,4 +72,28 @@ export interface BrokenStreakInfo {
   color: string;
   lost_streak: number;
   missed_date: string;
+}
+
+export interface HabitRiskPrediction {
+  habit_id: string;
+  habit_name: string;
+  icon: string;
+  color: string;
+  target_value: number;
+  target_unit: string;
+  failure_probability: number; // e.g. 78 (%)
+  risk_level: 'MODERATE' | 'HIGH';
+  primary_factor: string;
+  factor_breakdown: {
+    miss_rate_score: number;
+    weekday_vulnerability_score: number;
+    workload_score: number;
+    maturity_score: number;
+    late_hour_score: number;
+  };
+  suggested_action: {
+    type: 'LOWER_TARGET' | 'EARLY_NUDGE';
+    suggested_target_value?: number;
+    message: string;
+  };
 }
