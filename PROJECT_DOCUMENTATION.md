@@ -1,7 +1,7 @@
 # 🌿 HabitGrow — Dokumen Arsitektur Proyek & Panduan Skripsi Lengkap
 
-> **Versi Dokumen:** 1.0.0  
-> **Terakhir Diperbarui:** 23 September 2026  
+> **Versi Dokumen:** 1.2.0  
+> **Terakhir Diperbarui:** 24 September 2026  
 > **Target Pengguna:** Pengembang, Agen AI (*Context File*), dan Penulisan Laporan Tugas Akhir / Skripsi (Program Studi Sistem Komputer / Teknik Informatika / Sistem Informasi).
 
 ---
@@ -14,6 +14,7 @@
    * 3.2 Bahasa Pemrograman yang Digunakan & Peran Spesifiknya
    * 3.3 Metodologi Rekayasa Perangkat Lunak (SDLC) & Riset Akademis
    * 3.4 Landasan Teori Ilmiah & Model Perilaku Pengguna (Behavioral Psychology)
+   * 3.5 Arsitektur Distribusi & Generasi File Instalasi Mobile (Android APK)
 4. [Perancangan Basis Data & Skema ERD](#4-perancangan-basis-data--skema-erd)
 5. [Formulasi Algoritma & Logika Matematika Inti](#5-formulasi-algoritma--logika-matematika)
    * 5.1 Logika Non-Zero Day Global Daily Streak
@@ -25,7 +26,10 @@
    * 5.7 Logika Machine Learning: Prediksi Risiko Kegagalan (*Habit Churn*)
 6. [Katalog Endpoint RESTful API](#6-katalog-endpoint-restful-api)
 7. [Alur Bisnis End-to-End (User Journey & State Machine)](#7-alur-bisnis-end-to-end-user-journey--state-machine)
+   * 7.1 Alur Eksekusi Checklist Taktil (Optimistic UI & Server Sync)
+   * 7.2 Alur Sistem Prediksi Dini Machine Learning & Nudge Adaptif
 8. [Struktur Direktori & Pemetaan Kode Sumber](#8-struktur-direktori--pemetaan-kode-sumber)
+   * 8.1 Identitas Visual, Filosofi Logo & Lokasi Aset Gambar
 9. [Cetak Biru Integrasi IoT untuk Skripsi Sistem Komputer](#9-cetak-biru-integrasi-iot-untuk-skripsi-sistem-komputer)
 10. [Panduan Penulisan Proposal & Bab Skripsi (Bab 1 s/d Bab 5)](#10-panduan-penulisan-proposal--bab-skripsi)
 
@@ -37,7 +41,7 @@
 * **Nama Proyek:** HabitGrow
 * **Tagline:** *Gamified Habit Tracker & Virtual Tree Progression System*
 * **Platform:** Web Responsive (PWA-ready) & IoT Extensible
-* **Paradigma Inti:** *Non-Zero Day Principle*, *Visual Empathy*, *Botanical Metaphor Gamification*.
+* **Paradigma Inti:** *Non-Zero Day Principle*, *Visual Empathy*, *Botanical Metaphor Gamification*, *Machine Learning Early Warning*.
 
 ### 1.2 Masalah yang Diselesaikan (*Problem Statement*)
 Aplikasi pelacak kebiasaan konvensional sering kali gagal mempertahankan retensi pengguna dalam jangka panjang karena:
@@ -45,12 +49,14 @@ Aplikasi pelacak kebiasaan konvensional sering kali gagal mempertahankan retensi
 2. **Visualisasi yang Kering dan Monoton:** Hanya berupa daftar checklist teks tanpa representasi visual organik yang mencerminkan pertumbuhan diri.
 3. **Latensi Checklist yang Mengganggu:** Ketergantungan pada panggilan jaringan asinkron lambat membuat antarmuka terasa kaku saat mencentang kebiasaan.
 4. **Ketiadaan Hubungan dengan Dunia Nyata:** Pelacak digital terisolasi di dalam layar gawai tanpa kehadiran fisik di meja kerja pengguna.
+5. **Ketiadaan Sistem Pencegahan Dini Bersifat Prediktif (*Lack of Proactive Early Warning*):** Aplikasi umum bersifat pasif; hanya mencatat kegagalan setelah hari berganti, tanpa memberikan peringatan dini atau rekomendasi adaptif saat pengguna sedang berisiko tinggi melewatkan tugas hari itu.
 
 ### 1.3 Solusi HabitGrow
 HabitGrow mengatasi masalah tersebut melalui:
 * **Algoritma *Non-Zero Day Global Streak*:** Pengguna cukup menyelesaikan minimal 1 kebiasaan apa pun setiap hari agar api *streak* utama tidak padam.
 * **Sistem Metafora Pohon Virtual (*Botanical Progression*):** Rutinitas pengguna secara langsung memberi nutrisi pada pohon virtual interaktif yang berevolusi melalui 5 tahap kehidupan (*Seed* $\rightarrow$ *Sprout* $\rightarrow$ *Young Tree* $\rightarrow$ *Healthy Tree* $\rightarrow$ *Mature Tree*).
 * **Desain UI Berorientasi Manusia (*Human-Crafted Editorial*):** Menolak tata letak generik buatan AI; mengedepankan sapaan hangat personal, palet warna alam organik, kartu taktil dengan respons 0ms (*Optimistic UI*), dan konfeti perayaan instan.
+* **Sistem Peringatan Dini Prediktif (*Machine Learning Habit Churn Early Warning*):** Memprediksi kebiasaan yang berisiko terlewat hari ini menggunakan klasifikasi *Binary Logistic Regression* 5 fitur ($P \ge 60\%$), serta menyajikan aksi adaptif (*Smart Nudge*) 1-klik untuk menurunkan target sementara.
 * **Kesiapan Arsitektur IoT (Khusus Skripsi Sistem Komputer):** Backend berbasis REST API murni yang siap menerima pemicu fisik dari mikrokontroler (ESP32/RFID/NFC) maupun perangkat display meja mini.
 
 ---
@@ -70,6 +76,7 @@ HabitGrow mengatasi masalah tersebut melalui:
 * **[FR-10] Analitik & Riwayat:** Menyajikan rekapitulasi data visual, kalender aktivitas, dan distribusi kebiasaan.
 * **[FR-11] Filter Dashboard Dinamis:** Memfasilitasi penyaringan daftar tugas hari ini (*Semua*, *Belum Selesai*, *Selesai*).
 * **[FR-12] Dukungan Tema Ganda:** Antarmuka responsif dengan transisi mulus antara Mode Gelap (*Dark Mode*) dan Mode Terang (*Light Mode*).
+* **[FR-13] Sistem Prediksi Risiko Kegagalan (Machine Learning Early Warning):** Sistem secara proaktif mengevaluasi riwayat 14 hari pengguna dengan model *Binary Logistic Regression*, menghitung probabilitas kegagalan ($P \ge 60\%$), dan menyajikan rekomendasi adaptif (*Smart Predictive Nudge*) dengan opsi penyesuaian target kuantitas 1-klik (`PATCH /api/habits/[id]`).
 
 ### 2.2 Kebutuhan Non-Fungsional (Non-Functional Requirements)
 * **[NFR-01] Latensi Umpan Balik Antarmuka:** Perubahan status visual checklist harus $\le 50\text{ ms}$ di sisi klien tanpa menunggu *round-trip* server selesai.
@@ -77,6 +84,7 @@ HabitGrow mengatasi masalah tersebut melalui:
 * **[NFR-03] Kepatuhan Standar RESTful:** Seluruh komunikasi klien-server menggunakan protokol HTTP dengan kata kerja standar (`GET`, `POST`, `PATCH`, `DELETE`) dan payload berformat JSON.
 * **[NFR-04] Ketersediaan API untuk Eksternal:** API dirancang *stateless* sehingga dapat diakses oleh mikrokontroler IoT dengan autentikasi berbasis Bearer Token / Supabase JWT.
 * **[NFR-05] Keandalan Pengujian (*Test Coverage*):** Seluruh modul algoritma matematika inti wajib memiliki *unit tests* terotomatisasi dengan tingkat keberhasilan 100%.
+* **[NFR-06] Efisiensi Inferensi Model ML (Serverless Execution Latency):** Waktu komputasi ekstraksi 5 fitur dan inferensi probabilitas fungsi sigmoid pada serverless runtime harus $\le 10\text{ ms}$ per evaluasi tanpa memerlukan GPU atau microservice Python terpisah.
 
 ---
 
@@ -122,6 +130,7 @@ graph TD
 * **Manajemen State & Cache Server:** TanStack React Query v5 (Optimistic Mutations, Automatic Invalidation, Cache Rollback).
 * **Styling & Desain:** Tailwind CSS v4, CSS Variables, Nature-inspired HSL color tokens.
 * **Backend Runtime:** Node.js 20+ / Next.js Serverless Edge & Node runtime.
+* **Mesin Machine Learning:** In-Browser / Serverless Edge Binary Logistic Regression Classifier (Sigmoid Evaluation, 5 Feature Vectors, waktu inferensi $< 5\text{ ms}$ tanpa GPU eksternal).
 * **Validasi Skema:** Zod v3 (validasi *runtime payload* ketat di sisi klien dan server).
 * **Basis Data:** PostgreSQL via Supabase (Auth, Foreign Keys, UUID v4, Triggers, RLS).
 * **Unit Testing:** Vitest v5 (menjamin kebenaran algoritma secara deterministik).
@@ -177,6 +186,30 @@ HabitGrow bukan sekadar aplikasi pencatat, melainkan implementasi sistem dari te
    * *Development & Accomplishment:* Sistem Level bertingkat dan lencana pencapaian (*Achievements*).
    * *Ownership & Possession:* Pohon virtual yang bertumbuh seiring kedisiplinan diri.
    * *Empowerment of Creativity:* Kebebasan memilih warna, ikon, target kuantitas, dan frekuensi jadwal kebiasaan.
+
+---
+
+### 3.5 Arsitektur Distribusi & Generasi File Instalasi Mobile (Android APK)
+
+Dalam konteks penyelesaian Tugas Akhir / Skripsi yang membutuhkan pengujian langsung pada gawai *smartphone* Android pengguna atau dosen penguji, sistem HabitGrow dirancang untuk dapat diekstrak menjadi **file paket instalasi fisik (`.apk`)**.
+
+#### 1. Tiga Modalitas Pembangkitan File Instalasi Android (`.apk`):
+* **Modalitas A: PWABuilder / Trusted Web Activity (TWA) — Instan & Efisien:**
+  * Memanfaatkan *Progressive Web App manifest* dan integrasi Chrome Custom Tabs / TWA resmi dari Google.
+  * Platform [PWABuilder](https://www.pwabuilder.com) membungkus URL hosting produksi (`https://habit-grow.vercel.app`) menjadi file `HabitGrow.apk` dalam hitungan 5 menit tanpa perlu mengunduh SDK Android Studio berukuran puluhan gigabyte di laptop pengembang.
+* **Modalitas B: Capacitor Native Bridge (`@capacitor/android`) — Standar Industri Hybrid:**
+  * Mengintegrasikan `@capacitor/core` dan `@capacitor/android` langsung ke repositori Next.js.
+  * Mengonfigurasi `capacitor.config.json` dengan parameter `server.url` yang mengarah ke Vercel.
+  * Menghasilkan proyek Android Studio native lengkap dengan struktur Gradle, di mana perintah `./gradlew assembleDebug` langsung memproduksi berkas fisik:
+    `android/app/build/outputs/apk/debug/app-debug.apk`.
+* **Modalitas C: Expo / React Native EAS Cloud Build — Full Native Frontend:**
+  * Membangun frontend khusus seluler terpisah yang mengonsumsi Supabase Database dan REST API HabitGrow.
+  * Menggunakan kompilasi cloud Expo (`eas build -p android --profile preview`) yang secara otomatis menghasilkan link unduhan file `.apk` mandiri.
+
+#### 2. Justifikasi Akademis: Kebijakan Google Play Store vs. Standar Pengujian Skripsi:
+* **Fakta Regulasi Akademis:** Standar kelulusan dan sidang skripsi di perguruan tinggi (berdasarkan panduan BAN-PT dan LAM INFOKOM) menitikberatkan pada validitas algoritma, kesesuaian arsitektur sistem, dan pengujian fungsionalitas (*Blackbox & UAT*).
+* **Tidak Ada Keharusan Masuk Play Store:** Penguji tidak mewajibkan aplikasi terdaftar di Google Play Store publik. Kebijakan Google Play Store saat ini yang mewajibkan biaya registrasi $25 USD serta pengujian tertutup 20 orang selama 14 hari merupakan regulasi komersial distribusi massal, bukan parameter keilmuan teknologi informasi.
+* **Format Demonstrasi Sidang:** Menghasilkan file instalasi mandiri berformat `.apk` yang dipasang melalui *package installer* (fitur *sideloading*) pada smartphone penguji sudah 100% memenuhi syarat demonstrasi karya perangkat lunak dan dicantumkan secara formal pada Bab 1 sub-bab *Batasan Masalah*.
 
 ---
 
@@ -470,6 +503,8 @@ Seluruh endpoint menerima header `Content-Type: application/json` dan cookie ses
 | **POST** | `/api/auth/login` | Masuk ke sistem | `{ email, password }` | `{ success: true, session }` | `200 OK` |
 | **POST** | `/api/auth/logout` | Menghapus sesi otentikasi | *-* | `{ success: true }` | `200 OK` |
 | **GET** | `/api/dashboard/summary` | Mengambil data agregasi dashboard | *-* | `{ success: true, data: DashboardSummary }` | `200 OK` |
+| **GET** | `/api/calendar/activity` | Mengambil matriks aktivitas 52 minggu tahunan | `?year=2026` | `{ success: true, data: CalendarActivityResponse }` | `200 OK` |
+| **GET** | `/api/calendar/day` | Mengambil rincian kebiasaan terjadwal per tanggal | `?date=YYYY-MM-DD` | `{ success: true, data: CalendarDayDetail }` | `200 OK` |
 | **GET** | `/api/habits` | Mendapatkan seluruh kebiasaan user | `?archived=false&categoryId=...` | `{ success: true, data: HabitItem[] }` | `200 OK` |
 | **POST** | `/api/habits` | Membuat kebiasaan baru | `{ name, category_id, difficulty, frequency_type, ... }` | `{ success: true, data: Habit }` | `201 Created` |
 | **PATCH**| `/api/habits/[id]` | Memperbarui nama/target kebiasaan | `{ name?, target_value?, ... }` | `{ success: true, data: Habit }` | `200 OK` |
@@ -482,6 +517,8 @@ Seluruh endpoint menerima header `Content-Type: application/json` dan cookie ses
 ---
 
 ## 7. ALUR BISNIS END-TO-END (USER JOURNEY & STATE MACHINE)
+
+### 7.1 Alur Eksekusi Checklist Taktil (Optimistic UI & Server Sync)
 
 ```mermaid
 sequenceDiagram
@@ -514,6 +551,39 @@ sequenceDiagram
     end
 ```
 
+### 7.2 Alur Sistem Prediksi Dini Machine Learning & Nudge Adaptif
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Pengguna
+    participant UI as Dashboard & PredictionAlertBanner
+    participant API as GET /api/dashboard/summary
+    participant ML as PredictionService & Logistic Classifier
+    participant DB as PostgreSQL (Supabase)
+
+    User->>UI: Membuka halaman Dashboard HabitGrow
+    UI->>API: Request data ringkasan harian
+    API->>DB: Query daftar kebiasaan hari ini & riwayat 14 hari
+    DB-->>API: Data mentah kebiasaan dan status completion
+    API->>ML: Ekstraksi fitur (X1 s/d X5) untuk kebiasaan yang belum tuntas
+    ML->>ML: Hitung nilai logit z dan probabilitas Sigmoid P(Failure)
+    alt Probabilitas P >= 60%
+        ML-->>API: Buat rekomendasi penurunan target (Nudge: Target Baru = floor(Lama/2))
+    end
+    API-->>UI: Response JSON 200 OK (Memuat daftar at_risk_habits)
+    UI->>User: Tampilkan PredictionAlertBanner dengan badge risiko (HIGH / MODERATE)
+    
+    opt Pengguna Memilih Aksi Adaptif
+        User->>UI: Klik tombol "Terapkan Target Adaptif"
+        UI->>API: PATCH /api/habits/[id] (target_value baru)
+        API->>DB: UPDATE habits SET target_value = new_target
+        DB-->>API: Berhasil update
+        API-->>UI: Response 200 OK
+        UI-->>User: Target baru aktif seketika, risiko gagal termitigasi & banner tertutup
+    end
+```
+
 ---
 
 ## 8. STRUKTUR DIREKTORI & PEMETAAN KODE SUMBER
@@ -524,27 +594,29 @@ HabitGrow/
 │   ├── app/                                # Next.js 16 App Router
 │   │   ├── (auth)/                         # Rute Publik (Login, Register)
 │   │   ├── app/                            # Rute Terproteksi
-│   │   │   ├── dashboard/page.tsx          # Dashboard Utama (Human-Crafted Deck & Hub)
+│   │   │   ├── dashboard/page.tsx          # Dashboard Utama (Executive Command Bar & 2-Col Grid)
 │   │   │   ├── habits/page.tsx             # Manajemen Daftar Kebiasaan
 │   │   │   ├── tree/page.tsx               # Halaman Detail Sanctuary Pohon
-│   │   │   ├── calendar/page.tsx           # Tampilan Kalender & Aktivitas
+│   │   │   ├── calendar/page.tsx           # Matriks Pertumbuhan Kebun 52 Minggu (GitHub-Inspired) & Kalender Bulanan
 │   │   │   ├── statistics/page.tsx         # Grafik Analisis & Heatmap
 │   │   │   └── achievements/page.tsx       # Galeri Trofi & Pencapaian
 │   │   └── api/                            # Backend REST API Endpoints
 │   │       ├── auth/                       # API Auth Login/Register/Logout
-│   │       ├── habits/                     # API CRUD Habits & /complete
-│   │       ├── dashboard/summary/          # API Aggregator Ringkasan Dashboard
+│   │       ├── habits/                     # API CRUD Habits, /complete, & PATCH adaptif
+│   │       ├── dashboard/summary/          # API Aggregator Ringkasan Dashboard + ML Risk
+│   │       ├── calendar/                   # API Matriks Aktivitas (/activity & /day)
 │   │       ├── categories/                 # API Kategori
 │   │       └── achievements/               # API Pencapaian
 │   ├── components/                         # Komponen Antarmuka Reusable
 │   │   ├── habits/
 │   │   │   ├── HabitCard.tsx               # Kartu Kebiasaan Taktil (0ms Optimistic UI)
 │   │   │   ├── HabitFormModal.tsx          # Modal Tambah/Edit Kebiasaan
-│   │   │   └── StreakAlertBanner.tsx       # Banner Empatis Streak Putus
+│   │   │   ├── StreakAlertBanner.tsx       # Banner Empatis Streak Putus
+│   │   │   └── PredictionAlertBanner.tsx   # Banner Peringatan Dini ML + Aksi Adaptif 1-Klik
 │   │   ├── tree/
 │   │   │   └── TreeVisualization.tsx       # Komponen SVG Animasi Pohon (5 Tahap)
 │   │   ├── layout/
-│   │   │   └── Navbar.tsx                  # Navigasi Atas & Pengganti Tema
+│   │   │   └── Navbar.tsx                  # Navigasi Atas Responsif & Pengganti Tema
 │   │   └── ui/                             # Komponen Atomik (Button, Input, ThemeToggle)
 │   ├── lib/
 │   │   ├── algorithms/                     # PURE LOGIC (Dapat Diuji Tanpa Database)
@@ -553,22 +625,58 @@ HabitGrow/
 │   │   │   ├── consistency.ts              # Rolling Window Consistency Formula
 │   │   │   ├── level.ts                    # Logika Threshold & Progresi XP
 │   │   │   ├── xp.ts                       # Multiplier XP Berdasarkan Kesulitan
-│   │   │   └── __tests__/                  # Unit Tests (31 Test Cases Passing)
+│   │   │   ├── prediction.ts               # Binary Logistic Regression Classifier (ML Churn)
+│   │   │   └── __tests__/                  # Unit Tests (34 Test Cases Passing)
+│   │   │       ├── streak.test.ts
+│   │   │       ├── tree.test.ts
+│   │   │       ├── level.test.ts
+│   │   │       ├── xp.test.ts
+│   │   │       ├── consistency.test.ts
+│   │   │       └── prediction.test.ts      # 3 Skenario Evaluasi ML Probabilitas & Nudge
 │   │   ├── services/                       # Lapisan Layanan Bisnis Database
 │   │   │   ├── habit.service.ts
 │   │   │   ├── streak.service.ts
 │   │   │   ├── consistency.service.ts
-│   │   │   └── achievement.service.ts
+│   │   │   ├── achievement.service.ts
+│   │   │   └── prediction.service.ts       # Ekstraksi Fitur 14 Hari & Skoring Risiko
 │   │   ├── supabase/                       # Klien Supabase (Client, Server, Middleware)
 │   │   ├── validators/                     # Zod Schemas
 │   │   └── utils.ts                        # Helper Format Tanggal Indonesia & Greeting
 │   └── types/                              # Definisi TypeScript & Tipe Database
+├── image/                                  # Direktori Master Aset Visual & Branding
+│   ├── habitgrow_logo.jpg                  # Logo Render 3D Glassmorphic Botani (1024x1024)
+│   ├── habitgrow_logo.svg                  # Vektor Master Scalable Icon (Squircle 512x512)
+│   └── habitgrow_brand_horizontal.svg      # Vektor Brand Horizontal Lengkap dengan Tipografi
+├── public/                                 # Aset Statis Web Publik
+│   └── image/                              # Salinan Aset Logo untuk Browser & PWA
 ├── supabase/
 │   ├── migrations/                         # Berkas Migrasi SQL (Schema & RLS)
 │   └── seed.sql                            # Data Awal Kategori & Pencapaian
 ├── PROJECT_DOCUMENTATION.md                # Berkas Dokumentasi Induk (Dokumen Ini)
 └── package.json                            # Dependensi Proyek
 ```
+
+---
+
+### 8.1 Identitas Visual, Filosofi Logo & Lokasi Aset Gambar
+
+Untuk kebutuhan presentasi, laporan cetak tugas akhir, maupun pembuatan *icon launcher* aplikasi mobile, HabitGrow memiliki identitas visual berbasis metafora botani dan sains komputasi:
+
+#### 1. Filosofi Logo:
+* **Tunas Daun Organik (*The Sprout*):** Melambangkan proses pembentukan kebiasaan baru yang bertumbuh dari langkah kecil (*incremental growth*). Daun yang bercabang mencerminkan konsistensi harian.
+* **Landasan Kristal Heksagonal (*The Crystal Seed Base*):** Terinspirasi dari struktur digital dan sains komputasi, merepresentasikan fondasi data yang kuat, terukur, dan disiplin ilmiah di balik pelacakan kebiasaan.
+* **Cincin Terarium Digital (*Ambient Glow & Glassmorphism*):** Lingkaran pelindung neon menggambarkan ekosistem aman yang memelihara semangat pengguna agar tidak mengalami kelelahan mental (*streak fatigue*).
+
+#### 2. Palet Warna Resmi (*Brand Palette*):
+* **Emerald Green (`#059669` / `#047857`):** Menandakan ketenangan, stabilitas, dan alam.
+* **Mint Neon Teal (`#10b981` / `#34d399`):** Menandakan energi, vitalitas, dan dorongan motivasi harian.
+* **Dark Botanical Canvas (`#0c1914` / `#111a16`):** Latar belakang elegan berstandar *sleek dark mode* yang nyaman di mata pengguna.
+
+#### 3. Lokasi Berkas Logo di Komputer:
+* `image/habitgrow_logo.jpg` — Berkas gambar resolusi tinggi (1024x1024) dengan efek 3D glassmorphic neon, cocok untuk cover skripsi, slide PPT, dan icon installer.
+* `image/habitgrow_logo.svg` — Berkas vektor SVG tanpa batas resolusi (*lossless scalable vector*) untuk keperluan desain grafis dan pencetakan dokumen.
+* `image/habitgrow_brand_horizontal.svg` — Berkas logo horizontal memanjang yang memadukan icon dan teks tipografi *HabitGrow* beserta tagline.
+* `public/image/` — Salinan aset publik yang dapat diakses langsung oleh browser atau tag HTML `<img>`.
 
 ---
 
@@ -634,39 +742,43 @@ graph LR
 * **Rumusan Masalah:**
   1. Bagaimana merancang arsitektur perangkat lunak pelacak kebiasaan yang memitigasi efek keputusasaan (*streak fatigue*) menggunakan prinsip *Non-Zero Day*?
   2. Bagaimana merumuskan model metamorfosis pohon virtual berbasis konsistensi bergulir 30 hari?
-  3. *(Jika IoT)* Bagaimana mengintegrasikan modul pemicu fisik NFC dan mikrokontroler ESP32 dengan RESTful API server cloud secara andal?
+  3. Bagaimana mengimplementasikan sistem peringatan dini berbasis regresi logistik untuk memprediksi risiko kegagalan kebiasaan (*habit churn*) secara adaptif?
+  4. *(Jika IoT)* Bagaimana mengintegrasikan modul pemicu fisik NFC dan mikrokontroler ESP32 dengan RESTful API server cloud secara andal?
 * **Batasan Masalah:**
-  1. Sistem diimplementasikan pada platform berbasis web responsif menggunakan Next.js dan Supabase.
-  2. Pengujian dibatasi pada pengguna aktif dengan frekuensi pemantauan harian.
-* **Tujuan & Manfaat Penelitian:** Menghasilkan platform pelacak kebiasaan yang mampu meningkatkan retensi kedisiplinan diri secara terukur.
+  1. Sistem dikembangkan pada platform web modern (Next.js & Supabase) dan didistribusikan untuk smartphone dalam bentuk berkas instalasi mandiri Android (*Standalone APK*) yang dipasang secara langsung (*sideloading*) pada perangkat penguji, tanpa melalui proses publikasi komersial di Google Play Store.
+  2. Pengujian fungsionalitas dan retensi dibatasi pada pengguna aktif dengan frekuensi pemantauan harian.
+  3. Modul prediktif cerdas dijalankan secara komputasi ringan (*edge/serverless*) menggunakan 5 vektor fitur historis kebiasaan.
+* **Tujuan & Manfaat Penelitian:** Menghasilkan platform pelacak kebiasaan yang mampu meningkatkan retensi kedisiplinan diri secara terukur dan adaptif.
 
 #### BAB 2: TINJAUAN PUSTAKA & DASAR TEORI
 * Teori Pembentukan Kebiasaan (*The Habit Loop: Cue, Routine, Reward* - Charles Duhigg & James Clear).
 * Konsep Psikologis *Non-Zero Day* dan Teori Gamifikasi (*Self-Determination Theory*).
+* Pemodelan Klasifikasi Probabilitas (*Binary Logistic Regression* dan Fungsi Sigmoid).
 * Arsitektur RESTful API, Serverless Computing, dan PostgreSQL Row Level Security (RLS).
 * *(Jika IoT)* Komunikasi Data IoT (HTTP REST Client pada ESP32, Protokol SPI/I2C, Modul RFID/NFC).
 
 #### BAB 3: METODOLOGI PENELITIAN & PERANCANGAN SISTEM
 * **Metode Pengembangan:** *Software Development Life Cycle* (SDLC) model Agile / Prototyping.
 * **Perancangan Basis Data:** ERD (13 tabel pada Bab 4 dokumen ini), relasi kardinalitas, dan kamus data lengkap.
-* **Formulasi Algoritma:** Tuliskan seluruh rumus matematika dari Bab 5 dokumen ini (*Streak*, *Consistency Rate*, *Tree Lifecycle*, *Leveling Curve*).
+* **Formulasi Algoritma:** Tuliskan seluruh rumus matematika dari Bab 5 dokumen ini (*Streak*, *Consistency Rate*, *Tree Lifecycle*, *Leveling Curve*, *Logistic Regression ML*).
 * **Perancangan Antarmuka & REST API:** Diagram Sequence (Bab 7 dokumen ini) dan Tabel Endpoint API (Bab 6 dokumen ini).
 
 #### BAB 4: IMPLEMENTASI & PENGUJIAN SISTEM
 * **Lingkungan Implementasi:** Spesifikasi perangkat keras, perangkat lunak, dan konfigurasi server.
 * **Hasil Pengujian Algoritma (*Unit Testing*):**
-  * Tampilkan tabel hasil pengujian 31 test case Vitest yang mencakup:
+  * Tampilkan tabel hasil pengujian **34 test cases** Vitest dengan tingkat keberhasilan 100%:
     * `streak.test.ts` (12 skenario pengujian streak).
     * `tree.test.ts` (6 skenario transisi tahap pohon).
     * `level.test.ts` & `xp.test.ts` (pengujian formula kenaikan level).
     * `consistency.test.ts` (pengujian windowing 30 hari).
-* **Pengujian Antarmuka (*Blackbox Testing*):** Verifikasi fungsi checklist 0ms, filter data, autentikasi, dan responsivitas layout.
+    * `prediction.test.ts` (3 skenario klasifikasi probabilitas risiko kegagalan kebiasaan dan rekomendasi target adaptif).
+* **Pengujian Antarmuka (*Blackbox Testing*):** Verifikasi fungsi checklist 0ms, filter data, peringatan prediktif ML, autentikasi, dan responsivitas layout (desktop 1600px & mobile).
 * **Pengujian Latensi Jaringan:** Uji waktu respons panggilan REST API (`GET /api/dashboard/summary` rata-rata 150-300 ms).
 * *(Jika IoT)* Uji keberhasilan pembacaan kartu NFC dan latensi sinkronisasi dari hardware ke dashboard web.
 
 #### BAB 5: KESIMPULAN & SARAN
-* **Kesimpulan:** Keberhasilan penerapan prinsip *Non-Zero Day* dan metafora pohon virtual dalam menyediakan sistem pelacak kebiasaan yang adaptif dan terstruktur.
-* **Saran Pengembangan:** Penambahan fitur *Adaptive Difficulty Load*, integrasi Telegram Bot Webhook, dan fabrikasi casing cetak 3D untuk perangkat meja fisik.
+* **Kesimpulan:** Keberhasilan penerapan prinsip *Non-Zero Day*, metafora pohon virtual, dan model prediksi risiko dalam menyediakan sistem pelacak kebiasaan yang adaptif dan terstruktur.
+* **Saran Pengembangan:** Pembuatan casing fisik cetak 3D untuk IoT ambient display dan integrasi bot notifikasi multi-platform.
 
 ---
 

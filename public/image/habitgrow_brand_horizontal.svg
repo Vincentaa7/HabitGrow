@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 140" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient for Icon -->
+    <linearGradient id="navIconBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c1914" />
+      <stop offset="100%" stop-color="#050a08" />
+    </linearGradient>
+
+    <!-- Border Glow -->
+    <linearGradient id="navHBorderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#047857" stop-opacity="0.4" />
+    </linearGradient>
+
+    <!-- Sprout Stem Gradient -->
+    <linearGradient id="navHStemGrad" x1="0%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="60%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#6ee7b7" />
+    </linearGradient>
+
+    <!-- Leaves -->
+    <linearGradient id="navHLeaf1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6ee7b7" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="navHLeaf2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a7f3d0" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <!-- Text Gradient for 'Grow' -->
+    <linearGradient id="navTextGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <style>
+      .brand-title-text {
+        fill: #0f172a;
+      }
+      .brand-tagline-text {
+        fill: #64748b;
+      }
+      @media (prefers-color-scheme: dark) {
+        .brand-title-text {
+          fill: #f8fafc;
+        }
+        .brand-tagline-text {
+          fill: #94a3b8;
+        }
+      }
+    </style>
+  </defs>
+
+  <!-- Left Icon Container -->
+  <g transform="translate(10, 10)">
+    <!-- Squircle Icon Box -->
+    <rect x="0" y="0" width="120" height="120" rx="30" fill="url(#navIconBgGrad)" stroke="url(#navHBorderGrad)" stroke-width="3" />
+    
+    <!-- Mini Sprout & Crystal -->
+    <!-- Crystal Base -->
+    <polygon points="60,95 48,90 52,82 60,85" fill="#10b981" opacity="0.8" />
+    <polygon points="60,95 60,85 68,82 72,90" fill="#047857" opacity="0.9" />
+    <polygon points="60,85 52,82 60,75 68,82" fill="#34d399" opacity="0.95" />
+
+    <!-- Stem -->
+    <path d="M 60,80 Q 57,65 60,52 Q 62,42 60,35" fill="none" stroke="url(#navHStemGrad)" stroke-width="5" stroke-linecap="round" />
+
+    <!-- Left Leaf -->
+    <path d="M 59,62 C 43,59 36,47 40,38 C 49,37 56,46 59,55 Z" fill="url(#navHLeaf1)" />
+    <!-- Right Leaf -->
+    <path d="M 61,54 C 77,50 84,37 78,29 C 69,29 63,40 61,49 Z" fill="url(#navHLeaf2)" />
+    <!-- Top Peak Leaf -->
+    <path d="M 60,38 C 55,30 58,22 60,20 C 62,22 65,30 60,38 Z" fill="#6ee7b7" />
+  </g>
+
+  <!-- Brand Typography -->
+  <!-- 'Habit' adapts to light/dark themes -->
+  <text x="150" y="78" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="52" font-weight="800" letter-spacing="-1.5" class="brand-title-text">
+    Habit<tspan fill="url(#navTextGrad)">Grow</tspan>
+  </text>
+  
+  <!-- Subtitle Tagline -->
+  <text x="152" y="105" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="600" letter-spacing="2.5" class="brand-tagline-text">
+    GAMIFIED HABIT TRACKER &amp; VIRTUAL TREE
+  </text>
+</svg>

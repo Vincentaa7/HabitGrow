@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -46,13 +47,8 @@ export function Navbar() {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/app/dashboard" className="flex items-center gap-2.5 group">
-            <span className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-black text-lg shadow-sm group-hover:scale-105 transition-transform">
-              🌱
-            </span>
-            <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white">
-              Habit<span className="text-emerald-600 dark:text-emerald-400">Grow</span>
-            </span>
+          <Link href="/app/dashboard" className="flex items-center group transition-opacity hover:opacity-95" title="HabitGrow Dashboard">
+            <BrandLogo className="h-9 sm:h-10 w-auto group-hover:scale-[1.02] transition-transform" />
           </Link>
 
           {/* Desktop Nav Links */}

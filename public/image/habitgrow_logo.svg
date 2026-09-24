@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c1914" />
+      <stop offset="50%" stop-color="#091410" />
+      <stop offset="100%" stop-color="#050a08" />
+    </linearGradient>
+
+    <!-- Border Glow -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.6" />
+      <stop offset="50%" stop-color="#059669" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#047857" stop-opacity="0.5" />
+    </linearGradient>
+
+    <!-- Sprout Main Stem Gradient -->
+    <linearGradient id="stemGrad" x1="0%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="40%" stop-color="#059669" />
+      <stop offset="80%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#6ee7b7" />
+    </linearGradient>
+
+    <!-- Primary Leaf Gradient -->
+    <linearGradient id="leafGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6ee7b7" />
+      <stop offset="40%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+
+    <!-- Secondary Leaf Gradient -->
+    <linearGradient id="leafGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#a7f3d0" />
+      <stop offset="50%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <!-- Top Sprout Leaf Gradient -->
+    <linearGradient id="leafGradTop" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#d1fae5" />
+      <stop offset="60%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#065f46" />
+    </linearGradient>
+
+    <!-- Crystal Seed Gradient -->
+    <linearGradient id="crystalGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#064e3b" />
+    </linearGradient>
+    <linearGradient id="crystalGrad2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#047857" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+
+    <!-- Ambient Glow Filter -->
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur1" />
+      <feGaussianBlur stdDeviation="32" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Circular Terrarium Ring -->
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#064e3b" stop-opacity="0.05" />
+    </linearGradient>
+  </defs>
+
+  <!-- Squircle App Container -->
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="4" />
+
+  <!-- Ambient Backdrop Circles -->
+  <circle cx="256" cy="270" r="170" fill="url(#ringGrad)" stroke="#10b981" stroke-opacity="0.15" stroke-width="2" />
+  <circle cx="256" cy="270" r="140" fill="none" stroke="#10b981" stroke-opacity="0.08" stroke-width="1.5" stroke-dasharray="6 8" />
+
+  <!-- Radial Glow Behind the Sprout -->
+  <circle cx="256" cy="240" r="90" fill="#10b981" opacity="0.18" filter="url(#neonGlow)" />
+
+  <!-- Group for Central Plant & Seed Symbol -->
+  <g transform="translate(0, 5)">
+    <!-- Base Crystal Terrarium / Seed Foundation -->
+    <g id="crystal-base" opacity="0.95">
+      <!-- Crystal Facets -->
+      <polygon points="256,365 210,345 225,315 256,325" fill="url(#crystalGrad1)" opacity="0.8" />
+      <polygon points="256,365 256,325 287,315 302,345" fill="url(#crystalGrad2)" opacity="0.9" />
+      <polygon points="256,325 225,315 256,290 287,315" fill="#34d399" opacity="0.95" />
+      <polygon points="256,365 210,345 256,380" fill="#064e3b" opacity="0.7" />
+      <polygon points="256,365 302,345 256,380" fill="#047857" opacity="0.85" />
+    </g>
+
+    <!-- Growing Stem Curve -->
+    <path d="M 256,305 Q 248,250 256,200 Q 262,160 256,135" fill="none" stroke="url(#stemGrad)" stroke-width="14" stroke-linecap="round" filter="url(#neonGlow)" />
+
+    <!-- Left Elegant Leaf -->
+    <path d="M 252,240 C 190,230 165,185 180,150 C 215,145 242,180 252,215 Z" fill="url(#leafGrad1)" />
+    <!-- Leaf Spine Highlight Left -->
+    <path d="M 252,230 C 220,205 200,180 185,155" fill="none" stroke="#a7f3d0" stroke-width="3" stroke-linecap="round" opacity="0.8" />
+
+    <!-- Right Large Leaf -->
+    <path d="M 258,210 C 320,195 345,145 325,115 C 290,115 265,155 258,190 Z" fill="url(#leafGrad2)" />
+    <!-- Leaf Spine Highlight Right -->
+    <path d="M 258,200 C 290,175 310,145 320,122" fill="none" stroke="#d1fae5" stroke-width="3" stroke-linecap="round" opacity="0.85" />
+
+    <!-- Top Sprout Peak Leaf -->
+    <path d="M 256,145 C 240,115 250,85 256,75 C 262,85 272,115 256,145 Z" fill="url(#leafGradTop)" />
+
+    <!-- Dewdrop / Energy Sparkle -->
+    <circle cx="325" cy="115" r="4.5" fill="#ffffff" filter="url(#neonGlow)" />
+    <circle cx="256" cy="75" r="3.5" fill="#ffffff" />
+    <circle cx="180" cy="150" r="3" fill="#ffffff" />
+  </g>
+</svg>
