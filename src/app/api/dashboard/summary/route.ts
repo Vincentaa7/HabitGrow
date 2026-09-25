@@ -6,9 +6,10 @@ import { calculateLevel } from '@/lib/algorithms/level';
 import { ConsistencyService } from '@/lib/services/consistency.service';
 import { StreakService } from '@/lib/services/streak.service';
 import { PredictionService } from '@/lib/services/prediction.service';
+import { parseDateString, toDateString } from '@/lib/algorithms/schedule';
 import { DashboardSummary } from '@/types';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
     const {
@@ -23,6 +24,12 @@ export async function GET() {
       );
     }
 
+    // Support client local date query param (?date=YYYY-MM-DD) to resolve client-server timezone difference
+    const { searchParams } = new URL(request.url);
+    const dateParam = searchParams.get('date');
+    const evalDate = dateParam ? parseDateString(dateParam) : new Date();
+    const todayStr = dateParam || toDateString(evalDate);
+
     // 1. Fetch Profile
     const { data: profile } = await supabase
       .from('profiles')
@@ -30,8 +37,8 @@ export async function GET() {
       .eq('id', user.id)
       .maybeSingle();
 
-    // 2. Fetch Today Habits
-    const todayHabits = await HabitService.getTodayHabits(supabase, user.id);
+    // 2. Fetch Today Habits (aligned to client local date)
+    const todayHabits = await HabitService.getTodayHabits(supabase, user.id, todayStr);
     const completedCount = todayHabits.filter((h) => h.is_completed_today).length;
     const totalScheduled = todayHabits.length;
     const completionPercentage = totalScheduled > 0 ? Math.round((completedCount / totalScheduled) * 100) : 0;
@@ -54,7 +61,7 @@ export async function GET() {
       .maybeSingle();
 
     if (!treeData) {
-      const recalculated = await ConsistencyService.recalculateUserConsistencyAndTree(supabase, user.id);
+      const recalculated = await ConsistencyService.recalculateUserConsistencyAndTree(supabase, user.id, evalDate);
       treeData = {
         user_id: user.id,
         stage: recalculated.treeStage,
@@ -66,7 +73,7 @@ export async function GET() {
     }
 
     // 5. Calculate Global Daily Streak (Non-Zero Day: >= 1 habit completed per day)
-    const globalStreak = await StreakService.calculateUserGlobalStreak(supabase, user.id);
+    const globalStreak = await StreakService.calculateUserGlobalStreak(supabase, user.id, evalDate);
     const currentStreak = globalStreak.currentStreak;
     const longestStreak = globalStreak.longestStreak;
 
@@ -92,10 +99,10 @@ export async function GET() {
       });
 
     // 7. Detect Broken Streaks (missed scheduled days)
-    const brokenStreaks = await StreakService.detectBrokenStreaks(supabase, user.id);
+    const brokenStreaks = await StreakService.detectBrokenStreaks(supabase, user.id, evalDate);
 
     // 8. Predict Habits at Risk of Failure / Churn Today (Machine Learning Sigmoid Classifier)
-    const atRiskHabits = await PredictionService.getAtRiskHabitsToday(supabase, user.id);
+    const atRiskHabits = await PredictionService.getAtRiskHabitsToday(supabase, user.id, evalDate);
 
     const summary: DashboardSummary = {
       profile: {

@@ -27,9 +27,10 @@ export class AnalyticsService {
    */
   static async getWeeklyOverview(
     supabase: SupabaseClient,
-    userId: string
+    userId: string,
+    evalDate: Date = new Date()
   ): Promise<WeeklyChartData[]> {
-    const today = new Date();
+    const today = new Date(evalDate);
     today.setHours(0, 0, 0, 0);
 
     // Find the Monday of current week
@@ -101,7 +102,8 @@ export class AnalyticsService {
    */
   static async getHabitPerformance(
     supabase: SupabaseClient,
-    userId: string
+    userId: string,
+    evalDate: Date = new Date()
   ): Promise<{
     items: HabitPerformanceItem[];
     bestHabit: HabitPerformanceItem | null;
@@ -131,7 +133,7 @@ export class AnalyticsService {
       completionsByHabit.get(c.habit_id)!.add(c.date);
     });
 
-    const today = new Date();
+    const today = new Date(evalDate);
     today.setHours(0, 0, 0, 0);
 
     const items: HabitPerformanceItem[] = [];

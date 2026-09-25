@@ -16,9 +16,10 @@ export class PredictionService {
    */
   static async getAtRiskHabitsToday(
     supabase: SupabaseClient,
-    userId: string
+    userId: string,
+    evalDate: Date = new Date()
   ): Promise<HabitRiskPrediction[]> {
-    const today = new Date();
+    const today = new Date(evalDate);
     today.setHours(0, 0, 0, 0);
     const todayStr = toDateString(today);
 

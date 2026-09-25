@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { AnalyticsService } from '@/lib/services/analytics.service';
 
-export async function GET() {
+import { parseDateString } from '@/lib/algorithms/schedule';
+
+export async function GET(request: Request) {
   try {
     const supabase = await createClient();
     const {
@@ -18,7 +20,11 @@ export async function GET() {
       );
     }
 
-    const data = await AnalyticsService.getHabitPerformance(supabase, user.id);
+    const { searchParams } = new URL(request.url);
+    const dateParam = searchParams.get('date');
+    const evalDate = dateParam ? parseDateString(dateParam) : new Date();
+
+    const data = await AnalyticsService.getHabitPerformance(supabase, user.id, evalDate);
     return NextResponse.json({ success: true, data });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Gagal memuat data performa';

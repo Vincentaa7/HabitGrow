@@ -12,7 +12,8 @@ export class ConsistencyService {
    */
   static async recalculateUserConsistencyAndTree(
     supabase: SupabaseClient,
-    userId: string
+    userId: string,
+    evalDate: Date = new Date()
   ): Promise<{ consistencyScore: number; treeStage: string; health: number }> {
     // 1. Fetch user's active, non-archived habits and schedules
     const { data: habitsData, error: habitsError } = await supabase
@@ -49,7 +50,7 @@ export class ConsistencyService {
     });
 
     // 3. Evaluate each habit over its active lifespan up to today (or last 30 days window)
-    const today = new Date();
+    const today = new Date(evalDate);
     today.setHours(0, 0, 0, 0);
 
     const habitStats: Array<{ scheduledCount: number; completedCount: number }> = [];

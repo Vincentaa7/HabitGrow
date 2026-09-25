@@ -16,6 +16,7 @@ import {
   getTimeGreeting,
   cn,
 } from '@/lib/utils';
+import { toDateString } from '@/lib/algorithms/schedule';
 import Link from 'next/link';
 import {
   Flame,
@@ -38,11 +39,12 @@ export default function DashboardPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [filter, setFilter] = useState<FilterType>('all');
 
-  // 1. Fetch Dashboard Summary
+  // 1. Fetch Dashboard Summary (uses client local date to avoid server UTC mismatch)
   const { data: summary, isLoading, error } = useQuery<DashboardSummary>({
     queryKey: ['dashboard-summary'],
     queryFn: async () => {
-      const res = await fetch('/api/dashboard/summary');
+      const localDate = toDateString(new Date());
+      const res = await fetch(`/api/dashboard/summary?date=${localDate}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error?.message || 'Gagal memuat dashboard');
       return json.data;
@@ -59,12 +61,14 @@ export default function DashboardPage() {
     },
   });
 
-  // 3. Complete Habit Mutation with Optimistic UI updates
+  // 3. Complete Habit Mutation with Optimistic UI updates (records with client local date)
   const completeMutation = useMutation({
     mutationFn: async (habitId: string) => {
+      const localDate = toDateString(new Date());
       const res = await fetch(`/api/habits/${habitId}/complete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: localDate }),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error?.message || 'Gagal menyelesaikan kebiasaan');

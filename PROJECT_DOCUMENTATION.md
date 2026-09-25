@@ -499,6 +499,26 @@ $$P(\text{Failure}) = \frac{1}{1 + e^{-z}} \times 100\%$$
 
 ---
 
+### 5.8 Manajemen Zona Waktu & Siklus Pergantian Hari (*Timezone Synchronization & Midnight Reset*)
+*Berkas Implementasi:* `src/app/api/dashboard/summary/route.ts`, `src/lib/services/habit.service.ts`, `src/lib/algorithms/schedule.ts`, `src/app/app/dashboard/page.tsx`
+
+#### Masalah Zona Waktu Serverless (UTC vs Waktu Lokal):
+* Server *cloud/serverless* (seperti Vercel) mengeksekusi fungsi backend dalam zona waktu **UTC (GMT+0)**.
+* Di Indonesia (WIB UTC+7, WITA UTC+8, WIT UTC+9), jam 00:00 (tengah malam) waktu lokal setara dengan jam 16:00-17:00 UTC kemarin.
+* Jika backend hanya mengandalkan `new Date()` internal server tanpa parameter tanggal lokal klien:
+  1. Pergantian hari baru (*reset checklist*) di sisi server baru akan terjadi saat jam 07:00 WIB / 08:00 WITA (tengah malam UTC).
+  2. Antara jam 00:00 hingga 08:00 pagi waktu lokal, pengguna melihat tanggal sudah berganti (misal: Sabtu), namun checklist masih menampilkan status centang dari hari sebelumnya (Jumat) karena server masih menganggapnya hari Jumat.
+
+#### Solusi Arsitektur (*Client-Anchored Date Evaluation*):
+1. **Query Param `?date=YYYY-MM-DD`:**
+   Setiap permintaan data agregasi dashboard (`GET /api/dashboard/summary?date=...`) dan analitik menyertakan tanggal lokal perangkat pengguna (`toDateString(new Date())`).
+2. **Pencatatan Checklist Sinkron:**
+   Saat pengguna menekan centang kebiasaan, mutasi `POST /api/habits/[id]/complete` mengirimkan `{ date: localDate }` sehingga catatan penyelesaian di database terikat presisi pada tanggal kalender lokal pengguna.
+3. **Penyelarasan Algoritma:**
+   Semua fungsi evaluasi (`getTodayHabits`, `calculateUserGlobalStreak`, `detectBrokenStreaks`, dan `getAtRiskHabitsToday`) menerima parameter `evalDate` yang diselaraskan dengan tanggal kalender pengguna, memastikan siklus reset habit terjadi tepat pukul **00:00 (tengah malam) waktu lokal masing-masing pengguna**.
+
+---
+
 ## 6. KATALOG ENDPOINT RESTFUL API
 
 Seluruh endpoint menerima header `Content-Type: application/json` dan cookie sesi / Bearer Token Supabase untuk otentikasi.
@@ -508,17 +528,18 @@ Seluruh endpoint menerima header `Content-Type: application/json` dan cookie ses
 | **POST** | `/api/auth/register` | Mendaftarkan akun pengguna baru | `{ email, password, full_name }` | `{ success: true, user }` | `201 Created` |
 | **POST** | `/api/auth/login` | Masuk ke sistem | `{ email, password }` | `{ success: true, session }` | `200 OK` |
 | **POST** | `/api/auth/logout` | Menghapus sesi otentikasi | *-* | `{ success: true }` | `200 OK` |
-| **GET** | `/api/dashboard/summary` | Mengambil data agregasi dashboard | *-* | `{ success: true, data: DashboardSummary }` | `200 OK` |
+| **GET** | `/api/dashboard/summary` | Mengambil data agregasi dashboard (mendukung zona waktu lokal) | `?date=YYYY-MM-DD` | `{ success: true, data: DashboardSummary }` | `200 OK` |
 | **GET** | `/api/calendar/activity` | Mengambil matriks aktivitas 52 minggu tahunan | `?year=2026` | `{ success: true, data: CalendarActivityResponse }` | `200 OK` |
 | **GET** | `/api/calendar/day` | Mengambil rincian kebiasaan terjadwal per tanggal | `?date=YYYY-MM-DD` | `{ success: true, data: CalendarDayDetail }` | `200 OK` |
 | **GET** | `/api/habits` | Mendapatkan seluruh kebiasaan user | `?archived=false&categoryId=...` | `{ success: true, data: HabitItem[] }` | `200 OK` |
 | **POST** | `/api/habits` | Membuat kebiasaan baru | `{ name, category_id, difficulty, frequency_type, ... }` | `{ success: true, data: Habit }` | `201 Created` |
 | **PATCH**| `/api/habits/[id]` | Memperbarui nama/target kebiasaan | `{ name?, target_value?, ... }` | `{ success: true, data: Habit }` | `200 OK` |
 | **DELETE**| `/api/habits/[id]`| Menghapus kebiasaan secara permanen | *-* | `{ success: true }` | `200 OK` |
-| **POST** | `/api/habits/[id]/complete` | **Mencatat checklist kebiasaan hari ini** | *-* | `{ success: true, data: { xp_earned, streak, tree } }` | `200 OK` |
+| **POST** | `/api/habits/[id]/complete` | **Mencatat checklist kebiasaan hari ini** | `{ date?: string, note?: string }` | `{ success: true, data: { xp_earned, streak, tree } }` | `200 OK` |
 | **GET** | `/api/categories` | Mendapatkan daftar kategori aktif | *-* | `{ success: true, data: Category[] }` | `200 OK` |
 | **GET** | `/api/achievements` | Mendapatkan daftar pencapaian user | *-* | `{ success: true, data: Achievement[] }` | `200 OK` |
-| **GET** | `/api/analytics/overview` | Mendapatkan data historis & heatmap | `?days=30` | `{ success: true, data: AnalyticsOverview }` | `200 OK` |
+| **GET** | `/api/analytics/weekly` | Mendapatkan performa mingguan per tanggal lokal | `?date=YYYY-MM-DD` | `{ success: true, data: WeeklyChartData[] }` | `200 OK` |
+| **GET** | `/api/analytics/performance` | Mendapatkan ringkasan performa kebiasaan | `?date=YYYY-MM-DD` | `{ success: true, data: PerformanceSummary }` | `200 OK` |
 
 ---
 
