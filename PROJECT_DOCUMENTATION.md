@@ -485,11 +485,17 @@ Probabilitas Kegagalan ($P$):
 $$P(\text{Failure}) = \frac{1}{1 + e^{-z}} \times 100\%$$
 
 #### Aturan Tindakan Adaptif (*Adaptive Nudge Action*):
-* Jika $P \ge 60\%$:
+* **Cold-Start Guard (Filter Ambang Batas 1 Minggu / 7 Hari):**
+  * Kebiasaan baru dengan usia $< 7\text{ hari}$ berada dalam *initial onboarding baseline period*. Peringatan prediksi risiko dini otomatis **dinonaktifkan** selama 7 hari pertama untuk mencegah *false alarm* pada pengguna atau kebiasaan yang baru dibuat.
+* **Kriteria Evaluasi ($P \ge 60\%$ setelah 7 hari):**
   * Diklasifikasikan sebagai `HIGH` ($P \ge 70\%$) atau `MODERATE` ($60\% \le P < 70\%$).
-  * Jika target kuantitas $> 1$ (misal: 20x push-up), sistem menawarkan aksi:
+  * **Jalur 1 — Kuantitas $> 1$ (`LOWER_TARGET`):**
     $$\text{Target Baru} = \max\left(1, \left\lfloor \frac{\text{Target Lama}}{2} \right\rfloor\right)$$
-  * Pengguna dapat menerapkan penyesuaian target 1 klik via `PATCH /api/habits/[id]` untuk menjaga keberlangsungan *streak*.
+    Pengguna dapat menerapkan penyesuaian target 1 klik via `PATCH /api/habits/[id]` untuk menjaga keberlangsungan *streak*.
+  * **Jalur 2 — Kuantitas $= 1$ (`EARLY_NUDGE`):**
+    Sistem menyarankan penyelesaian lebih awal pada waktu siang/sore sebelum energi terkuras di malam hari, dilengkapi tombol komitmen *"Siap, Kerjakan Lebih Awal"*.
+* **Penyajian Antarmuka Antirumpang:**
+  * Komponen `PredictionAlertBanner` menyajikan kotak *callout* rekomendasi AI secara visual dan eksplisit sehingga pengguna mendapatkan instruksi tindakan yang jelas sebelum memilih opsi.
 
 ---
 
@@ -566,21 +572,30 @@ sequenceDiagram
     UI->>API: Request data ringkasan harian
     API->>DB: Query daftar kebiasaan hari ini & riwayat 14 hari
     DB-->>API: Data mentah kebiasaan dan status completion
-    API->>ML: Ekstraksi fitur (X1 s/d X5) untuk kebiasaan yang belum tuntas
-    ML->>ML: Hitung nilai logit z dan probabilitas Sigmoid P(Failure)
-    alt Probabilitas P >= 60%
-        ML-->>API: Buat rekomendasi penurunan target (Nudge: Target Baru = floor(Lama/2))
+    API->>ML: Evaluasi kebiasaan belum tuntas (Cek Usia Kebiasaan >= 7 Hari)
+    alt Usia Kebiasaan < 7 Hari (Masa Adaptasi Awal)
+        ML-->>API: Lewati prediksi (Cegah false alarm pengguna baru)
+    else Usia Kebiasaan >= 7 Hari
+        ML->>ML: Ekstraksi fitur (X1 s/d X5), hitung logit z & Sigmoid P(Failure)
+        alt Probabilitas P >= 60%
+            ML-->>API: Buat rekomendasi adaptif (LOWER_TARGET jika >1, EARLY_NUDGE jika =1)
+        end
     end
     API-->>UI: Response JSON 200 OK (Memuat daftar at_risk_habits)
-    UI->>User: Tampilkan PredictionAlertBanner dengan badge risiko (HIGH / MODERATE)
+    UI->>User: Tampilkan PredictionAlertBanner (Penyebab Utama, Rekomendasi AI & Tombol Aksi)
     
     opt Pengguna Memilih Aksi Adaptif
-        User->>UI: Klik tombol "Terapkan Target Adaptif"
-        UI->>API: PATCH /api/habits/[id] (target_value baru)
-        API->>DB: UPDATE habits SET target_value = new_target
-        DB-->>API: Berhasil update
-        API-->>UI: Response 200 OK
-        UI-->>User: Target baru aktif seketika, risiko gagal termitigasi & banner tertutup
+        alt Opsi LOWER_TARGET
+            User->>UI: Klik tombol "Ubah Target Jadi [X] (Mode Ringan)"
+            UI->>API: PATCH /api/habits/[id] (target_value baru)
+            API->>DB: UPDATE habits SET target_value = new_target
+            DB-->>API: Berhasil update
+            API-->>UI: Response 200 OK
+            UI-->>User: Target baru aktif seketika, risiko gagal termitigasi & banner tertutup
+        else Opsi EARLY_NUDGE
+            User->>UI: Klik tombol "Siap, Kerjakan Lebih Awal"
+            UI-->>User: Komitmen dicatat, tampilkan pesan semangat & tutup banner
+        end
     end
 ```
 
