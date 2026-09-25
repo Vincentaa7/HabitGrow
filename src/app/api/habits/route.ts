@@ -2,6 +2,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { HabitService } from '@/lib/services/habit.service';
+import { StreakService } from '@/lib/services/streak.service';
+import { parseDateString } from '@/lib/algorithms/schedule';
 import { habitCreateSchema } from '@/lib/validators/habit.schema';
 
 export async function GET(request: Request) {
@@ -22,6 +24,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const isArchived = searchParams.get('archived') === 'true' ? true : searchParams.get('archived') === 'false' ? false : undefined;
     const categoryId = searchParams.get('categoryId') || undefined;
+    const dateParam = searchParams.get('date');
+    const evalDate = dateParam ? parseDateString(dateParam) : new Date();
+
+    await StreakService.recalculateAllUserStreaks(supabase, user.id, evalDate);
 
     const habits = await HabitService.getHabits(supabase, user.id, { isArchived, categoryId });
 

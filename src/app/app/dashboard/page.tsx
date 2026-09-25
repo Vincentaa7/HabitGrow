@@ -231,51 +231,50 @@ export default function DashboardPage() {
           </div>
 
           {/* Center/Right: 3 Compact Metric Tiles + Action Button */}
-          <div className="flex items-center flex-wrap gap-2.5 sm:gap-3">
-            {/* Stat 1: Streak */}
-            <div className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-900/40">
-              <div className="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 flex items-center justify-center shrink-0">
-                <Flame className="w-4 h-4 fill-amber-500 text-amber-500 animate-pulse" />
-              </div>
-              <div className="min-w-0 pr-1">
-                <div className="text-xs font-black text-slate-900 dark:text-white leading-tight">
-                  {streak.current_streak} Hari Streak
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full lg:w-auto">
+            <div className="grid grid-cols-3 gap-2 w-full sm:flex sm:items-center sm:gap-3">
+              {/* Stat 1: Streak */}
+              <div className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-900/40 min-w-0">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 flex items-center justify-center shrink-0">
+                  <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-amber-500 text-amber-500 animate-pulse" />
                 </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                  Rekor: {streak.longest_streak} Hari
+                <div className="min-w-0">
+                  <div className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white leading-tight truncate">
+                    {streak.current_streak} Hari
+                  </div>
+                  <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">
+                    Streak
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Stat 2: Level & XP */}
-            <div className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-900/40">
-              <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 flex items-center justify-center shrink-0">
-                <Zap className="w-4 h-4 fill-emerald-500 text-emerald-500" />
-              </div>
-              <div className="min-w-0 pr-1">
-                <div className="text-xs font-black text-slate-900 dark:text-white leading-tight flex items-center gap-1.5">
-                  <span>Level {user_level.level}</span>
-                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+              {/* Stat 2: Level & XP */}
+              <div className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-900/40 min-w-0">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-emerald-500 text-emerald-500" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white leading-tight truncate">
+                    Lvl {user_level.level}
+                  </div>
+                  <div className="text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-bold truncate">
                     {user_level.total_xp} XP
-                  </span>
-                </div>
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                  {user_level.progress_percentage}% ke Lvl {user_level.level + 1}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Stat 3: Pohon & Konsistensi */}
-            <div className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200/70 dark:border-teal-900/40">
-              <div className="w-8 h-8 rounded-xl bg-teal-100 dark:bg-teal-900/60 text-teal-600 flex items-center justify-center shrink-0">
-                <Sprout className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-              </div>
-              <div className="min-w-0 pr-1">
-                <div className="text-xs font-black text-slate-900 dark:text-white leading-tight flex items-center gap-1">
-                  <span>{Math.round(tree.consistency_score)}% Konsisten</span>
+              {/* Stat 3: Pohon & Konsistensi */}
+              <div className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 rounded-2xl bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200/70 dark:border-teal-900/40 min-w-0">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-teal-100 dark:bg-teal-900/60 text-teal-600 flex items-center justify-center shrink-0">
+                  <Sprout className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-teal-600 dark:text-teal-400" />
                 </div>
-                <div className="text-[10px] text-teal-700 dark:text-teal-300 font-semibold">
-                  {tree.stage} (Sehat: {tree.health}%)
+                <div className="min-w-0">
+                  <div className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white leading-tight truncate">
+                    {Math.round(tree.consistency_score)}%
+                  </div>
+                  <div className="text-[9px] sm:text-[10px] text-teal-700 dark:text-teal-300 font-semibold truncate">
+                    {tree.stage}
+                  </div>
                 </div>
               </div>
             </div>
@@ -283,7 +282,7 @@ export default function DashboardPage() {
             {/* Action Button: Create Habit */}
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition hover:scale-105 active:scale-95 shrink-0 ml-auto lg:ml-0"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition hover:scale-[1.02] sm:hover:scale-105 active:scale-95 shrink-0"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Tambah Kebiasaan</span>
@@ -304,20 +303,20 @@ export default function DashboardPage() {
         <div className="lg:col-span-8 xl:col-span-8 space-y-4">
           {/* Habit Hub Header & Segment Controls */}
           <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#0f1713] border border-slate-200/90 dark:border-[#1e2e26] shadow-xs space-y-3.5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <ListTodo className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  Rencana Kebiasaan Hari Ini
+                <h2 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2">
+                  <ListTodo className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />
+                  <span className="truncate">Rencana Kebiasaan Hari Ini</span>
                 </h2>
-                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                <span className="text-[11px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 shrink-0">
                   {completed_count}/{total_scheduled_today}
                 </span>
               </div>
 
               <Link
                 href="/app/habits"
-                className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 flex items-center gap-1 self-start sm:self-auto"
+                className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 flex items-center gap-1 shrink-0"
               >
                 Kelola Semua
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -346,12 +345,12 @@ export default function DashboardPage() {
 
             {/* Filter Tabs */}
             <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800/80 flex-wrap gap-2">
-              <div className="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 text-xs font-medium">
+              <div className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 text-xs font-medium gap-1 sm:gap-0">
                 <button
                   type="button"
                   onClick={() => setFilter('all')}
                   className={cn(
-                    'px-3 py-1 rounded-lg transition-all',
+                    'py-1.5 px-2 sm:px-3 sm:py-1 rounded-lg transition-all text-center text-[11px] sm:text-xs font-medium',
                     filter === 'all'
                       ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-xs'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -363,19 +362,20 @@ export default function DashboardPage() {
                   type="button"
                   onClick={() => setFilter('pending')}
                   className={cn(
-                    'px-3 py-1 rounded-lg transition-all',
+                    'py-1.5 px-2 sm:px-3 sm:py-1 rounded-lg transition-all text-center text-[11px] sm:text-xs font-medium',
                     filter === 'pending'
                       ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-xs'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   )}
                 >
-                  Belum Selesai ({pendingCount})
+                  <span className="hidden sm:inline">Belum Selesai</span>
+                  <span className="sm:hidden">Belum</span> ({pendingCount})
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilter('completed')}
                   className={cn(
-                    'px-3 py-1 rounded-lg transition-all',
+                    'py-1.5 px-2 sm:px-3 sm:py-1 rounded-lg transition-all text-center text-[11px] sm:text-xs font-medium',
                     filter === 'completed'
                       ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-xs'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -386,7 +386,7 @@ export default function DashboardPage() {
               </div>
 
               {isAllCompleted && (
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-200/60 dark:border-emerald-900/60">
+                <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-200/60 dark:border-emerald-900/60">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   100% Tuntas
                 </span>

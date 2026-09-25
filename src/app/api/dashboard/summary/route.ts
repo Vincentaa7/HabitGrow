@@ -37,7 +37,10 @@ export async function GET(request: Request) {
       .eq('id', user.id)
       .maybeSingle();
 
-    // 2. Fetch Today Habits (aligned to client local date)
+    // 2. Synchronize all habit streaks for user on evalDate (resets any streaks missed yesterday)
+    await StreakService.recalculateAllUserStreaks(supabase, user.id, evalDate);
+
+    // 3. Fetch Today Habits (aligned to client local date with refreshed streaks)
     const todayHabits = await HabitService.getTodayHabits(supabase, user.id, todayStr);
     const completedCount = todayHabits.filter((h) => h.is_completed_today).length;
     const totalScheduled = todayHabits.length;

@@ -15,6 +15,7 @@
    * 3.3 Metodologi Rekayasa Perangkat Lunak (SDLC) & Riset Akademis
    * 3.4 Landasan Teori Ilmiah & Model Perilaku Pengguna (Behavioral Psychology)
    * 3.5 Arsitektur Distribusi & Generasi File Instalasi Mobile (Android APK)
+   * 3.6 Arsitektur Antarmuka Responsif Mobile (Android/iOS), Drawer Hamburger & Eliminasi Containing-Block Bug
 4. [Perancangan Basis Data & Skema ERD](#4-perancangan-basis-data--skema-erd)
 5. [Formulasi Algoritma & Logika Matematika Inti](#5-formulasi-algoritma--logika-matematika)
    * 5.1 Logika Non-Zero Day Global Daily Streak
@@ -85,6 +86,7 @@ HabitGrow mengatasi masalah tersebut melalui:
 * **[NFR-04] Ketersediaan API untuk Eksternal:** API dirancang *stateless* sehingga dapat diakses oleh mikrokontroler IoT dengan autentikasi berbasis Bearer Token / Supabase JWT.
 * **[NFR-05] Keandalan Pengujian (*Test Coverage*):** Seluruh modul algoritma matematika inti wajib memiliki *unit tests* terotomatisasi dengan tingkat keberhasilan 100%.
 * **[NFR-06] Efisiensi Inferensi Model ML (Serverless Execution Latency):** Waktu komputasi ekstraksi 5 fitur dan inferensi probabilitas fungsi sigmoid pada serverless runtime harus $\le 10\text{ ms}$ per evaluasi tanpa memerlukan GPU atau microservice Python terpisah.
+* **[NFR-07] Ergonomi Responsif Seluler (Mobile Android & iOS UI/UX):** Antarmuka wajib mematuhi standar ergonomi *thumb zone* seluler (touch target $\ge 40\text{px}$), bilah navigasi bawah (*Bottom Navigation Bar*) terlabuh di dasar viewport dengan perlindungan *safe area* iOS (`env(safe-area-inset-bottom)`), laci navigasi samping (*Slide-over Hamburger Drawer*) untuk rute komprehensif dan profil/logout, serta tata letak metrik *Executive Command Bar* berbasis grid 3-kolom proporsional tanpa wrapping tak beraturan pada resolusi sempit ($360\text{px} - 430\text{px}$).
 
 ---
 
@@ -210,6 +212,46 @@ Dalam konteks penyelesaian Tugas Akhir / Skripsi yang membutuhkan pengujian lang
 * **Fakta Regulasi Akademis:** Standar kelulusan dan sidang skripsi di perguruan tinggi (berdasarkan panduan BAN-PT dan LAM INFOKOM) menitikberatkan pada validitas algoritma, kesesuaian arsitektur sistem, dan pengujian fungsionalitas (*Blackbox & UAT*).
 * **Tidak Ada Keharusan Masuk Play Store:** Penguji tidak mewajibkan aplikasi terdaftar di Google Play Store publik. Kebijakan Google Play Store saat ini yang mewajibkan biaya registrasi $25 USD serta pengujian tertutup 20 orang selama 14 hari merupakan regulasi komersial distribusi massal, bukan parameter keilmuan teknologi informasi.
 * **Format Demonstrasi Sidang:** Menghasilkan file instalasi mandiri berformat `.apk` yang dipasang melalui *package installer* (fitur *sideloading*) pada smartphone penguji sudah 100% memenuhi syarat demonstrasi karya perangkat lunak dan dicantumkan secara formal pada Bab 1 sub-bab *Batasan Masalah*.
+
+---
+
+### 3.6 Arsitektur Antarmuka Responsif Mobile (Android/iOS), Drawer Hamburger & Eliminasi Containing-Block Bug
+
+Pengalaman pengguna (*User Experience*) pada peramban seluler (Chrome Android & Safari iOS) memerlukan penanganan arsitektural khusus agar antarmuka tidak mengalami disorientasi visual (*layout shift*) maupun tumpang tindih elemen (*visual clipping*).
+
+#### 1. Identifikasi Akar Masalah & Eliminasi "CSS Containing Block Bug":
+* **Gejala Masalah Sebelumnya:** Pada pengujian awal di perangkat seluler Android, bilah navigasi bawah (*Bottom Navigation Bar*) tampak menempel di bagian paling atas layar persis di bawah URL bar Chrome, dengan 6 ikon menu berdesakan dan memicu tumpang tindih dengan header.
+* **Akar Masalah Matematis/Spesifikasi CSS:**
+  Sesuai spesifikasi W3C CSS Transforms Module Level 1 & Filter Effects Module Level 1:
+  $$\text{Jika suatu elemen memiliki } \texttt{backdrop-filter} \ne \text{none}, \text{ maka elemen tersebut menjadi } \textbf{containing block} \text{ baru bagi keturunan } \texttt{position: fixed}.$$
+  Karena bilah navigasi seluler sebelumnya diletakkan sebagai anak (*child*) di dalam `<header className="... backdrop-blur-md">`, instruksi `fixed bottom-0` tidak lagi mengacu pada dasar layar *viewport* ponsel, melainkan mengacu pada dasar elemen `<header>` di bagian atas layar!
+* **Solusi Arsitektural:** Memindahkan komponen laci navigasi samping (*Slide-over Drawer*) dan bilah navigasi bawah (*Mobile Bottom Navigation Bar*) keluar dari elemen `<header>` menggunakan React Fragments (`<> <header /> <Drawer /> <nav /> </>`). Dengan demikian, `fixed bottom-0` dan `fixed inset-0` secara murni terlabuh pada *root viewport* perangkat.
+
+#### 2. Spesifikasi Slide-Over Hamburger Drawer Navigation:
+* **Pemicu Header Seluler:** Menambahkan tombol hamburger adaptif (`Menu` / `X`) di sebelah kanan header seluler (`md:hidden`), berdampingan dengan sakelar tema (`ThemeToggle`).
+* **Backdrop Blur & Animasi Sheet:** Ketika tombol ditekan, lembaran drawer samping (`w-[85%] max-w-xs h-full`) muncul dari sisi kanan dengan efek *slide-in-from-right* dan latar belakang semi-transparan `bg-slate-950/60 backdrop-blur-xs`.
+* **Kunci Scroll Tubuh Dokumen (*Body Scroll Lock*):**
+  ```typescript
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isMobileMenuOpen]);
+  ```
+* **Navigasi Rute Komprehensif:** Menyediakan 6 rute lengkap (Dashboard, Kebiasaan, Pohon Virtual, Kalender, Statistik, Pencapaian) dengan target sentuh tinggi $\ge 44\text{px}$, tautan profil pengguna, dan tombol keluar (*logout*) terisolasi.
+* **Auto-Close on Route Change:** Drawer otomatis menutup secara mulus saat pengguna menavigasi ke halaman baru melalui *listener* `pathname`.
+
+#### 3. Bilah Navigasi Bawah Ergonomis (*Ergonomic Mobile Bottom Nav*):
+* **Optimasi Thumb-Zone (5 Tab Utama):** Disederhanakan menjadi 5 tab berjarak seimbang: `Beranda`, `Kebiasaan`, `Pohon`, `Kalender`, dan `Menu` (yang memicu Hamburger Drawer).
+* **Perlindungan Safe-Area iOS:** Menggunakan utilitas dinamis `pb-[max(0.375rem,env(safe-area-inset-bottom))]` guna mencegah tab navigasi terhalang oleh garis bilah beranda (*home indicator bar*) pada iPhone modern.
+* **Layout Offset:** Elemen `<main>` pada `app/layout.tsx` dilengkapi padding bawah `pb-24 md:pb-12` agar konten terbawah kartu tugas tidak pernah tertutup oleh bilah navigasi.
+
+#### 4. Tata Letak Dashboard Command Bar & Habit Card Ramah Sentuh:
+* **Metrik 3-Kolom Rapat:** Tiga kartu statistik inti (Streak, Level XP, Konsistensi) diorganisasikan dalam grid 3-kolom seimbang (`grid grid-cols-3 gap-2 w-full`) dengan teks ringkas terpotong rapi (*no wrapping*), diikuti tombol "+ Tambah Kebiasaan" selebar penuh (*full-width CTA*) di bawahnya agar mudah dijangkau ibu jari pengguna dengan satu tangan.
+* **Header & Tab Filter Seluler:** Judul "Rencana Kebiasaan Hari Ini" dan tombol "Kelola Semua" terkunci rapi pada satu baris (`flex items-center justify-between`), serta tab filter `Semua`, `Belum`, `Selesai` terbagi proporsional 3-kolom rata di layar sempit.
+* **Kartu Kebiasaan (*HabitCard*):** Diberi padding rapat `p-3.5 sm:p-5`, avatar ikon `w-10 h-10`, lencana kategori mikro, serta tombol centang lingkaran taktil berukuran optimal (`w-9 h-9 sm:w-11 sm:h-11`) dengan utilitas `touch-manipulation` untuk respons sentuhan berlatensi 0ms.
 
 ---
 
@@ -357,6 +399,16 @@ Misalkan $d_{today}$ adalah tanggal hari evaluasi saat ini, dan $d_{yesterday} =
    $$\text{CurrentStreak} = k \quad \text{di mana } \forall i \in [0, k-1], \, (d_{start} - i) \in D_{active} \text{ dan } (d_{start} - k) \notin D_{active}$$
 4. **Rekor Streak Terpanjang (*Longest Streak*):**
    $$\text{LongestStreak} = \max_{j} (\text{ConsecutiveDays}_j)$$
+
+#### 5.1.1 Perbedaan Streak Global vs. Streak Individual Kebiasaan (*Per-Habit Streak*):
+* **Streak Global (Ditampilkan pada Command Bar Atas):** Berprinsip *Non-Zero Day*. Selama pengguna menyelesaikan minimal 1 kebiasaan apapun setiap hari, streak global akun tetap hidup.
+* **Streak Individual (Ditampilkan pada Masing-Masing Kartu Kebiasaan):**
+  * Terikat ketat pada jadwal masing-masing kebiasaan (`DAILY`, `SELECTED_DAYS`, `WEEKLY_TARGET`).
+  * Jika suatu kebiasaan dijadwalkan kemarin ($d_{yesterday}$) dan tidak diselesaikan, maka streak individual kebiasaan tersebut **hangus dan di-reset ke 0**.
+* **Mekanisme Sinkronisasi Otomatis (*Self-Healing Streak Sync*):**
+  * *Berkas:* `src/lib/services/streak.service.ts` $\rightarrow$ `recalculateAllUserStreaks()`
+  * Karena basis data Supabase menyimpan `user_streaks` secara statis, ketika pengguna melewati hari tanpa mencentang tugas, mutasi `completeHabit` tidak terpanggil.
+  * Setiap kali dashboard dibuka (`GET /api/dashboard/summary`), sistem secara otomatis menjalankan `recalculateAllUserStreaks(supabase, userId, evalDate)` di latar belakang. Fungsi ini mengevaluasi seluruh riwayat centang terhadap tanggal evaluasi lokal, mendeteksi tugas yang terlewat kemarin, dan menyinkronkan nilai `current_streak: 0` ke dalam basis data secara instan.
 
 ---
 
