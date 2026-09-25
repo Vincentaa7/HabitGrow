@@ -2,7 +2,11 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { HabitRiskPrediction } from '@/types';
 import { Habit, HabitSchedule } from '@/types/database';
-import { predictHabitFailureRisk, HabitCompletionRecord } from '@/lib/algorithms/prediction';
+import {
+  predictHabitFailureRisk,
+  isHabitEligibleForPrediction,
+  HabitCompletionRecord,
+} from '@/lib/algorithms/prediction';
 import { toDateString } from '@/lib/algorithms/schedule';
 
 export class PredictionService {
@@ -107,6 +111,13 @@ export class PredictionService {
     const atRiskHabits: HabitRiskPrediction[] = [];
 
     for (const habit of uncompletedScheduledHabits) {
+      // 1-Week (7-Day) Cold Start Guard:
+      // Predictive risk nudges only activate after a habit has been tracked for at least 7 days (1 week).
+      // Brand new accounts and freshly created habits are in their onboarding baseline phase.
+      if (!isHabitEligibleForPrediction(habit, today)) {
+        continue;
+      }
+
       const hCompletions = completionsByHabit.get(habit.id) || [];
       const hSchedules = schedulesByHabit.get(habit.id) || [];
 

@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { HabitRiskPrediction } from '@/types';
 import { useQueryClient } from '@tanstack/react-query';
-import { Brain, ArrowDownCircle, X, ShieldAlert, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Brain, ArrowDownCircle, X, ShieldAlert, Sparkles, CheckCircle2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PredictionAlertBannerProps {
@@ -112,15 +112,30 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                 {current.primary_factor}. Agar ritme dan pohonmu tetap terjaga subur, pertimbangkan rekomendasi berikut:
               </p>
 
+              {/* Recommendation Callout Box */}
+              <div className="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/70 border border-violet-200/90 dark:border-violet-800/60 flex items-start gap-2.5 shadow-xs max-w-2xl backdrop-blur-xs">
+                <div className="w-6 h-6 rounded-lg bg-violet-100 dark:bg-violet-950 text-violet-600 dark:text-violet-300 flex items-center justify-center shrink-0 mt-0.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </div>
+                <div className="text-xs leading-relaxed">
+                  <span className="font-bold text-violet-900 dark:text-violet-200 mr-1.5">
+                    Rekomendasi AI:
+                  </span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-200">
+                    {current.suggested_action.message}
+                  </span>
+                </div>
+              </div>
+
               {/* Action Buttons */}
-              <div className="pt-2 flex items-center gap-2.5 flex-wrap">
+              <div className="pt-1.5 flex items-center gap-2.5 flex-wrap">
                 {current.suggested_action.type === 'LOWER_TARGET' &&
                   current.suggested_action.suggested_target_value && (
                     <button
                       type="button"
                       disabled={applyingId === current.habit_id}
                       onClick={() => handleApplyLowerTarget(current)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-sm transition active:scale-95 disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-sm transition active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                       {applyingId === current.habit_id ? (
                         <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -133,10 +148,29 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                     </button>
                   )}
 
+                {current.suggested_action.type === 'EARLY_NUDGE' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSuccessMessage(
+                        `Mantap! Komitmen dicatat untuk "${current.habit_name}". Kerjakan lebih awal hari ini agar energimu tetap optimal! 🚀`
+                      );
+                      setTimeout(() => {
+                        handleDismiss(current.habit_id);
+                        setSuccessMessage(null);
+                      }, 2500);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-sm transition active:scale-95 cursor-pointer"
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span>Siap, Kerjakan Lebih Awal</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => handleDismiss(current.habit_id)}
-                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 transition"
+                  className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 transition cursor-pointer"
                 >
                   Saya Sanggup Target Normal
                 </button>

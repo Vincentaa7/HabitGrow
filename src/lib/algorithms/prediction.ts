@@ -230,3 +230,30 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
     suggested_action: suggestedAction,
   };
 }
+
+/**
+ * Evaluates whether a habit is mature enough for predictive churn/failure analysis.
+ * New habits are granted a 7-day (1 week) grace period to establish baseline behavior
+ * without triggering premature high-risk alerts.
+ */
+export function isHabitEligibleForPrediction(
+  habit: Pick<Habit, 'created_at' | 'start_date'>,
+  evaluationDate: Date = new Date()
+): boolean {
+  const evalDate = new Date(evaluationDate);
+  evalDate.setHours(0, 0, 0, 0);
+
+  const createdDate = habit.created_at
+    ? new Date(habit.created_at)
+    : parseDateString(habit.start_date);
+  const createdDay = new Date(createdDate);
+  createdDay.setHours(0, 0, 0, 0);
+
+  const daysSinceCreation = Math.max(
+    0,
+    Math.round((evalDate.getTime() - createdDay.getTime()) / (1000 * 3600 * 24))
+  );
+
+  return daysSinceCreation >= 7;
+}
+

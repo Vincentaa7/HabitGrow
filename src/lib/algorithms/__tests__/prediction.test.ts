@@ -1,6 +1,6 @@
 // src/lib/algorithms/__tests__/prediction.test.ts
 import { describe, it, expect } from 'vitest';
-import { predictHabitFailureRisk } from '../prediction';
+import { predictHabitFailureRisk, isHabitEligibleForPrediction } from '../prediction';
 import { Habit, HabitSchedule } from '@/types/database';
 import { toDateString } from '../schedule';
 
@@ -113,3 +113,59 @@ describe('predictHabitFailureRisk', () => {
     expect(prediction.primary_factor).toBeDefined();
   });
 });
+
+describe('isHabitEligibleForPrediction', () => {
+  const evalDate = new Date(2026, 8, 25); // Sept 25, 2026
+
+  it('returns false for habits created on the same day (0 days old)', () => {
+    const habit = {
+      created_at: '2026-09-25T10:00:00Z',
+      start_date: '2026-09-25',
+    };
+    expect(isHabitEligibleForPrediction(habit, evalDate)).toBe(false);
+  });
+
+  it('returns false for habits younger than 7 days (e.g. 3 and 6 days old)', () => {
+    const habit3Days = {
+      created_at: '2026-09-22T08:00:00Z',
+      start_date: '2026-09-22',
+    };
+    const habit6Days = {
+      created_at: '2026-09-19T14:00:00Z',
+      start_date: '2026-09-19',
+    };
+    expect(isHabitEligibleForPrediction(habit3Days, evalDate)).toBe(false);
+    expect(isHabitEligibleForPrediction(habit6Days, evalDate)).toBe(false);
+  });
+
+  it('returns true for habits created exactly 7 days ago', () => {
+    const habit7Days = {
+      created_at: '2026-09-18T00:00:00Z',
+      start_date: '2026-09-18',
+    };
+    expect(isHabitEligibleForPrediction(habit7Days, evalDate)).toBe(true);
+  });
+
+  it('returns true for mature habits (> 7 days old)', () => {
+    const habitMature = {
+      created_at: '2026-08-01T00:00:00Z',
+      start_date: '2026-08-01',
+    };
+    expect(isHabitEligibleForPrediction(habitMature, evalDate)).toBe(true);
+  });
+
+  it('correctly uses start_date fallback when created_at is null', () => {
+    const habitNoCreatedAt = {
+      created_at: null as any,
+      start_date: '2026-09-24', // 1 day old
+    };
+    expect(isHabitEligibleForPrediction(habitNoCreatedAt, evalDate)).toBe(false);
+
+    const habitOldStartDate = {
+      created_at: null as any,
+      start_date: '2026-09-01', // 24 days old
+    };
+    expect(isHabitEligibleForPrediction(habitOldStartDate, evalDate)).toBe(true);
+  });
+});
+
