@@ -228,8 +228,9 @@ Pengalaman pengguna (*User Experience*) pada peramban seluler (Chrome Android & 
 * **Solusi Arsitektural:** Memindahkan komponen laci navigasi samping (*Slide-over Drawer*) dan bilah navigasi bawah (*Mobile Bottom Navigation Bar*) keluar dari elemen `<header>` menggunakan React Fragments (`<> <header /> <Drawer /> <nav /> </>`). Dengan demikian, `fixed bottom-0` dan `fixed inset-0` secara murni terlabuh pada *root viewport* perangkat.
 
 #### 2. Spesifikasi Slide-Over Hamburger Drawer Navigation:
-* **Pemicu Header Seluler:** Menambahkan tombol hamburger adaptif (`Menu` / `X`) di sebelah kanan header seluler (`md:hidden`), berdampingan dengan sakelar tema (`ThemeToggle`).
-* **Backdrop Blur & Animasi Sheet:** Ketika tombol ditekan, lembaran drawer samping (`w-[85%] max-w-xs h-full`) muncul dari sisi kanan dengan efek *slide-in-from-right* dan latar belakang semi-transparan `bg-slate-950/60 backdrop-blur-xs`.
+* **Desain Header Seluler Bersih (*Clean Minimalist Top Header*):** Header seluler di bagian atas hanya menampilkan logo HabitGrow di sebelah kiri dan sakelar tema (`ThemeToggle`) di sebelah kanan. Tombol menu di kanan atas dihilangkan untuk menghindari duplikasi antarmuka (*redundancy*) dengan bilah navigasi bawah.
+* **Pemicu Tab Menu Bawah:** Laci navigasi samping (*Slide-over Drawer*) dipicu secara elegan melalui tombol tab `Menu` pada bilah navigasi bawah (*Bottom Nav*), yang berada langsung dalam jangkauan alami ibu jari pengguna (*thumb-zone*).
+* **Backdrop Blur & Animasi Sheet:** Ketika tombol ditekan, lembaran drawer samping (`w-[85%] max-w-xs h-full`) muncul dari sisi kanan dengan efek *slide-in-from-right* dan latar belakang semi-transparan `bg-slate-950/60 backdrop-blur-xs`, lengkap dengan tombol penutup silang (`X`) di sudut kanan atas lembaran drawer.
 * **Kunci Scroll Tubuh Dokumen (*Body Scroll Lock*):**
   ```typescript
   useEffect(() => {
@@ -244,7 +245,7 @@ Pengalaman pengguna (*User Experience*) pada peramban seluler (Chrome Android & 
 * **Auto-Close on Route Change:** Drawer otomatis menutup secara mulus saat pengguna menavigasi ke halaman baru melalui *listener* `pathname`.
 
 #### 3. Bilah Navigasi Bawah Ergonomis (*Ergonomic Mobile Bottom Nav*):
-* **Optimasi Thumb-Zone (5 Tab Utama):** Disederhanakan menjadi 5 tab berjarak seimbang: `Beranda`, `Kebiasaan`, `Pohon`, `Kalender`, dan `Menu` (yang memicu Hamburger Drawer).
+* **Optimasi Thumb-Zone (5 Tab Utama):** Disederhanakan menjadi 5 tab berjarak seimbang: `Beranda`, `Kebiasaan`, `Pohon`, `Kalender`, dan `Menu` (yang membuka Hamburger Drawer).
 * **Perlindungan Safe-Area iOS:** Menggunakan utilitas dinamis `pb-[max(0.375rem,env(safe-area-inset-bottom))]` guna mencegah tab navigasi terhalang oleh garis bilah beranda (*home indicator bar*) pada iPhone modern.
 * **Layout Offset:** Elemen `<main>` pada `app/layout.tsx` dilengkapi padding bawah `pb-24 md:pb-12` agar konten terbawah kartu tugas tidak pernah tertutup oleh bilah navigasi.
 

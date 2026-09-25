@@ -134,20 +134,6 @@ export function Navbar() {
                   <LogOut className="w-4 h-4" />
                 </button>
               </div>
-
-              {/* Mobile Hamburger Button */}
-              <button
-                type="button"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 rounded-xl border border-slate-200/80 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                aria-label={isMobileMenuOpen ? 'Tutup navigasi' : 'Buka navigasi'}
-              >
-                {isMobileMenuOpen ? (
-                  <X className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                ) : (
-                  <Menu className="w-5 h-5" />
-                )}
-              </button>
             </div>
           </div>
         </div>
