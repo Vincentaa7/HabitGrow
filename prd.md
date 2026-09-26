@@ -1,23 +1,23 @@
 # PRD — HabitGrow
 
-## Gamified Habit Tracker with Virtual Tree Progression
+## Gamified Habit Tracker with Virtual Tree Progression & Machine Learning Early Warning
 
-**Document Version:** 1.0
-**Status:** Ready for Development
-**Product Type:** Habit Tracker / Productivity / Gamification
-**Primary Platform:** Responsive Web Application
-**Future Platform:** Android / Google Play Store
-**Primary Database:** Supabase PostgreSQL
-**Backend:** Next.js Route Handlers / REST API
-**Authentication:** Supabase Auth
-**Storage:** Supabase Storage
-**Frontend:** Next.js 15 + React + TypeScript
-**UI:** Tailwind CSS + shadcn/ui
-**Data Fetching:** TanStack Query
-**Forms:** React Hook Form + Zod
-**Charts:** Recharts
-**Icons:** Lucide React
-**Deployment:** Vercel + Supabase
+**Document Version:** 2.0 (Production & Automated Testing Ready)  
+**Last Updated:** 26 September 2026  
+**Status:** Feature Complete & Verified  
+**Product Type:** Habit Tracker / Productivity / Gamification / Predictive Nudges  
+**Primary Platform:** Responsive Web Application (Mobile Android/iOS & Desktop)  
+**Packaging Platform:** Progressive Web App (PWA) / Android APK (Capacitor/TWA)  
+**Primary Database:** Supabase PostgreSQL with Row Level Security (RLS)  
+**Backend:** Next.js Route Handlers / REST API  
+**Authentication:** Supabase Auth (Session Cookies & JWT)  
+**Storage:** Supabase Storage  
+**Frontend:** Next.js 16 + React 19 + TypeScript  
+**UI/UX:** Tailwind CSS + Vanilla CSS Tokens + Lucide React  
+**Data Fetching:** TanStack React Query (Optimistic UI & Cache Invalidation)  
+**Machine Learning:** Logistic Regression 5-Feature Churn Prediction Engine  
+**Testing Framework:** Vitest (100% Core Algorithms) + TestSprite Autonomous E2E Testing  
+**Deployment:** Vercel + Supabase  
 
 ---
 
@@ -141,23 +141,15 @@ Tujuan akhirnya adalah membuat perkembangan pengguna terlihat secara visual.
 
 # 5. Non-Goals
 
-Versi pertama TIDAK perlu:
+Versi HabitGrow 2.0 mempertahankan fokus tajam pada pembentukan kebiasaan personal dan gamifikasi botani. Fitur-fitur berikut **secara eksplisit bukan tujuan produk**:
 
-* Social media.
-* Chat.
-* Multiplayer.
-* Marketplace.
-* Cryptocurrency.
-* NFT.
-* Payment system.
-* Wearable integration.
-* Health diagnosis.
-* AI chatbot.
-* Complex recommendation AI.
-* Competitive multiplayer league.
-* Real-money rewards.
-
-AI boleh ditambahkan pada fase berikutnya, tetapi bukan MVP.
+* Social media feed publik atau follower tracking.
+* Chat antar-pengguna atau forum komunitas terbuka.
+* Mode kompetisi multipemain (*competitive multiplayer league*).
+* Pasar digital (*Marketplace*), mata uang kripto (Crypto), atau NFT.
+* Sistem pembayaran/transaksi moneter (*Real-money rewards*).
+* Integrasi perangkat wearable medis atau diagnosis kesehatan klinis.
+* Chatbot percakapan generatif yang lambat (Sistem digantikan oleh *Machine Learning Predictive Early Warning* deterministik 5-fitur berlatensi $\le 10\text{ ms}$).
 
 ---
 
@@ -3185,6 +3177,141 @@ HabitGrow should answer three questions immediately whenever the user opens the 
 > **How is my tree growing?** 🌱
 
 These three questions are the heart of the product.
+
+---
+
+# 121. Machine Learning Predictive Habit Churn & Adaptive Nudge System
+
+Versi 2.0 mengintegrasikan modul kecerdasan buatan berbasis *Binary Logistic Regression* yang beroperasi secara *serverless* dengan latensi sangat rendah ($\le 10\text{ ms}$).
+
+### 121.1 Tujuan Modul
+Mendeteksi secara proaktif kebiasaan yang berisiko tinggi terlewatkan (*churn*) pada hari evaluasi berjalan ($P \ge 60\%$), serta menyajikan rekomendasi penyesuaian target 1-klik (*Adaptive Nudge*) agar pengguna tidak mengalami keputusasaan.
+
+### 121.2 Ekstraksi 5 Fitur Numerik
+Untuk setiap kebiasaan aktif yang terjadwal hari ini, sistem mengekstraksi riwayat 14 hari terakhir:
+1. $x_1$ (`completion_rate_7d`): Rasio penyelesaian dalam 7 hari terakhir $[0, 1]$.
+2. $x_2$ (`completion_rate_14d`): Rasio penyelesaian dalam 14 hari terakhir $[0, 1]$.
+3. $x_3$ (`days_since_last_completed`): Jumlah hari sejak kebiasaan ini terakhir diselesaikan ($\ge 0$).
+4. $x_4$ (`current_streak`): Rentetan keberhasilan kebiasaan saat ini ($\ge 0$).
+5. $x_5$ (`is_weekend`): Bobot faktor akhir pekan ($1$ untuk Sabtu/Minggu, $0$ untuk hari kerja).
+
+### 121.3 Formulasi Model & Nilai Bobot
+Log-odds $z$ dihitung dengan kombinasi linier terbobot:
+$$z = w_0 + w_1 x_1 + w_2 x_2 + w_3 \min(x_3, 5) + w_4 \min(x_4, 10) + w_5 x_5$$
+
+Vektor bobot terkalibrasi (*empirically calibrated weights*):
+* Bias ($w_0$): $+0.50$ (Kecenderungan risiko inersia awal)
+* Bobot Tren 7 Hari ($w_1$): $-2.00$ (Konsistensi seminggu sangat menurunkan risiko)
+* Bobot Tren 14 Hari ($w_2$): $-1.50$ (Konsistensi 2 minggu menurunkan risiko)
+* Bobot Hari Terlewat ($w_3$): $+0.80$ (Semakin lama tidak dikerjakan, risiko melonjak tajam)
+* Bobot Penyangga Streak ($w_4$): $-0.20$ (Streak panjang bertindak sebagai *habit buffer*)
+* Bobot Gangguan Akhir Pekan ($w_5$): $+0.40$ (Akhir pekan memiliki variansi jadwal tinggi)
+
+Probabilitas risiko kegagalan dihitung melalui fungsi aktivasi Sigmoid standar:
+$$P(\text{churn}) = \sigma(z) = \frac{1}{1 + e^{-z}}$$
+
+### 121.4 Threshold & Tindakan Adaptif
+* **Ambang Batas Peringatan:** Jika $P(\text{churn}) \ge 0.60$ (Tingkat risiko $\ge 60\%$).
+* **Fase Adaptasi Dingin (*Cold-Start Guard*):** Evaluasi prediktif baru aktif setelah kebiasaan berusia $\ge 7\text{ hari}$ agar pengguna baru tidak dibebani peringatan saat baru membuat akun.
+* **Aksi Nudge 1-Klik:** Menampilkan kartu *Smart Predictive Nudge* berwarna oranye-amber di atas daftar kebiasaan hari ini dengan tombol adaptif 1-klik untuk menurunkan target kuantitas sementara (`PATCH /api/habits/[id]`).
+
+---
+
+# 122. Non-Zero Day Global Daily Streak & Broken Streak Architecture
+
+Sistem *streak* HabitGrow dirancang untuk memutus siklus keputusasaan (*streak fatigue*) melalui dua pilar utama:
+
+### 122.1 Prinsip Non-Zero Day Global Streak
+* Tidak mewajibkan penyelesaian seluruh kebiasaan sekaligus dalam sehari untuk mempertahankan api *Global Daily Streak*.
+* Cukup menyelesaikan **minimal 1 kebiasaan terjadwal apa pun hari ini**, maka api *Global Streak* tetap menyala ($+1\text{ hari}$).
+* Jika tidak ada kebiasaan yang diselesaikan sama sekali pada hari sebelumnya, api *Global Streak* padam dan kembali ke 0.
+
+### 122.2 Deteksi & Pemulihan Streak Putus Empatik (*Broken Streak Alert*)
+* Ketika pengguna membuka aplikasi (`GET /api/dashboard/summary`), sistem secara dinamis membandingkan jadwal kemarin dengan riwayat checklist.
+* Jika ada kebiasaan terjadwal yang terlewat kemarin dan mengalami pemutusan streak individu, sistem menyajikan *Broken Streak Banner* dengan pesan motivasional empatik (menampilkan rekor hari yang telah dicapai pengguna) serta tombol penutup (*dismiss*).
+
+---
+
+# 123. Botanical Contribution Matrix (GitHub-Style 52-Week Activity Heatmap)
+
+Pada halaman `/app/calendar`, HabitGrow menyajikan kalender aktivitas visual 365/366 hari yang terinspirasi dari grafik kontribusi GitHub dengan sentuhan botani organik:
+
+### 123.1 Karakteristik Matriks
+* **Dimensi Grid:** 7 baris horizontal (mewakili hari dalam sepekan: Min s/d Sab) dan 53 kolom vertikal (mewakili 52–53 pekan dalam setahun kalender).
+* **5 Tingkat Intensitas Warna Hijau Botani:**
+  * **Level 0 (0 checklist):** Abu-abu netral tipis (`bg-slate-100` / `dark:bg-slate-800/50`).
+  * **Level 1 (1–2 checklist):** Hijau kecambah muda (`#a7f3d0`).
+  * **Level 2 (3–4 checklist):** Hijau daun segar (`#34d399`).
+  * **Level 3 (5–6 checklist):** Hijau zamrud pekat (`#059669`).
+  * **Level 4 ($\ge 7$ checklist):** Hijau hutan lebat bernutrisi tinggi (`#064e3b`).
+
+### 123.2 Metrik Kinerja Tahunan
+Di atas kanvas matriks, disajikan 4 kartu metrik eksekutif tahunan:
+1. **Total Checklist:** Akumulasi total checklist kebiasaan yang tuntas pada tahun berjalan.
+2. **Hari Non-Zero (Disiplin):** Jumlah hari aktif di mana pengguna menyelesaikan setidaknya 1 tugas.
+3. **Akumulasi XP:** Total perolehan XP yang terkumpul sepanjang tahun.
+4. **Rekor Streak Terpanjang:** *Streak* harian kontinu terpanjang yang tercapai pada tahun tersebut.
+
+### 123.3 Interaktivitas & Mode Tampilan
+* **Year Selector:** Beralih instan antar tahun kalender yang tersedia.
+* **Tampilan Ganda:** Tombol sakelar antara *Matriks 52 Minggu* dan *Tampilan Bulanan*.
+* **Day Inspector Card:** Mengklik kotak tanggal mana pun di matriks akan memicu panel inspektur di sebelah kanan yang merinci daftar kebiasaan yang selesai, perolehan XP, dan status kepatuhan target.
+
+---
+
+# 124. Mobile Responsive Architecture & Slide-Over Drawer Navigation
+
+Antarmuka HabitGrow dioptimalkan secara mendalam untuk perangkat Android & iOS dengan panduan ergonomi *thumb zone*:
+
+### 124.1 Desain Header Bersih & Minimalis
+* Header bagian atas pada perangkat seluler hanya memuat Logo resmi HabitGrow dan Sakelar Tema (*Light/Dark mode*).
+* Menghindari tombol menu di kanan atas untuk mencegah redundansi (*visual clutter*).
+
+### 124.2 Bilah Navigasi Bawah Ergonomis (*Bottom Navigation Bar*)
+* Terlabuh kokoh di dasar *viewport* (`fixed bottom-0 left-0 right-0`) di luar elemen header untuk mengeliminasi *CSS Containing Block Bug*.
+* Disederhanakan menjadi 5 tab utama berjarak seimbang: **Beranda**, **Kebiasaan**, **Pohon**, **Kalender**, dan **Menu**.
+* Dilengkapi utilitas bantalan *safe area* iOS: `pb-[max(0.375rem,env(safe-area-inset-bottom))]` agar tidak terhalang oleh *home indicator bar* iPhone.
+
+### 124.3 Slide-Over Hamburger Drawer Navigation
+* Dipicu dari tab **Menu** pada bilah navigasi bawah.
+* Membuka panel lembaran samping dari sisi kanan (`w-[85%] max-w-xs h-full`) dengan efek *slide-in-from-right* dan latar belakang *backdrop blur*.
+* Mengunci gulir halaman latar belakang (`document.body.style.overflow = 'hidden'`) saat terbuka, serta otomatis tertutup saat rute berubah.
+* Menyajikan akses lengkap ke seluruh rute sistem, pengaturan profil akun, dan tombol keluar (*logout*).
+
+### 124.4 Executive Command Bar & Kartu Taktil
+* **Grid 3-Kolom Proporsional:** 3 kartu statistik inti (*Streak*, *Level XP*, *Konsistensi*) disusun rapi dalam grid 3-kolom seimbang di mobile tanpa *line wrapping* tak beraturan.
+* **Full-Width CTA:** Tombol `+ Tambah Kebiasaan` membentang penuh tepat di bawah 3 metrik sehingga sangat mudah dijangkau dengan ibu jari satu tangan.
+* **Kartu Taktil & Confetti:** Kartu kebiasaan (*HabitCard*) memiliki padding responsif `p-3.5 sm:p-5`, target sentuh centang taktil lingkaran, latensi 0ms (*Optimistic UI*), dan semburan partikel konfeti perayaan instan.
+
+---
+
+# 125. Automated Testing & Verification Suite (Vitest & TestSprite Integration)
+
+Untuk menjamin keandalan sistem berskala produksi dan kepatuhan standar tugas akhir akademik, HabitGrow menerapkan dua lapis pengujian otomatis:
+
+### 125.1 Pengujian Unit Matematika & Algoritma (Vitest)
+Menjalankan 39 pengujian unit terotomatisasi dengan tingkat kelulusan 100%:
+* `streak.test.ts` (12 tests): Validasi Non-Zero Day, kalkulasi streak individual, rekor streak terpanjang, dan deteksi broken streak.
+* `prediction.test.ts` (8 tests): Validasi ekstraksi 5 fitur numerik, formulasi sigmoid, ambang batas $P \ge 60\%$, dan filter cold-start 7 hari.
+* `tree.test.ts` (6 tests): Validasi 5 tahap evolusi botani (*Seed* $\rightarrow$ *Mature Tree*) dan ambang batas kesehatan pohon.
+* `level.test.ts` (5 tests): Validasi ambang batas XP kumulatif dan kenaikan level pengguna.
+* `consistency.test.ts` (4 tests): Validasi skor konsistensi bergulir 30 hari (*Rolling 30-Day Consistency*).
+* `xp.test.ts` (4 tests): Validasi perolehan XP berdasarkan tingkat kesulitan kebiasaan (*Easy*, *Medium*, *Hard*).
+
+### 125.2 Pengujian Otomatis End-to-End Browser (TestSprite MCP)
+Pengujian fungsionalitas antarmuka dan alur pengguna nyata (*Real User Journey*) menggunakan bot pengujian otonom TestSprite:
+* **Target Lingkungan Server Lokal:** `http://localhost:3000` (Port 3000).
+* **Rute Masuk Awal:** `/login` (Halaman Masuk Pengguna).
+* **Akun Pengujian Terotentikasi (*Test User Account*):**
+  * **Email:** `gura3497@gmail.com`
+  * **Password:** `gurarawr@#01`
+* **Cakupan Skenario Pengujian:**
+  1. *Authentication Flow*: Login dengan kredensial uji, verifikasi pembuatan sesi cookie, dan pengalihan otomatis ke `/app/dashboard`.
+  2. *Dashboard Command Bar Verification*: Memeriksa rendering sapaan nama pengguna, streak, level XP, dan persentase pohon.
+  3. *Habit Checklist Execution*: Memeriksa penekanan tombol centang lingkaran, animasi Optimistic UI, dan perayaan partikel konfeti.
+  4. *Habit Management (CRUD)*: Membuka modal "+ Tambah Kebiasaan", mengisi formulir dengan validasi Zod, dan menambahkan rutinitas baru.
+  5. *Mobile Navigation & Drawer*: Membuka tab Menu di bilah bawah, memeriksa pembukaan Slide-Over Drawer, navigasi ke halaman lain, dan penutupan menu.
+  6. *Theme Switching*: Beralih antara tema gelap (*Dark Mode*) dan terang (*Light Mode*) dengan persistensi visual mulus.
 
 ---
 

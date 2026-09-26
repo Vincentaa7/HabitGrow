@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   LayoutDashboard,
   CheckSquare,
@@ -24,6 +25,7 @@ import { BrandLogo } from '@/components/ui/BrandLogo';
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Close mobile drawer on route change
@@ -62,6 +64,8 @@ export function Navbar() {
 
   const handleLogout = async () => {
     try {
+      // 1. Immediately wipe all cached user data from memory (prevents lingering data on account switch)
+      queryClient.clear();
       await fetch('/api/auth/logout', { method: 'POST' });
       router.push('/login');
       router.refresh();
@@ -93,6 +97,7 @@ export function Navbar() {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={true}
                     className={cn(
                       'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all',
                       isActive
@@ -176,6 +181,7 @@ export function Navbar() {
                     <Link
                       key={item.href}
                       href={item.href}
+                      prefetch={true}
                       onClick={() => setIsMobileMenuOpen(false)}
                       className={cn(
                         'flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all',
@@ -208,6 +214,7 @@ export function Navbar() {
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
               <Link
                 href="/app/profile"
+                prefetch={true}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition"
               >
@@ -244,6 +251,7 @@ export function Navbar() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={true}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 py-1 px-2.5 rounded-xl text-[10px] font-medium transition active:scale-90',
                 isActive

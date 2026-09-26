@@ -4,6 +4,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardSummary } from '@/types';
+import { toDateString } from '@/lib/algorithms/schedule';
 import { useTheme } from '@/components/providers/ThemeProvider';
 import {
   User,
@@ -25,7 +26,8 @@ export default function ProfilePage() {
   const { data: summary, isLoading } = useQuery<DashboardSummary>({
     queryKey: ['dashboard-summary'],
     queryFn: async () => {
-      const res = await fetch('/api/dashboard/summary');
+      const localDate = toDateString(new Date());
+      const res = await fetch(`/api/dashboard/summary?date=${localDate}`);
       const json = await res.json();
       return json.data;
     },

@@ -30,39 +30,43 @@ export async function GET(request: Request) {
     const evalDate = dateParam ? parseDateString(dateParam) : new Date();
     const todayStr = dateParam || toDateString(evalDate);
 
-    // 1. Fetch Profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('display_name, avatar_url')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    // 2. Synchronize all habit streaks for user on evalDate (resets any streaks missed yesterday)
+    // 1. Synchronize all habit streaks for user on evalDate (resets any streaks missed yesterday)
     await StreakService.recalculateAllUserStreaks(supabase, user.id, evalDate);
 
-    // 3. Fetch Today Habits (aligned to client local date with refreshed streaks)
-    const todayHabits = await HabitService.getTodayHabits(supabase, user.id, todayStr);
+    // 2. Fetch all dashboard components concurrently in parallel (Massive Latency Reduction)
+    const [
+      { data: profile },
+      todayHabits,
+      { data: levelData },
+      treeRes,
+      globalStreak,
+      { data: recentAchievements },
+      brokenStreaks,
+      atRiskHabits,
+    ] = await Promise.all([
+      supabase.from('profiles').select('display_name, avatar_url').eq('id', user.id).maybeSingle(),
+      HabitService.getTodayHabits(supabase, user.id, todayStr),
+      supabase.from('user_levels').select('level, total_xp').eq('user_id', user.id).maybeSingle(),
+      supabase.from('user_trees').select('*').eq('user_id', user.id).maybeSingle(),
+      StreakService.calculateUserGlobalStreak(supabase, user.id, evalDate),
+      supabase
+        .from('user_achievements')
+        .select('unlocked_at, achievement:achievements(id, name, description, icon)')
+        .eq('user_id', user.id)
+        .order('unlocked_at', { ascending: false })
+        .limit(3),
+      StreakService.detectBrokenStreaks(supabase, user.id, evalDate),
+      PredictionService.getAtRiskHabitsToday(supabase, user.id, evalDate),
+    ]);
+
     const completedCount = todayHabits.filter((h) => h.is_completed_today).length;
     const totalScheduled = todayHabits.length;
     const completionPercentage = totalScheduled > 0 ? Math.round((completedCount / totalScheduled) * 100) : 0;
 
-    // 3. Fetch Level & XP
-    const { data: levelData } = await supabase
-      .from('user_levels')
-      .select('level, total_xp')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
     const totalXp = levelData?.total_xp ?? 0;
     const levelInfo = calculateLevel(totalXp);
 
-    // 4. Fetch Tree State (or initialize if missing)
-    let { data: treeData } = await supabase
-      .from('user_trees')
-      .select('*')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
+    let treeData = treeRes.data;
     if (!treeData) {
       const recalculated = await ConsistencyService.recalculateUserConsistencyAndTree(supabase, user.id, evalDate);
       treeData = {
@@ -75,18 +79,8 @@ export async function GET(request: Request) {
       };
     }
 
-    // 5. Calculate Global Daily Streak (Non-Zero Day: >= 1 habit completed per day)
-    const globalStreak = await StreakService.calculateUserGlobalStreak(supabase, user.id, evalDate);
     const currentStreak = globalStreak.currentStreak;
     const longestStreak = globalStreak.longestStreak;
-
-    // 6. Fetch Recent Achievements
-    const { data: recentAchievements } = await supabase
-      .from('user_achievements')
-      .select('unlocked_at, achievement:achievements(id, name, description, icon)')
-      .eq('user_id', user.id)
-      .order('unlocked_at', { ascending: false })
-      .limit(3);
 
     const formattedAchievements = (recentAchievements || [])
       .filter((a) => a.achievement)
@@ -100,12 +94,6 @@ export async function GET(request: Request) {
           unlocked_at: a.unlocked_at,
         };
       });
-
-    // 7. Detect Broken Streaks (missed scheduled days)
-    const brokenStreaks = await StreakService.detectBrokenStreaks(supabase, user.id, evalDate);
-
-    // 8. Predict Habits at Risk of Failure / Churn Today (Machine Learning Sigmoid Classifier)
-    const atRiskHabits = await PredictionService.getAtRiskHabitsToday(supabase, user.id, evalDate);
 
     const summary: DashboardSummary = {
       profile: {

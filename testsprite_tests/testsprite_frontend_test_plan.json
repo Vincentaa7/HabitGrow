@@ -1,0 +1,1118 @@
+[
+  {
+    "id": "TC001",
+    "title": "Access dashboard after signing in",
+    "description": "An authenticated user can sign in and reach the main dashboard hub successfully.",
+    "category": "Dashboard Overview",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user can see today’s habit overview"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Complete a daily habit and receive progress feedback",
+    "description": "A user can mark a scheduled habit complete on the dashboard and see completion feedback with progress updates.",
+    "category": "Daily Habit Completion",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Mark a scheduled habit as complete"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify completion feedback is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the habit shows a completed state"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Sign in and reach the dashboard",
+    "description": "A user can sign in with valid credentials and land on the protected dashboard.",
+    "category": "User Login & Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify dashboard content is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Create a new habit and see it in the active list",
+    "description": "An authenticated user can create a habit from the habits page and see it appear in the active list.",
+    "category": "Habit Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/habits"
+      },
+      {
+        "type": "action",
+        "description": "Open the habit creation flow"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the habit name field with Morning water"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid category"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid icon"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid color"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid frequency"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid target into the target field"
+      },
+      {
+        "type": "action",
+        "description": "Save the habit"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new habit appears in the active habits list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Keep access to protected app pages after login",
+    "description": "This test verifies that a guest can sign in and reach the protected dashboard without being blocked.",
+    "category": "Mobile Responsive Navigation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify protected app content is accessible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Complete another habit and see XP and streak progress",
+    "description": "A user can complete another scheduled habit on the dashboard and see XP and streak progress update.",
+    "category": "Daily Habit Completion",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Mark another scheduled habit as complete"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify XP progress is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify streak progress is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Redirect unauthenticated users from a protected page",
+    "description": "An unauthenticated user who opens a protected page is redirected to the login page.",
+    "category": "User Login & Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /app/dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is redirected to the login page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login form is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Archive an active habit",
+    "description": "A user can archive an active habit and see it removed from the active list.",
+    "category": "Habit Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/habits"
+      },
+      {
+        "type": "action",
+        "description": "Archive an active habit"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the habit no longer appears in the active habits list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the habit appears in the archived habits view"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "View the daily habit summary on the dashboard",
+    "description": "The dashboard shows the core daily summary needed to track progress at a glance.",
+    "category": "Dashboard Overview",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify today’s habits, streak, level, XP, and tree preview are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify weekly progress and recent achievements are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Restore an archived habit",
+    "description": "A user can restore an archived habit and see it return to the active list.",
+    "category": "Habit Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/habits"
+      },
+      {
+        "type": "action",
+        "description": "Select the archived habits view"
+      },
+      {
+        "type": "action",
+        "description": "Restore an archived habit"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the habit appears in the active habits list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the habit no longer appears in the archived habits view"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Accept a predictive habit nudge",
+    "description": "A user can review a risk nudge on the dashboard and apply the suggested target adjustment.",
+    "category": "Predictive Habit Nudge",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Review the predictive nudge for a habit at risk"
+      },
+      {
+        "type": "action",
+        "description": "Accept the suggested adjustment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the habit target is updated"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated state remains visible on the dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "Navigate between core sections with bottom navigation",
+    "description": "This test verifies that a user can use the mobile navigation controls to move between the main app sections and land on the selected page.",
+    "category": "Mobile Responsive Navigation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation control for another main app section"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation control for a different main app section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the app section navigation remains available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Open the menu drawer and choose a destination",
+    "description": "This test verifies that a user can open the slide-over menu and use it to navigate to another main section of the app.",
+    "category": "Mobile Responsive Navigation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Open the menu drawer"
+      },
+      {
+        "type": "action",
+        "description": "Choose another destination from the drawer"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected destination page is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the menu drawer is no longer open"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Switch theme and keep browsing the app",
+    "description": "This test verifies that an authenticated user can change the theme and continue navigating across the app with the updated appearance.",
+    "category": "Mobile Responsive Navigation",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Change the theme"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to another main app section"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the theme change is still applied"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the selected section is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC015",
+    "title": "View the virtual tree status",
+    "description": "A user can open the tree page and see the current stage, health, and growth guidance.",
+    "category": "Virtual Tree Progression",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/tree"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the current tree stage is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify tree health and consistency score are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC016",
+    "title": "Filter habits by category and archived status",
+    "description": "A user can filter the habits list by category and archived status and see the list update accordingly.",
+    "category": "Habit Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/habits"
+      },
+      {
+        "type": "action",
+        "description": "Select a category filter"
+      },
+      {
+        "type": "action",
+        "description": "Select the archived habits view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the habits list updates to match the selected filters"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC017",
+    "title": "Review analytics charts and trends",
+    "description": "This test verifies that an authenticated user can open statistics and see completion charts and consistency trends.",
+    "category": "Statistics & Analytics",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the statistics page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify completion charts are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify consistency trends are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC018",
+    "title": "View calendar activity overview",
+    "description": "This test verifies that an authenticated user can open the calendar page and see the yearly activity overview with summary totals.",
+    "category": "Calendar Heatmap & Day Inspector",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the calendar page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the yearly activity heatmap is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify yearly activity totals are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC019",
+    "title": "Update profile details successfully",
+    "description": "This test verifies that an authenticated user can update their profile information and see the saved changes reflected on the profile page.",
+    "category": "Profile Settings & Preferences",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/profile"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the display name field with a new display name"
+      },
+      {
+        "type": "action",
+        "description": "Save the profile changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated profile information is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the profile changes are persisted on the page"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC020",
+    "title": "Leave a predictive habit nudge unchanged",
+    "description": "A user can dismiss or ignore the predictive nudge and continue using the dashboard normally.",
+    "category": "Predictive Habit Nudge",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Review the predictive nudge for a habit at risk"
+      },
+      {
+        "type": "action",
+        "description": "Continue using the dashboard without applying the suggestion"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard remains usable"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the nudge state is still present or dismissed without changing the habit target"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC021",
+    "title": "Show an error for invalid login credentials",
+    "description": "A user sees an authentication error when submitting invalid login credentials.",
+    "category": "User Login & Authentication",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with invalid@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with invalid-password"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a login error message is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC022",
+    "title": "Inspect a day in the calendar",
+    "description": "This test verifies that an authenticated user can select a day in the calendar and see the detailed inspector for that date.",
+    "category": "Calendar Heatmap & Day Inspector",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the calendar page"
+      },
+      {
+        "type": "action",
+        "description": "Select a date in the calendar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the day inspector is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify completion details for the selected day are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC023",
+    "title": "Change personal preferences successfully",
+    "description": "This test verifies that an authenticated user can update preferences such as timezone or theme and continue using the app with the saved settings.",
+    "category": "Profile Settings & Preferences",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/profile"
+      },
+      {
+        "type": "action",
+        "description": "Change a preference such as timezone or theme"
+      },
+      {
+        "type": "action",
+        "description": "Save the preference changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated preference is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the profile settings remain available"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC024",
+    "title": "Compare habit performance analytics",
+    "description": "This test verifies that an authenticated user can review best and worst habit performance on the statistics page.",
+    "category": "Statistics & Analytics",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the statistics page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify habit performance summaries are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the analytics view includes comparative trend information"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC025",
+    "title": "See tree progression after improved consistency",
+    "description": "A user can return to the tree page after making progress and see the tree advance appropriately.",
+    "category": "Virtual Tree Progression",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /app/tree"
+      },
+      {
+        "type": "action",
+        "description": "Return to the tree page after completing habit progress"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tree reflects a progressed stage or improved health"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the growth roadmap remains visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC026",
+    "title": "Switch calendar between yearly and monthly views",
+    "description": "This test verifies that an authenticated user can switch calendar views and continue reviewing activity patterns.",
+    "category": "Calendar Heatmap & Day Inspector",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the calendar page"
+      },
+      {
+        "type": "action",
+        "description": "Switch the calendar to monthly view"
+      },
+      {
+        "type": "action",
+        "description": "Switch the calendar back to yearly view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the calendar heatmap remains displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify activity patterns are still visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC027",
+    "title": "View achievements and milestone progress",
+    "description": "This test verifies that an authenticated user can open achievements and see unlocked badges along with milestone progress.",
+    "category": "Achievements",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the achievements page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify achievement badges are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify milestone progress is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC028",
+    "title": "Review locked and unlocked achievements",
+    "description": "This test verifies that an authenticated user can distinguish completed achievements from those still in progress.",
+    "category": "Achievements",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with gura3497@gmail.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with gurarawr@#01"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the achievements page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify unlocked achievements are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify locked achievements are displayed"
+      }
+    ],
+    "priority": "Low"
+  }
+]

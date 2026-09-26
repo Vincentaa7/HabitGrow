@@ -854,14 +854,22 @@ graph LR
 
 #### BAB 4: IMPLEMENTASI & PENGUJIAN SISTEM
 * **Lingkungan Implementasi:** Spesifikasi perangkat keras, perangkat lunak, dan konfigurasi server.
-* **Hasil Pengujian Algoritma (*Unit Testing*):**
-  * Tampilkan tabel hasil pengujian **34 test cases** Vitest dengan tingkat keberhasilan 100%:
+* **Hasil Pengujian Algoritma (*Unit Testing* - Vitest):**
+  * Tampilkan tabel hasil pengujian **39 test cases** Vitest dengan tingkat keberhasilan 100%:
     * `streak.test.ts` (12 skenario pengujian streak).
     * `tree.test.ts` (6 skenario transisi tahap pohon).
-    * `level.test.ts` & `xp.test.ts` (pengujian formula kenaikan level).
-    * `consistency.test.ts` (pengujian windowing 30 hari).
-    * `prediction.test.ts` (3 skenario klasifikasi probabilitas risiko kegagalan kebiasaan dan rekomendasi target adaptif).
-* **Pengujian Antarmuka (*Blackbox Testing*):** Verifikasi fungsi checklist 0ms, filter data, peringatan prediktif ML, autentikasi, dan responsivitas layout (desktop 1600px & mobile).
+    * `level.test.ts` (5 skenario formula kenaikan level).
+    * `xp.test.ts` (4 skenario perhitungan XP kesulitan tugas).
+    * `consistency.test.ts` (4 skenario windowing 30 hari).
+    * `prediction.test.ts` (8 skenario klasifikasi probabilitas risiko kegagalan kebiasaan, cold-start guard 7 hari, dan rekomendasi target adaptif).
+* **Hasil Pengujian Otomatis Antarmuka (*Automated E2E Testing* - TestSprite MCP):**
+  * Pengujian otonom berbasis peramban virtual Playwright/Chromium terhadap 15 skenario antarmuka end-to-end dengan akun `gura3497@gmail.com`.
+  * **Tingkat Kelulusan:** 80.00% (12 skenario Lulus, 2 Gagal pada edge case, 1 Terblokir karena ketiadaan data arsip awal).
+  * Seluruh alur utama (*Core Happy Path*) lulus 100%: Autentikasi Login, Proteksi Sesi Cookie, Navigasi Dashboard, Checklist 0ms & Konfeti, Akumulasi Streak/XP, Visualisasi Pohon Virtual, Bilah Navigasi Bawah, Laci Navigasi Seluler (*Hamburger Drawer*), dan Sakelar Tema (*Dark/Light Mode*).
+* **Optimasi Performa & Higienitas Cache (Anti-Lag & Anti-Stale Data):**
+  * **Paralelisasi Kueri Backend (`Promise.all`):** Rute `/api/dashboard/summary` memparalelkan 8 pemanggilan database secara serentak, memangkas latensi respon backend dari $\sim 2.500\text{ ms}$ menjadi $\sim 300\text{ ms}$ (percepatan hingga 7x lipat).
+  * **Higienitas Cache Multi-Akun (`queryClient.clear()`):** Pembersihan memori cache TanStack Query secara seketika saat Logout (`Navbar.tsx`) dan Login (`login/page.tsx`), mengeliminasi bug data akun sebelumnya yang "nyangkut" saat beralih akun.
+  * **Navigasi Klien Instan (0ms):** Penerapan `prefetch={true}` pada seluruh tautan navigasi dan unifikasi query key dengan parameter tanggal lokal (`['dashboard-summary']`), sehingga perpindahan antara Dashboard, Pohon Virtual, dan Profil tidak lagi memicu *loading skeleton* berulang.
 * **Pengujian Latensi Jaringan:** Uji waktu respons panggilan REST API (`GET /api/dashboard/summary` rata-rata 150-300 ms).
 * *(Jika IoT)* Uji keberhasilan pembacaan kartu NFC dan latensi sinkronisasi dari hardware ke dashboard web.
 

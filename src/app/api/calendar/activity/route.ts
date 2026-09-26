@@ -32,25 +32,28 @@ export async function GET(request: Request) {
     const startDateStr = `${selectedYear}-01-01`;
     const endDateStr = `${selectedYear}-12-31`;
 
-    // 1. Fetch completions for the user in this year
-    const { data: completions, error: compError } = await supabase
-      .from('habit_completions')
-      .select('id, habit_id, date, xp_earned, completed_at')
-      .eq('user_id', user.id)
-      .gte('date', startDateStr)
-      .lte('date', endDateStr)
-      .order('date', { ascending: true });
+    // 1. Fetch completions for the user in this year and all historical dates in parallel
+    const [compRes, allCompRes] = await Promise.all([
+      supabase
+        .from('habit_completions')
+        .select('id, habit_id, date, xp_earned, completed_at')
+        .eq('user_id', user.id)
+        .gte('date', startDateStr)
+        .lte('date', endDateStr)
+        .order('date', { ascending: true }),
+      supabase
+        .from('habit_completions')
+        .select('date')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false }),
+    ]);
 
-    if (compError) {
-      throw new Error(compError.message);
+    if (compRes.error) {
+      throw new Error(compRes.error.message);
     }
 
-    // 2. Fetch all completions overall to find available active years
-    const { data: allCompletions } = await supabase
-      .from('habit_completions')
-      .select('date')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false });
+    const completions = compRes.data || [];
+    const allCompletions = allCompRes.data || [];
 
     const availableYearsSet = new Set<number>([currentYear]);
     (allCompletions || []).forEach((c) => {

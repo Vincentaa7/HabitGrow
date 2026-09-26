@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { DashboardSummary } from '@/types';
 import { TreeVisualization } from '@/components/tree/TreeVisualization';
 import { TREE_STAGES } from '@/lib/algorithms/tree';
+import { toDateString } from '@/lib/algorithms/schedule';
 import { Sparkles, Heart, ShieldCheck, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -14,8 +15,10 @@ export default function TreePage() {
   const { data: summary, isLoading } = useQuery<DashboardSummary>({
     queryKey: ['dashboard-summary'],
     queryFn: async () => {
-      const res = await fetch('/api/dashboard/summary');
+      const localDate = toDateString(new Date());
+      const res = await fetch(`/api/dashboard/summary?date=${localDate}`);
       const json = await res.json();
+      if (!json.success) throw new Error(json.error?.message || 'Gagal memuat pohon');
       return json.data;
     },
   });

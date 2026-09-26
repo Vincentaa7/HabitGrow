@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, LoginInput } from '@/lib/validators/auth.schema';
@@ -12,6 +13,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export default function LoginPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -39,6 +41,8 @@ export default function LoginPage() {
         throw new Error(json.error?.message || 'Login gagal. Periksa email & password.');
       }
 
+      // Immediately clear cached queries so prior account data never lingers
+      queryClient.clear();
       router.push('/app/dashboard');
       router.refresh();
     } catch (err: unknown) {
