@@ -30,10 +30,7 @@ export async function GET(request: Request) {
     const evalDate = dateParam ? parseDateString(dateParam) : new Date();
     const todayStr = dateParam || toDateString(evalDate);
 
-    // 1. Synchronize all habit streaks for user on evalDate (resets any streaks missed yesterday)
-    await StreakService.recalculateAllUserStreaks(supabase, user.id, evalDate);
-
-    // 2. Fetch all dashboard components concurrently in parallel (Massive Latency Reduction)
+    // Fetch all dashboard components concurrently in parallel (Zero Sequential Blocking)
     const [
       { data: profile },
       todayHabits,
@@ -57,6 +54,8 @@ export async function GET(request: Request) {
         .limit(3),
       StreakService.detectBrokenStreaks(supabase, user.id, evalDate),
       PredictionService.getAtRiskHabitsToday(supabase, user.id, evalDate),
+      // Synchronize habit streaks in parallel without blocking main queries
+      StreakService.recalculateAllUserStreaks(supabase, user.id, evalDate),
     ]);
 
     const completedCount = todayHabits.filter((h) => h.is_completed_today).length;

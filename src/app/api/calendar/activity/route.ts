@@ -32,8 +32,8 @@ export async function GET(request: Request) {
     const startDateStr = `${selectedYear}-01-01`;
     const endDateStr = `${selectedYear}-12-31`;
 
-    // 1. Fetch completions for the user in this year and all historical dates in parallel
-    const [compRes, allCompRes] = await Promise.all([
+    // 1. Fetch completions for the user in this year and the earliest completion date to determine available years
+    const [compRes, earliestCompRes] = await Promise.all([
       supabase
         .from('habit_completions')
         .select('id, habit_id, date, xp_earned, completed_at')
@@ -45,7 +45,9 @@ export async function GET(request: Request) {
         .from('habit_completions')
         .select('date')
         .eq('user_id', user.id)
-        .order('date', { ascending: false }),
+        .order('date', { ascending: true })
+        .limit(1)
+        .maybeSingle(),
     ]);
 
     if (compRes.error) {
@@ -53,15 +55,15 @@ export async function GET(request: Request) {
     }
 
     const completions = compRes.data || [];
-    const allCompletions = allCompRes.data || [];
+    const earliestDate = earliestCompRes.data?.date;
+    const earliestYear = earliestDate ? parseInt(earliestDate.split('-')[0], 10) : currentYear;
 
     const availableYearsSet = new Set<number>([currentYear]);
-    (allCompletions || []).forEach((c) => {
-      if (c.date) {
-        const y = parseInt(c.date.split('-')[0], 10);
-        if (!isNaN(y)) availableYearsSet.add(y);
+    if (!isNaN(earliestYear)) {
+      for (let y = earliestYear; y <= currentYear; y++) {
+        availableYearsSet.add(y);
       }
-    });
+    }
     // Add past 2 years minimum for nice UI selector
     availableYearsSet.add(currentYear - 1);
     availableYearsSet.add(currentYear - 2);
