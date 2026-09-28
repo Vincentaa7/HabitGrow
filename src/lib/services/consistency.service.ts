@@ -13,7 +13,7 @@ export class ConsistencyService {
   static async recalculateUserConsistencyAndTree(
     supabase: SupabaseClient,
     userId: string,
-    evalDate: Date = new Date()
+    evalDate: Date | string = new Date()
   ): Promise<{ consistencyScore: number; treeStage: string; health: number }> {
     // 1. Fetch user's active, non-archived habits and schedules
     const { data: habitsData, error: habitsError } = await supabase
@@ -24,7 +24,7 @@ export class ConsistencyService {
       .eq('is_archived', false);
 
     if (habitsError || !habitsData || habitsData.length === 0) {
-      // No active habits -> default 0%
+      // No active habits -> default 100% health, Seed
       await supabase.from('user_trees').upsert({
         user_id: userId,
         stage: 'Seed',
@@ -49,11 +49,17 @@ export class ConsistencyService {
       completionsByHabit.get(c.habit_id)!.add(c.date);
     });
 
-    // 3. Evaluate each habit over its active lifespan up to today (or last 30 days window)
-    const today = new Date(evalDate);
+    // 3. Evaluate each habit over its active lifespan up to evalDate (30 days rolling window)
+    const today = typeof evalDate === 'string' ? parseDateString(evalDate) : new Date(evalDate);
     today.setHours(0, 0, 0, 0);
 
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+
     const habitStats: Array<{ scheduledCount: number; completedCount: number }> = [];
+    let totalPastScheduled = 0;
+    let totalCompleted = 0;
 
     for (const habitItem of habitsData) {
       const habit = habitItem as unknown as Habit;
@@ -63,10 +69,12 @@ export class ConsistencyService {
       const startDate = parseDateString(habit.start_date);
       startDate.setHours(0, 0, 0, 0);
 
+      const windowStart = startDate > thirtyDaysAgo ? startDate : thirtyDaysAgo;
+
       let scheduledCount = 0;
       let completedCount = 0;
 
-      const cur = new Date(startDate);
+      const cur = new Date(windowStart);
       while (cur <= today) {
         if (isHabitScheduledOnDate(habit, schedules, cur)) {
           scheduledCount += 1;
@@ -74,17 +82,29 @@ export class ConsistencyService {
           if (completedSet.has(curStr)) {
             completedCount += 1;
           }
+          if (cur < today) {
+            totalPastScheduled += 1;
+          }
         }
         cur.setDate(cur.getDate() + 1);
       }
 
       habitStats.push({ scheduledCount, completedCount });
+      totalCompleted += completedCount;
     }
 
     // 4. Calculate overall consistency
-    const overallConsistency = calculateOverallConsistency(habitStats);
-    const treeStage = calculateTreeStage(overallConsistency);
-    const health = calculateTreeHealth(overallConsistency);
+    let overallConsistency = calculateOverallConsistency(habitStats);
+    let treeStage = calculateTreeStage(overallConsistency);
+    let health = calculateTreeHealth(overallConsistency);
+
+    // If a user just created habits today and hasn't had past scheduled occurrences yet,
+    // the seed starts alive and healthy (100% health, Seed stage) until past days are missed.
+    if (totalPastScheduled === 0 && totalCompleted === 0) {
+      treeStage = 'Seed';
+      health = 100;
+      overallConsistency = 0;
+    }
 
     // 5. Update user_trees
     await supabase.from('user_trees').upsert({

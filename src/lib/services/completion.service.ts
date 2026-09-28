@@ -3,7 +3,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { calculateXP } from '../algorithms/xp';
 import { calculateLevel } from '../algorithms/level';
 import { calculateStreak } from '../algorithms/streak';
-import { isHabitScheduledOnDate, toDateString } from '../algorithms/schedule';
+import { isHabitScheduledOnDate, toDateString, parseDateString } from '../algorithms/schedule';
 import { ConsistencyService } from './consistency.service';
 import { AchievementService } from './achievement.service';
 import { StreakService } from './streak.service';
@@ -130,9 +130,11 @@ export class CompletionService {
     );
 
     // 9. Recalculate Consistency & Tree Stage
+    const evalDate = parseDateString(todayStr);
     const { consistencyScore, treeStage, health } = await ConsistencyService.recalculateUserConsistencyAndTree(
       supabase,
-      userId
+      userId,
+      evalDate
     );
 
     // 10. Check & Unlock Achievements
@@ -222,9 +224,10 @@ export class CompletionService {
     });
 
     // 5. Recalculate Consistency & Tree
-    await ConsistencyService.recalculateUserConsistencyAndTree(supabase, userId);
+    const evalDate = parseDateString(completion.date);
+    await ConsistencyService.recalculateUserConsistencyAndTree(supabase, userId, evalDate);
 
     // 6. Recalculate Streak for this habit
-    await StreakService.recalculateHabitStreak(supabase, userId, completion.habit_id);
+    await StreakService.recalculateHabitStreak(supabase, userId, completion.habit_id, evalDate);
   }
 }

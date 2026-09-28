@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       { data: profile },
       todayHabits,
       { data: levelData },
-      treeRes,
+      treeData,
       globalStreak,
       { data: recentAchievements },
       brokenStreaks,
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       supabase.from('profiles').select('display_name, avatar_url').eq('id', user.id).maybeSingle(),
       HabitService.getTodayHabits(supabase, user.id, todayStr),
       supabase.from('user_levels').select('level, total_xp').eq('user_id', user.id).maybeSingle(),
-      supabase.from('user_trees').select('*').eq('user_id', user.id).maybeSingle(),
+      ConsistencyService.recalculateUserConsistencyAndTree(supabase, user.id, evalDate),
       StreakService.calculateUserGlobalStreak(supabase, user.id, evalDate),
       supabase
         .from('user_achievements')
@@ -64,19 +64,6 @@ export async function GET(request: Request) {
 
     const totalXp = levelData?.total_xp ?? 0;
     const levelInfo = calculateLevel(totalXp);
-
-    let treeData = treeRes.data;
-    if (!treeData) {
-      const recalculated = await ConsistencyService.recalculateUserConsistencyAndTree(supabase, user.id, evalDate);
-      treeData = {
-        user_id: user.id,
-        stage: recalculated.treeStage,
-        health: recalculated.health,
-        consistency_score: recalculated.consistencyScore,
-        growth_points: 0,
-        updated_at: new Date().toISOString(),
-      };
-    }
 
     const currentStreak = globalStreak.currentStreak;
     const longestStreak = globalStreak.longestStreak;
@@ -115,10 +102,10 @@ export async function GET(request: Request) {
         longest_streak: longestStreak,
       },
       tree: {
-        stage: treeData.stage as any,
+        stage: treeData.treeStage as any,
         health: treeData.health,
-        consistency_score: Number(treeData.consistency_score) || 0,
-        growth_points: treeData.growth_points || 0,
+        consistency_score: treeData.consistencyScore,
+        growth_points: 0,
       },
       recent_achievements: formattedAchievements,
       broken_streaks: brokenStreaks,
