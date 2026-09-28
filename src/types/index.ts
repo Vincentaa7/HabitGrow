@@ -92,8 +92,9 @@ export interface HabitRiskPrediction {
     late_hour_score: number;
   };
   suggested_action: {
-    type: 'LOWER_TARGET' | 'EARLY_NUDGE';
+    type: 'LOWER_TARGET' | 'EARLY_NUDGE' | 'CHECKLIST_2MIN';
     suggested_target_value?: number;
+    suggested_target_unit?: string;
     message: string;
   };
 }

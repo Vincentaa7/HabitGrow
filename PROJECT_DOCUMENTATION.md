@@ -66,7 +66,7 @@ HabitGrow mengatasi masalah tersebut melalui:
 
 ### 2.1 Kebutuhan Fungsional (Functional Requirements)
 * **[FR-01] Autentikasi & Profil:** Pengguna dapat mendaftar, masuk, keluar, serta memperbarui nama tampilan dan preferensi zona waktu secara aman.
-* **[FR-02] Manajemen Kebiasaan (CRUD):** Pengguna dapat membuat, melihat, memperbarui, mengarsipkan, dan menghapus kebiasaan dengan kustomisasi ikon, warna hex, tingkat kesulitan (*Easy/Medium/Hard*), target kuantitatif, dan satuan.
+* **[FR-02] Manajemen Kebiasaan (CRUD):** Pengguna dapat membuat, melihat, memperbarui (Edit Modal), mengarsipkan, dan menghapus kebiasaan dengan kustomisasi ikon, warna hex, tingkat kesulitan (*Easy/Medium/Hard*), target kuantitatif, dan satuan. Konfirmasi penghapusan disajikan melalui modal dialog kustom profesional dengan peringatan risiko kehilangan riwayat data.
 * **[FR-03] Penjadwalan Fleksibel:** Sistem mendukung tiga modalitas frekuensi: Harian (*DAILY*), Hari Tertentu (*SELECTED_DAYS*), dan Target Mingguan (*WEEKLY_TARGET*).
 * **[FR-04] Eksekusi & Checklist Instan:** Pengguna dapat mencentang kebiasaan harian dengan umpan balik visual instan (0 milidetik) melalui mekanisme *Optimistic UI Update*.
 * **[FR-05] Mesin Gamifikasi XP & Level:** Setiap penyelesaian kebiasaan menghasilkan *Experience Points* (XP) berdasarkan tingkat kesulitan yang berkontribusi pada kenaikan level pengguna secara terstruktur.
@@ -518,10 +518,10 @@ Sistem secara proaktif mendeteksi kebiasaan terjadwal yang memiliki probabilitas
 
 #### Vektor Fitur ($X_1 \dots X_5$):
 1. **$X_1$ — Miss Rate 14 Hari Terakhir:** Rasio hari terjadwal yang terlewat dalam 2 minggu terakhir ($X_1 = \frac{\text{missed}}{\text{scheduled}}$).
-2. **$X_2$ — Day-of-Week Vulnerability:** Rasio historis kegagalan khusus pada hari yang sama dalam seminggu (misal: hari Kamis).
+2. **$X_2$ — Day-of-Week Vulnerability (2 Siklus Mingguan Penuh):** Rasio historis kegagalan khusus pada hari yang sama dalam seminggu selama 14 hari terakhir ($X_2 = \frac{\text{sameWeekdayMissed}}{\text{sameWeekdayScheduled}}$). Menghasilkan minimal 2 titik data per hari kalender dengan distribusi rasio teratur ($0\%$, $50\%$, atau $100\%$).
 3. **$X_3$ — Daily Cognitive Workload:** Akumulasi bobot kesulitan kebiasaan yang terjadwal hari ini (Easy: 1, Med: 2, Hard: 3), dinormalisasi terhadap ambang kelelahan 16 poin ($X_3 = \min(1.0, \frac{\text{totalPts}}{16})$).
-4. **$X_4$ — Habit Maturity Fragility:** Usia kebiasaan sejak dibuat. Kebiasaan baru ($< 7\text{ hari}$) memiliki skor kerentanan tinggi ($X_4 = 0.85$), sedangkan kebiasaan matang ($> 30\text{ hari}$) memiliki $X_4 = 0.12$.
-5. **$X_5$ — Late Hour Procrastination:** Rata-rata jam penyelesaian dalam 7 hari terakhir. Jika pengerjaan cenderung larut malam ($\ge 22.00$), $X_5 = 0.85$.
+4. **$X_4$ — Habit Maturity Fragility:** Usia kebiasaan sejak dibuat. Kebiasaan baru ($< 7\text{ hari}$) memiliki skor kerentanan tinggi ($X_4 = 0.85$), fase adaptasi lanjutan ($7-13\text{ hari}$) $X_4 = 0.65$, stabil ($14-29\text{ hari}$) $X_4 = 0.35$, sedangkan kebiasaan matang ($\ge 30\text{ hari}$) memiliki $X_4 = 0.12$.
+5. **$X_5$ — Late Hour Procrastination:** Rata-rata jam penyelesaian dalam 14 hari terakhir. Jika pengerjaan cenderung larut malam ($\ge 22.00$), $X_5 = 0.85$.
 
 #### Model Logit & Probabilitas Sigmoid:
 $$z = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \beta_3 X_3 + \beta_4 X_4 + \beta_5 X_5$$
@@ -529,7 +529,7 @@ $$z = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \beta_3 X_3 + \beta_4 X_4 + \beta_5 
 *Bobot Koefisien Terkalibrasi:*
 * $\beta_0 = -2.3$ (Log-odds dasar kondisi normal)
 * $\beta_1 = 2.6$ (Bobot rasio keterlewatan 14 hari)
-* $\beta_2 = 2.0$ (Bobot kerentanan hari kalender)
+* $\beta_2 = 2.0$ (Bobot kerentanan hari kalender 2 siklus)
 * $\beta_3 = 1.2$ (Bobot kelelahan beban harian)
 * $\beta_4 = 1.3$ (Bobot usia kebiasaan baru)
 * $\beta_5 = 1.1$ (Bobot kebiasaan jam malam)
@@ -537,16 +537,32 @@ $$z = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \beta_3 X_3 + \beta_4 X_4 + \beta_5 
 Probabilitas Kegagalan ($P$):
 $$P(\text{Failure}) = \frac{1}{1 + e^{-z}} \times 100\%$$
 
+#### Landasan Ilmiah Pemilihan Jendela 14 Hari & Cold-Start Guard:
+Penetapan jendela observasi dan ambang batas aktivasi model prediktif pada **14 hari (2 minggu)** didasarkan pada tiga pertimbangan metodologis dan psikologis:
+1. **Mengatasi Masalah Sampel Minim (*Small Sample Noise*):**
+   Jika pengguna memiliki kebiasaan yang hanya dijadwalkan 2 kali seminggu (misalnya Senin dan Kamis), jendela 7 hari hanya menangkap 1 kali kesempatan per hari tersebut. Jika pengguna melewatkannya sekali saja karena urusan darurat, tingkat kegagalan (*miss rate*) seketika melonjak menjadi $100\%$ ($1/1$). Hal ini memicu *false alarm* (peringatan palsu) yang mengganggu kenyamanan pengguna.
+2. **Menangkap 2 Siklus Kalender Lengkap:**
+   Dengan rentang 14 hari, setiap hari dalam seminggu memiliki minimal 2 titik data evaluasi. Rasio keterlewatan menjadi lebih terdistribusi secara wajar ($0\%$, $50\%$, atau $100\%$), sehingga nilai fitur $X_1$ (*Miss Rate*) dan $X_2$ (*Day-of-Week Vulnerability*) menjadi jauh lebih representatif dan stabil.
+3. **Keseimbangan Memori (*Recency vs. Baseline Memory Balance*):**
+   Rentang 30 hari terlalu lambat dalam mendeteksi kejenuhan pengguna (*burnout*), sedangkan 7 hari terlalu reaktif terhadap anomali sesaat. Rentang 14 hari (2 minggu) adalah *sweet spot* psikologis untuk mendeteksi tren penurunan motivasi sebelum kebiasaan benar-benar ditinggalkan.
+
 #### Aturan Tindakan Adaptif (*Adaptive Nudge Action*):
-* **Cold-Start Guard (Filter Ambang Batas 1 Minggu / 7 Hari):**
-  * Kebiasaan baru dengan usia $< 7\text{ hari}$ berada dalam *initial onboarding baseline period*. Peringatan prediksi risiko dini otomatis **dinonaktifkan** selama 7 hari pertama untuk mencegah *false alarm* pada pengguna atau kebiasaan yang baru dibuat.
-* **Kriteria Evaluasi ($P \ge 60\%$ setelah 7 hari):**
+* **Cold-Start Guard (Filter Ambang Batas 2 Minggu / 14 Hari):**
+  * Kebiasaan baru dengan usia $< 14\text{ hari}$ berada dalam *initial onboarding baseline period*. Peringatan prediksi risiko dini otomatis **dinonaktifkan** selama 14 hari pertama untuk menangkap 2 siklus kalender utuh dan mencegah *false alarm* pada pengguna atau kebiasaan baru.
+* **Kriteria Evaluasi ($P \ge 60\%$ setelah 14 hari):**
   * Diklasifikasikan sebagai `HIGH` ($P \ge 70\%$) atau `MODERATE` ($60\% \le P < 70\%$).
-  * **Jalur 1 — Kuantitas $> 1$ (`LOWER_TARGET`):**
-    $$\text{Target Baru} = \max\left(1, \left\lfloor \frac{\text{Target Lama}}{2} \right\rfloor\right)$$
-    Pengguna dapat menerapkan penyesuaian target 1 klik via `PATCH /api/habits/[id]` untuk menjaga keberlangsungan *streak*.
-  * **Jalur 2 — Kuantitas $= 1$ (`EARLY_NUDGE`):**
-    Sistem menyarankan penyelesaian lebih awal pada waktu siang/sore sebelum energi terkuras di malam hari, dilengkapi tombol komitmen *"Siap, Kerjakan Lebih Awal"*.
+  * **Jalur 1 — Tipe Kuantitatif (`target_value > 1` atau Satuan Jam/Liter):**
+    * *Pesan Rekomendasi:* `"Beban hari ini terdeteksi tinggi. Amankan streak dengan memangkas target menjadi [X] [Satuan]."`
+    * *Formulasi Pangkas:* $\text{Target Baru} = \max\left(1, \left\lfloor \frac{\text{Target Lama}}{2} \right\rfloor\right)$.
+    * *Konversi Cerdas Satuan:*
+      * Jika `target_unit: 'jam'` dan target bernilai 1, sistem otomatis mengonversinya menjadi **30 menit**.
+      * Jika `target_unit: 'liter'` (atau `'l'`) dan target bernilai 1, sistem otomatis mengonversinya menjadi **500 ml** (setara 2 gelas air).
+    * *Aksi Tombol Utama:* `[⚡ Pangkas Target Jadi [X] [Satuan]]` yang mengeksekusi `PATCH /api/habits/[id]` seketika.
+    * *Aksi Sekunder:* `[Saya Sanggup Target Normal]` yang menutup banner tanpa memodifikasi data kebiasaan.
+  * **Jalur 2 — Tipe Biner / Checklist (`target_value = 1` Non-Jam/Liter):**
+    * *Pesan Rekomendasi:* `"[Nama] biasanya rawan terlewat di hari [Hari]. Gunakan prinsip 2 menit: lakukan versi teringan sekarang agar pohon virtualmu tidak kekurangan nutrisi."`
+    * *Aksi Tombol Utama:* `[✓ Tandai Selesai Cepat (2 Menit)]` yang langsung mengeksekusi `POST /api/habits/[id]/complete` dengan ledakan konfeti dan pembaruan antarmuka instan (0ms).
+    * *Aksi Alternatif:* `[⏰ Ingatkan 1 Jam Lagi]` yang menunda (*snooze*) penayangan banner peringatan selama 60 menit via *client-side local storage*.
 * **Penyajian Antarmuka Antirumpang:**
   * Komponen `PredictionAlertBanner` menyajikan kotak *callout* rekomendasi AI secara visual dan eksplisit sehingga pengguna mendapatkan instruksi tindakan yang jelas sebelum memilih opsi.
 
@@ -582,7 +598,7 @@ Seluruh endpoint menerima header `Content-Type: application/json` dan cookie ses
 | **POST** | `/api/auth/login` | Masuk ke sistem | `{ email, password }` | `{ success: true, session }` | `200 OK` |
 | **POST** | `/api/auth/logout` | Menghapus sesi otentikasi | *-* | `{ success: true }` | `200 OK` |
 | **GET** | `/api/dashboard/summary` | Mengambil data agregasi dashboard (mendukung zona waktu lokal) | `?date=YYYY-MM-DD` | `{ success: true, data: DashboardSummary }` | `200 OK` |
-| **GET** | `/api/calendar/activity` | Mengambil matriks aktivitas 52 minggu tahunan | `?year=2026` | `{ success: true, data: CalendarActivityResponse }` | `200 OK` |
+| **GET** | `/api/calendar/activity` | Mengambil data riwayat aktivitas kebiasaan tahunan & bulanan | `?year=2026` | `{ success: true, data: CalendarActivityResponse }` | `200 OK` |
 | **GET** | `/api/calendar/day` | Mengambil rincian kebiasaan terjadwal per tanggal | `?date=YYYY-MM-DD` | `{ success: true, data: CalendarDayDetail }` | `200 OK` |
 | **GET** | `/api/habits` | Mendapatkan seluruh kebiasaan user | `?archived=false&categoryId=...` | `{ success: true, data: HabitItem[] }` | `200 OK` |
 | **POST** | `/api/habits` | Membuat kebiasaan baru | `{ name, category_id, difficulty, frequency_type, ... }` | `{ success: true, data: Habit }` | `201 Created` |
@@ -646,10 +662,10 @@ sequenceDiagram
     UI->>API: Request data ringkasan harian
     API->>DB: Query daftar kebiasaan hari ini & riwayat 14 hari
     DB-->>API: Data mentah kebiasaan dan status completion
-    API->>ML: Evaluasi kebiasaan belum tuntas (Cek Usia Kebiasaan >= 7 Hari)
-    alt Usia Kebiasaan < 7 Hari (Masa Adaptasi Awal)
-        ML-->>API: Lewati prediksi (Cegah false alarm pengguna baru)
-    else Usia Kebiasaan >= 7 Hari
+    API->>ML: Evaluasi kebiasaan belum tuntas (Cek Usia Kebiasaan >= 14 Hari)
+    alt Usia Kebiasaan < 14 Hari (Masa Adaptasi Awal 2 Siklus)
+        ML-->>API: Lewati prediksi (Cegah false alarm & noise sampel minim)
+    else Usia Kebiasaan >= 14 Hari
         ML->>ML: Ekstraksi fitur (X1 s/d X5), hitung logit z & Sigmoid P(Failure)
         alt Probabilitas P >= 60%
             ML-->>API: Buat rekomendasi adaptif (LOWER_TARGET jika >1, EARLY_NUDGE jika =1)
@@ -686,7 +702,7 @@ HabitGrow/
 │   │   │   ├── dashboard/page.tsx          # Dashboard Utama (Executive Command Bar & 2-Col Grid)
 │   │   │   ├── habits/page.tsx             # Manajemen Daftar Kebiasaan
 │   │   │   ├── tree/page.tsx               # Halaman Detail Sanctuary Pohon
-│   │   │   ├── calendar/page.tsx           # Matriks Pertumbuhan Kebun 52 Minggu (GitHub-Inspired) & Kalender Bulanan
+│   │   │   ├── calendar/page.tsx           # Kalender Bulanan Interaktif Per-Bulan & Per-Tanggal (Senin s/d Minggu)
 │   │   │   ├── statistics/page.tsx         # Grafik Analisis & Heatmap
 │   │   │   └── achievements/page.tsx       # Galeri Trofi & Pencapaian
 │   │   └── api/                            # Backend REST API Endpoints

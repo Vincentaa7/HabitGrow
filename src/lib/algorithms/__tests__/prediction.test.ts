@@ -89,7 +89,7 @@ describe('predictHabitFailureRisk', () => {
     expect(prediction.suggested_action.suggested_target_value).toBe(10);
   });
 
-  it('suggests EARLY_NUDGE for habit with target_value of 1', () => {
+  it('suggests CHECKLIST_2MIN (2-Minute Rule) for habit with target_value of 1', () => {
     const evalDate = new Date(2026, 8, 24);
     const habitSingle: Habit = {
       ...baseHabit,
@@ -109,8 +109,61 @@ describe('predictHabitFailureRisk', () => {
       totalDifficultyPointsToday: 15,
     });
 
-    expect(prediction.suggested_action.type).toBe('EARLY_NUDGE');
+    expect(prediction.suggested_action.type).toBe('CHECKLIST_2MIN');
+    expect(prediction.suggested_action.message).toContain('prinsip 2 menit');
     expect(prediction.primary_factor).toBeDefined();
+  });
+
+  it('converts 1 jam to 30 menit for LOWER_TARGET action', () => {
+    const evalDate = new Date(2026, 8, 24);
+    const habitHour: Habit = {
+      ...baseHabit,
+      id: 'habit-study',
+      name: 'Belajar Koding',
+      target_value: 1,
+      target_unit: 'jam',
+      created_at: '2026-08-01T00:00:00Z',
+    };
+
+    const prediction = predictHabitFailureRisk({
+      habit: habitHour,
+      schedules,
+      completions: [],
+      evaluationDate: evalDate,
+      totalScheduledToday: 6,
+      totalDifficultyPointsToday: 12,
+    });
+
+    expect(prediction.suggested_action.type).toBe('LOWER_TARGET');
+    expect(prediction.suggested_action.suggested_target_value).toBe(30);
+    expect(prediction.suggested_action.suggested_target_unit).toBe('menit');
+    expect(prediction.suggested_action.message).toContain('30 menit');
+  });
+
+  it('converts 1 liter to 500 ml for LOWER_TARGET action', () => {
+    const evalDate = new Date(2026, 8, 24);
+    const habitWater: Habit = {
+      ...baseHabit,
+      id: 'habit-water',
+      name: 'Minum Air',
+      target_value: 1,
+      target_unit: 'liter',
+      created_at: '2026-08-01T00:00:00Z',
+    };
+
+    const prediction = predictHabitFailureRisk({
+      habit: habitWater,
+      schedules,
+      completions: [],
+      evaluationDate: evalDate,
+      totalScheduledToday: 5,
+      totalDifficultyPointsToday: 10,
+    });
+
+    expect(prediction.suggested_action.type).toBe('LOWER_TARGET');
+    expect(prediction.suggested_action.suggested_target_value).toBe(500);
+    expect(prediction.suggested_action.suggested_target_unit).toBe('ml');
+    expect(prediction.suggested_action.message).toContain('500 ml');
   });
 });
 
@@ -125,28 +178,33 @@ describe('isHabitEligibleForPrediction', () => {
     expect(isHabitEligibleForPrediction(habit, evalDate)).toBe(false);
   });
 
-  it('returns false for habits younger than 7 days (e.g. 3 and 6 days old)', () => {
+  it('returns false for habits younger than 14 days (e.g. 3, 7, and 13 days old)', () => {
     const habit3Days = {
       created_at: '2026-09-22T08:00:00Z',
       start_date: '2026-09-22',
     };
-    const habit6Days = {
-      created_at: '2026-09-19T14:00:00Z',
-      start_date: '2026-09-19',
-    };
-    expect(isHabitEligibleForPrediction(habit3Days, evalDate)).toBe(false);
-    expect(isHabitEligibleForPrediction(habit6Days, evalDate)).toBe(false);
-  });
-
-  it('returns true for habits created exactly 7 days ago', () => {
     const habit7Days = {
-      created_at: '2026-09-18T00:00:00Z',
+      created_at: '2026-09-18T14:00:00Z',
       start_date: '2026-09-18',
     };
-    expect(isHabitEligibleForPrediction(habit7Days, evalDate)).toBe(true);
+    const habit13Days = {
+      created_at: '2026-09-12T14:00:00Z',
+      start_date: '2026-09-12',
+    };
+    expect(isHabitEligibleForPrediction(habit3Days, evalDate)).toBe(false);
+    expect(isHabitEligibleForPrediction(habit7Days, evalDate)).toBe(false);
+    expect(isHabitEligibleForPrediction(habit13Days, evalDate)).toBe(false);
   });
 
-  it('returns true for mature habits (> 7 days old)', () => {
+  it('returns true for habits created exactly 14 days ago', () => {
+    const habit14Days = {
+      created_at: '2026-09-11T00:00:00Z',
+      start_date: '2026-09-11',
+    };
+    expect(isHabitEligibleForPrediction(habit14Days, evalDate)).toBe(true);
+  });
+
+  it('returns true for mature habits (> 14 days old)', () => {
     const habitMature = {
       created_at: '2026-08-01T00:00:00Z',
       start_date: '2026-08-01',
@@ -157,13 +215,13 @@ describe('isHabitEligibleForPrediction', () => {
   it('correctly uses start_date fallback when created_at is null', () => {
     const habitNoCreatedAt = {
       created_at: null as any,
-      start_date: '2026-09-24', // 1 day old
+      start_date: '2026-09-20', // 5 days old (< 14 days)
     };
     expect(isHabitEligibleForPrediction(habitNoCreatedAt, evalDate)).toBe(false);
 
     const habitOldStartDate = {
       created_at: null as any,
-      start_date: '2026-09-01', // 24 days old
+      start_date: '2026-09-01', // 24 days old (>= 14 days)
     };
     expect(isHabitEligibleForPrediction(habitOldStartDate, evalDate)).toBe(true);
   });

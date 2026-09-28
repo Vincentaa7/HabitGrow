@@ -7,6 +7,7 @@ import { Habit, HabitCategory } from '@/types/database';
 import { HabitFormModal } from '@/components/habits/HabitFormModal';
 import {
   Plus,
+  Pencil,
   Archive,
   RotateCcw,
   Trash2,
@@ -18,6 +19,8 @@ import {
   Smile,
   Zap,
   Flame,
+  AlertTriangle,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -36,6 +39,8 @@ export default function HabitsPage() {
   const [tab, setTab] = useState<'active' | 'archived'>('active');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
+  const [deletingHabit, setDeletingHabit] = useState<Habit | null>(null);
 
   // 1. Fetch Categories
   const { data: categories = [] } = useQuery<HabitCategory[]>({
@@ -85,12 +90,15 @@ export default function HabitsPage() {
   // 5. Delete Mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      if (!confirm('Apakah kamu yakin ingin menghapus kebiasaan ini?')) return;
       const res = await fetch(`/api/habits/${id}`, { method: 'DELETE' });
       const json = await res.json();
       if (!json.success) throw new Error(json.error?.message);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['habits'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['habits'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+      setDeletingHabit(null);
+    },
   });
 
   return (
@@ -251,19 +259,29 @@ export default function HabitsPage() {
                 {/* Actions Footer */}
                 <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-end gap-2">
                   {tab === 'active' ? (
-                    <button
-                      onClick={() => archiveMutation.mutate(habit.id)}
-                      disabled={archiveMutation.isPending}
-                      className="p-2 text-xs font-semibold text-slate-500 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
-                      title="Arsipkan"
-                    >
-                      <Archive className="w-4 h-4" />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setEditingHabit(habit)}
+                        className="p-2 text-xs font-semibold text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition cursor-pointer"
+                        title="Edit Kebiasaan"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        onClick={() => archiveMutation.mutate(habit.id)}
+                        disabled={archiveMutation.isPending}
+                        className="p-2 text-xs font-semibold text-slate-500 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition cursor-pointer"
+                        title="Arsipkan"
+                      >
+                        <Archive className="w-4 h-4" />
+                      </button>
+                    </>
                   ) : (
                     <button
                       onClick={() => restoreMutation.mutate(habit.id)}
                       disabled={restoreMutation.isPending}
-                      className="p-2 text-xs font-semibold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-lg transition"
+                      className="p-2 text-xs font-semibold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-lg transition cursor-pointer"
                       title="Pulihkan"
                     >
                       <RotateCcw className="w-4 h-4" />
@@ -271,9 +289,9 @@ export default function HabitsPage() {
                   )}
 
                   <button
-                    onClick={() => deleteMutation.mutate(habit.id)}
+                    onClick={() => setDeletingHabit(habit)}
                     disabled={deleteMutation.isPending}
-                    className="p-2 text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/60 rounded-lg transition"
+                    className="p-2 text-xs font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition cursor-pointer"
                     title="Hapus Permanen"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -285,13 +303,93 @@ export default function HabitsPage() {
         </div>
       )}
 
-      {/* Modal */}
+      {/* Modal Buat & Edit Kebiasaan */}
       <HabitFormModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmitSuccess={() => queryClient.invalidateQueries({ queryKey: ['habits'] })}
+        isOpen={isCreateModalOpen || Boolean(editingHabit)}
+        initialHabit={editingHabit}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setEditingHabit(null);
+        }}
+        onSubmitSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['habits'] });
+          queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+        }}
         categories={categories}
       />
+
+      {/* Custom Professional Delete Confirmation Modal */}
+      {deletingHabit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md rounded-2xl sm:rounded-3xl bg-white dark:bg-[#111a16] border border-rose-100 dark:border-rose-950/60 p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+            {/* Close Button */}
+            <button
+              onClick={() => setDeletingHabit(null)}
+              disabled={deleteMutation.isPending}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Warning Icon Badge */}
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-200/60 dark:border-rose-900/50 shadow-inner">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            {/* Title & Description */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                Hapus Kebiasaan?
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                Apakah kamu yakin ingin menghapus kebiasaan{' '}
+                <strong className="text-slate-900 dark:text-white font-semibold">
+                  &ldquo;{deletingHabit.name}&rdquo;
+                </strong>
+                ? Seluruh riwayat penyelesaian, checklist, dan streak terkait kebiasaan ini akan dihapus secara permanen.
+              </p>
+            </div>
+
+            {/* Callout Notice */}
+            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/40 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
+              <span className="shrink-0 text-base leading-none">⚠️</span>
+              <span>
+                Tindakan ini tidak dapat dibatalkan. Jika hanya ingin rehat sementara, kamu bisa memilih opsi <strong>Arsipkan</strong>.
+              </span>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeletingHabit(null)}
+                disabled={deleteMutation.isPending}
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 transition cursor-pointer disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteMutation.mutate(deletingHabit.id)}
+                disabled={deleteMutation.isPending}
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+              >
+                {deleteMutation.isPending ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Menghapus...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Hapus Permanen</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

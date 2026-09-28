@@ -3212,8 +3212,14 @@ $$P(\text{churn}) = \sigma(z) = \frac{1}{1 + e^{-z}}$$
 
 ### 121.4 Threshold & Tindakan Adaptif
 * **Ambang Batas Peringatan:** Jika $P(\text{churn}) \ge 0.60$ (Tingkat risiko $\ge 60\%$).
-* **Fase Adaptasi Dingin (*Cold-Start Guard*):** Evaluasi prediktif baru aktif setelah kebiasaan berusia $\ge 7\text{ hari}$ agar pengguna baru tidak dibebani peringatan saat baru membuat akun.
-* **Aksi Nudge 1-Klik:** Menampilkan kartu *Smart Predictive Nudge* berwarna oranye-amber di atas daftar kebiasaan hari ini dengan tombol adaptif 1-klik untuk menurunkan target kuantitas sementara (`PATCH /api/habits/[id]`).
+* **Fase Adaptasi Dingin (*Cold-Start Guard* 14 Hari / 2 Minggu):**
+  Evaluasi prediktif baru aktif setelah kebiasaan berusia $\ge 14\text{ hari}$ berdasarkan 3 landasan ilmiah:
+  1. *Mengatasi Masalah Sampel Minim (Small Sample Noise):* Pada kebiasaan 2x seminggu (misal: Senin & Kamis), jendela 7 hari hanya menangkap 1 data point per hari tersebut. Jika terlewat sekali karena darurat, miss rate melonjak $100\%$ ($1/1$) memicu *false alarm*.
+  2. *Menangkap 2 Siklus Kalender Lengkap:* Rentang 14 hari menyediakan minimal 2 titik data evaluasi per hari sepekan dengan distribusi wajar ($0\%$, $50\%$, atau $100\%$), menstabilkan fitur $X_1$ dan $X_2$.
+  3. *Keseimbangan Memori (Recency vs Baseline):* Rentang 30 hari terlalu lambat mendeteksi kejenuhan (*burnout*), sedangkan 7 hari terlalu reaktif terhadap anomali sesaat. 14 hari adalah *sweet spot* psikologis deteksi tren penurunan motivasi.
+* **Aksi Nudge Adaptif (Dual Modality):**
+  * *Tipe Kuantitatif:* Menampilkan rekomendasi pangkas target (`[⚡ Pangkas Target Jadi X]`) via `PATCH /api/habits/[id]` dan opsi sekunder `[Saya Sanggup Target Normal]` tanpa mutasi data. Dilengkapi konversi pintar 1 jam menjadi 30 menit serta 1 liter menjadi 500 ml.
+  * *Tipe Biner / Checklist (Prinsip 2 Menit Atomic Habits):* Menampilkan tombol aksi instan `[✓ Tandai Selesai Cepat (2 Menit)]` via `POST /api/habits/[id]/complete` (disertai konfeti dan pembaruan optimistik) serta tombol tunda `[⏰ Ingatkan 1 Jam Lagi]` (snooze 1 jam via local storage).
 
 ---
 
@@ -3252,10 +3258,10 @@ Di atas kanvas matriks, disajikan 4 kartu metrik eksekutif tahunan:
 3. **Akumulasi XP:** Total perolehan XP yang terkumpul sepanjang tahun.
 4. **Rekor Streak Terpanjang:** *Streak* harian kontinu terpanjang yang tercapai pada tahun tersebut.
 
-### 123.3 Interaktivitas & Mode Tampilan
-* **Year Selector:** Beralih instan antar tahun kalender yang tersedia.
-* **Tampilan Ganda:** Tombol sakelar antara *Matriks 52 Minggu* dan *Tampilan Bulanan*.
-* **Day Inspector Card:** Mengklik kotak tanggal mana pun di matriks akan memicu panel inspektur di sebelah kanan yang merinci daftar kebiasaan yang selesai, perolehan XP, dan status kepatuhan target.
+### 123.3 Interaktivitas & Navigasi Kalender Bulanan
+* **Navigasi Bulan & Tahun:** Tombol navigasi bulan sebelumnya/berikutnya, *quick pill selector* (Januari s/d Desember), dan pengubah tahun interaktif.
+* **Format Grid Per-Bulan & Per-Tanggal:** Kisi kalender 7 kolom (Senin s/d Minggu) dengan tanggal 1..31 yang proporsional, lencana botani intensitas checklist, indikator "Hari Ini", dan tombol instan "Kembali ke Hari Ini".
+* **Day Inspector Card:** Mengklik kotak tanggal mana pun di kalender akan memicu panel inspektur di sebelah kanan yang merinci daftar kebiasaan, perolehan XP, status Non-Zero Day, dan checkbox penyelesaian langsung jika hari ini.
 
 ---
 
@@ -3290,9 +3296,9 @@ Antarmuka HabitGrow dioptimalkan secara mendalam untuk perangkat Android & iOS d
 Untuk menjamin keandalan sistem berskala produksi dan kepatuhan standar tugas akhir akademik, HabitGrow menerapkan dua lapis pengujian otomatis:
 
 ### 125.1 Pengujian Unit Matematika & Algoritma (Vitest)
-Menjalankan 39 pengujian unit terotomatisasi dengan tingkat kelulusan 100%:
+Menjalankan 41 pengujian unit terotomatisasi dengan tingkat kelulusan 100%:
 * `streak.test.ts` (12 tests): Validasi Non-Zero Day, kalkulasi streak individual, rekor streak terpanjang, dan deteksi broken streak.
-* `prediction.test.ts` (8 tests): Validasi ekstraksi 5 fitur numerik, formulasi sigmoid, ambang batas $P \ge 60\%$, dan filter cold-start 7 hari.
+* `prediction.test.ts` (10 tests): Validasi ekstraksi 5 fitur numerik, formulasi sigmoid, ambang batas $P \ge 60\%$, filter cold-start 14 hari, aturan 2 menit biner, serta konversi cerdas jam ke menit dan liter ke ml.
 * `tree.test.ts` (6 tests): Validasi 5 tahap evolusi botani (*Seed* $\rightarrow$ *Mature Tree*) dan ambang batas kesehatan pohon.
 * `level.test.ts` (5 tests): Validasi ambang batas XP kumulatif dan kenaikan level pengguna.
 * `consistency.test.ts` (4 tests): Validasi skor konsistensi bergulir 30 hari (*Rolling 30-Day Consistency*).

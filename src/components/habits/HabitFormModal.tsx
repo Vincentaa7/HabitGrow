@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { habitCreateSchema, HabitCreateInput } from '@/lib/validators/habit.schema';
-import { HabitCategory } from '@/types/database';
+import { Habit, HabitCategory } from '@/types/database';
 import { toDateString } from '@/lib/algorithms/schedule';
 import { X, Sparkles, Dumbbell, BookOpen, Heart, Briefcase, Smile, Zap, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,7 @@ interface HabitFormModalProps {
   onClose: () => void;
   onSubmitSuccess: () => void;
   categories: HabitCategory[];
+  initialHabit?: Habit | null;
 }
 
 const ICONS = [
@@ -73,6 +74,7 @@ export function HabitFormModal({
   onClose,
   onSubmitSuccess,
   categories,
+  initialHabit,
 }: HabitFormModalProps) {
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -102,6 +104,46 @@ export function HabitFormModal({
     },
   });
 
+  // Pre-fill form when editing an existing habit
+  React.useEffect(() => {
+    if (initialHabit && isOpen) {
+      const habitSchedules =
+        (initialHabit as any).schedules?.map((s: any) => s.day_of_week) ??
+        (initialHabit as any).habit_schedules?.map((s: any) => s.day_of_week) ??
+        [1, 2, 3, 4, 5];
+      setSelectedDays(habitSchedules);
+
+      reset({
+        name: initialHabit.name || '',
+        description: initialHabit.description || '',
+        category_id: initialHabit.category_id || categories[0]?.id || null,
+        icon: initialHabit.icon || 'sparkles',
+        color: initialHabit.color || '#10b981',
+        difficulty: initialHabit.difficulty || 'MEDIUM',
+        frequency_type: initialHabit.frequency_type || 'DAILY',
+        target_value: Number(initialHabit.target_value) || 1,
+        target_unit: initialHabit.target_unit || 'kali',
+        start_date: initialHabit.start_date || toDateString(new Date()),
+        selected_days: habitSchedules,
+      });
+    } else if (isOpen) {
+      setSelectedDays([1, 2, 3, 4, 5]);
+      reset({
+        name: '',
+        description: '',
+        category_id: categories[0]?.id || null,
+        icon: 'sparkles',
+        color: '#10b981',
+        difficulty: 'MEDIUM',
+        frequency_type: 'DAILY',
+        target_value: 1,
+        target_unit: 'kali',
+        start_date: toDateString(new Date()),
+        selected_days: [1, 2, 3, 4, 5],
+      });
+    }
+  }, [initialHabit, isOpen, reset, categories]);
+
   const frequencyType = watch('frequency_type');
   const selectedIcon = watch('icon');
   const selectedColor = watch('color');
@@ -126,8 +168,11 @@ export function HabitFormModal({
       setIsSubmitting(true);
       setServerError(null);
 
-      const res = await fetch('/api/habits', {
-        method: 'POST',
+      const url = initialHabit ? `/api/habits/${initialHabit.id}` : '/api/habits';
+      const method = initialHabit ? 'PATCH' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
@@ -137,7 +182,7 @@ export function HabitFormModal({
 
       const json = await res.json();
       if (!json.success) {
-        throw new Error(json.error?.message || 'Gagal menyimpan habit');
+        throw new Error(json.error?.message || 'Gagal menyimpan kebiasaan');
       }
 
       reset();
@@ -158,14 +203,16 @@ export function HabitFormModal({
         <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-[#1e2e26] bg-white/95 dark:bg-[#111a16]/95 backdrop-blur-sm rounded-t-2xl">
           <div className="flex items-center gap-3">
             <span className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-400 text-lg shadow-sm">
-              🌱
+              {initialHabit ? '✏️' : '🌱'}
             </span>
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">
-                Buat Kebiasaan Baru
+                {initialHabit ? 'Edit Kebiasaan' : 'Buat Kebiasaan Baru'}
               </h3>
               <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                Tanam kebiasaan dan rawat pohon virtualmu
+                {initialHabit
+                  ? 'Perbarui target, jadwal, atau detail kebiasaanmu'
+                  : 'Tanam kebiasaan dan rawat pohon virtualmu'}
               </p>
             </div>
           </div>
@@ -315,7 +362,7 @@ export function HabitFormModal({
           )}
 
           {/* Target Value & Unit */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <FormLabel>Target Harian</FormLabel>
               <input
@@ -325,6 +372,25 @@ export function HabitFormModal({
                 {...register('target_value', { valueAsNumber: true })}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e2e26] bg-slate-50 dark:bg-[#0d1612] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/60 transition"
               />
+              {/* Quick Preset Numbers 1 to 5 */}
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                <span className="text-[10px] text-slate-400 font-semibold mr-0.5">Pilihan Cepat:</span>
+                {[1, 2, 3, 4, 5].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => setValue('target_value', num, { shouldValidate: true })}
+                    className={cn(
+                      'w-7 h-7 rounded-lg text-xs font-bold border transition-all cursor-pointer flex items-center justify-center',
+                      watch('target_value') === num
+                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-[#111a16] border-slate-200 dark:border-[#1e2e26] text-slate-600 dark:text-slate-400 hover:border-emerald-400 hover:text-emerald-600'
+                    )}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
             </div>
             <div>
               <FormLabel>Satuan</FormLabel>
@@ -334,6 +400,24 @@ export function HabitFormModal({
                 {...register('target_unit')}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e2e26] bg-slate-50 dark:bg-[#0d1612] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/60 transition"
               />
+              {/* Quick Preset Unit Chips */}
+              <div className="flex items-center gap-1 mt-2 flex-wrap">
+                {['kali', 'menit', 'halaman', 'jam', 'liter', 'ml', 'gelas', 'bab'].map((unit) => (
+                  <button
+                    key={unit}
+                    type="button"
+                    onClick={() => setValue('target_unit', unit, { shouldValidate: true })}
+                    className={cn(
+                      'px-2 py-0.5 rounded-md text-[11px] font-semibold border transition-all cursor-pointer',
+                      watch('target_unit') === unit
+                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-[#111a16] border-slate-200 dark:border-[#1e2e26] text-slate-600 dark:text-slate-400 hover:border-emerald-400 hover:text-emerald-600'
+                    )}
+                  >
+                    {unit}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -402,14 +486,14 @@ export function HabitFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition"
+              className="px-5 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-md shadow-emerald-600/20 transition disabled:opacity-50 flex items-center gap-2"
+              className="px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-md shadow-emerald-600/20 transition disabled:opacity-50 flex items-center gap-2 cursor-pointer"
             >
               {isSubmitting ? (
                 <>
@@ -417,7 +501,7 @@ export function HabitFormModal({
                   Menyimpan...
                 </>
               ) : (
-                <>Tanam Kebiasaan 🌱</>
+                <>{initialHabit ? 'Simpan Perubahan ✨' : 'Tanam Kebiasaan 🌱'}</>
               )}
             </button>
           </div>

@@ -94,10 +94,11 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
   const x1_missRate = past14ScheduledCount > 0 ? past14MissedCount / past14ScheduledCount : 0.2;
 
   // --- Feature 2: Day-of-Week Historical Vulnerability (X2) ---
+  // Captures 2 full calendar cycles (14 days), providing 2 evaluation points per weekday (0%, 50%, or 100%)
   let sameWeekdayScheduledCount = 0;
   let sameWeekdayMissedCount = 0;
 
-  for (let i = 1; i <= 21; i++) {
+  for (let i = 1; i <= 14; i++) {
     const checkDate = new Date(evalDate);
     checkDate.setDate(checkDate.getDate() - i);
 
@@ -143,7 +144,7 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
   const recentCompletions = completions.filter((c) => {
     const cDate = parseDateString(c.date);
     const diff = Math.round((evalDate.getTime() - cDate.getTime()) / (1000 * 3600 * 24));
-    return diff <= 7;
+    return diff <= 14;
   });
 
   let x5_lateHour = 0.25;
@@ -194,19 +195,42 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
 
   // Formulate Adaptive Action Recommendation
   const currentTarget = Number(habit.target_value) || 1;
-  const suggestedTarget = Math.max(1, Math.floor(currentTarget * 0.5));
+  const currentUnit = (habit.target_unit || 'kali').trim();
+  const unitLower = currentUnit.toLowerCase();
+  const isHourUnit = unitLower === 'jam';
+  const isLiterUnit = unitLower === 'liter' || unitLower === 'l';
 
   let suggestedAction: HabitRiskPrediction['suggested_action'];
-  if (currentTarget > 1 && suggestedTarget < currentTarget) {
+
+  // Case 1: Quantitative habit (e.g. Push up 20x, Baca 30 Halaman, Olahraga 30 Menit, Belajar 1 Jam, Minum Air 1 Liter)
+  if (currentTarget > 1 || isHourUnit || isLiterUnit) {
+    let suggestedTarget: number;
+    let suggestedUnit = currentUnit;
+
+    if (isHourUnit && currentTarget === 1) {
+      // Smart unit conversion: 1 Jam -> 30 Menit
+      suggestedTarget = 30;
+      suggestedUnit = 'menit';
+    } else if (isLiterUnit && currentTarget === 1) {
+      // Smart unit conversion: 1 Liter -> 500 ml
+      suggestedTarget = 500;
+      suggestedUnit = 'ml';
+    } else {
+      suggestedTarget = Math.max(1, Math.floor(currentTarget * 0.5));
+    }
+
     suggestedAction = {
       type: 'LOWER_TARGET',
       suggested_target_value: suggestedTarget,
-      message: `Turunkan target sementara ke ${suggestedTarget} ${habit.target_unit} agar momentum streak tidak putus!`,
+      suggested_target_unit: suggestedUnit,
+      message: `Beban hari ini terdeteksi tinggi. Amankan streak dengan memangkas target menjadi ${suggestedTarget} ${suggestedUnit}.`,
     };
   } else {
+    // Case 2: Binary / Checklist habit (e.g. Siram Tanaman, Minum Vitamin)
+    // Applies Atomic Habits 2-Minute Rule
     suggestedAction = {
-      type: 'EARLY_NUDGE',
-      message: `Selesaikan lebih awal siang/sore ini sebelum energimu terkuras di malam hari!`,
+      type: 'CHECKLIST_2MIN',
+      message: `${habit.name} biasanya rawan terlewat di hari ${currentDayName}. Gunakan prinsip 2 menit: lakukan versi teringan sekarang agar pohon virtualmu tidak kekurangan nutrisi.`,
     };
   }
 
@@ -233,8 +257,9 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
 
 /**
  * Evaluates whether a habit is mature enough for predictive churn/failure analysis.
- * New habits are granted a 7-day (1 week) grace period to establish baseline behavior
- * without triggering premature high-risk alerts.
+ * New habits are granted a 14-day (2-week) baseline grace period to establish consistent behavior,
+ * capture at least 2 full calendar cycles, and eliminate small sample noise before triggering
+ * predictive early-warning alerts.
  */
 export function isHabitEligibleForPrediction(
   habit: Pick<Habit, 'created_at' | 'start_date'>,
@@ -254,6 +279,6 @@ export function isHabitEligibleForPrediction(
     Math.round((evalDate.getTime() - createdDay.getTime()) / (1000 * 3600 * 24))
   );
 
-  return daysSinceCreation >= 7;
+  return daysSinceCreation >= 14;
 }
 

@@ -112,9 +112,10 @@ export class PredictionService {
     const atRiskHabits: HabitRiskPrediction[] = [];
 
     for (const habit of uncompletedScheduledHabits) {
-      // 1-Week (7-Day) Cold Start Guard:
-      // Predictive risk nudges only activate after a habit has been tracked for at least 7 days (1 week).
-      // Brand new accounts and freshly created habits are in their onboarding baseline phase.
+      // 2-Week (14-Day) Cold Start Guard:
+      // Predictive risk nudges only activate after a habit has been tracked for at least 14 days (2 weeks).
+      // Brand new accounts and freshly created habits are in their onboarding baseline phase to capture
+      // 2 full calendar cycles and eliminate small sample noise.
       if (!isHabitEligibleForPrediction(habit, today)) {
         continue;
       }

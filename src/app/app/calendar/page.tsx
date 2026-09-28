@@ -12,10 +12,8 @@ import {
   CheckCircle2,
   Clock,
   Sparkles,
-  Layers,
   CalendarDays,
   Check,
-  TrendingUp,
   Leaf,
   Loader2
 } from 'lucide-react';
@@ -33,17 +31,18 @@ const FULL_MONTH_NAMES_ID = [
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
 
-interface MatrixDay {
+interface MonthGridCell {
   dateStr: string;
-  dateObj: Date;
-  dayOfWeek: number; // 0 = Sun, 1 = Mon, ..., 6 = Sat
-  dayOfMonth: number;
+  dayNumber: number;
   month: number;
+  year: number;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  isFuture: boolean;
+  isPast: boolean;
   count: number;
   xp: number;
   level: 0 | 1 | 2 | 3 | 4;
-  isToday: boolean;
-  isFuture: boolean;
 }
 
 export default function CalendarPage() {
@@ -54,8 +53,7 @@ export default function CalendarPage() {
 
   const [selectedYear, setSelectedYear] = useState<number>(currentRealYear);
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
-  const [viewMode, setViewMode] = useState<'matrix' | 'month'>('matrix');
-  const [currentMonth, setCurrentMonth] = useState<number>(today.getMonth()); // For monthly view
+  const [currentMonth, setCurrentMonth] = useState<number>(today.getMonth());
   const [completingId, setCompletingId] = useState<string | null>(null);
 
   const handleCompleteHabit = async (habitId: string) => {
@@ -74,7 +72,7 @@ export default function CalendarPage() {
     }
   };
 
-  // 1. Fetch Year Activity Matrix
+  // 1. Fetch Year Activity (Contains all daily activities in this year)
   const { data: activityResponse, isLoading: isActivityLoading } = useQuery<{
     success: boolean;
     data: {
@@ -96,10 +94,9 @@ export default function CalendarPage() {
 
   const activityData = activityResponse?.data;
   const activitiesMap = activityData?.activities || {};
-  const availableYears = activityData?.availableYears || [currentRealYear, currentRealYear - 1, currentRealYear - 2];
 
   // 2. Fetch Day Detail for Selected Date
-  const { data: dayDetailResponse, isLoading: isDayLoading, refetch: refetchDay } = useQuery<{
+  const { data: dayDetailResponse, isLoading: isDayLoading } = useQuery<{
     success: boolean;
     data: {
       date: string;
@@ -122,79 +119,7 @@ export default function CalendarPage() {
 
   const dayDetail = dayDetailResponse?.data;
 
-  // Build 53-week Matrix for the selected year
-  const { weeks, monthHeaders } = useMemo(() => {
-    const isLeap = (selectedYear % 4 === 0 && selectedYear % 100 !== 0) || selectedYear % 400 === 0;
-    const daysInMonths = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-
-    const weeksList: (MatrixDay | null)[][] = [];
-    let currentWeek: (MatrixDay | null)[] = [];
-    const monthCols: { month: number; colIndex: number }[] = [];
-    let lastMonthSeen = -1;
-
-    // Start on Jan 1
-    const jan1 = new Date(selectedYear, 0, 1);
-    const startDayOfWeek = jan1.getDay(); // 0 is Sun
-
-    // Fill initial empty days in week 0
-    for (let i = 0; i < startDayOfWeek; i++) {
-      currentWeek.push(null);
-    }
-
-    let colIdx = 0;
-
-    for (let m = 0; m < 12; m++) {
-      const totalDays = daysInMonths[m];
-      for (let d = 1; d <= totalDays; d++) {
-        const dObj = new Date(selectedYear, m, d);
-        const dStr = toDateString(dObj);
-        const dayOfWeek = dObj.getDay();
-
-        if (m !== lastMonthSeen) {
-          monthCols.push({ month: m, colIndex: colIdx });
-          lastMonthSeen = m;
-        }
-
-        const act = activitiesMap[dStr];
-        const count = act?.count || 0;
-        const xp = act?.xp || 0;
-        const level = (act?.level ?? 0) as 0 | 1 | 2 | 3 | 4;
-        const isFuture = dObj > today;
-
-        currentWeek.push({
-          dateStr: dStr,
-          dateObj: dObj,
-          dayOfWeek,
-          dayOfMonth: d,
-          month: m,
-          count,
-          xp,
-          level,
-          isToday: dStr === todayStr,
-          isFuture,
-        });
-
-        // If Saturday (end of column), wrap to next week
-        if (dayOfWeek === 6) {
-          weeksList.push(currentWeek);
-          currentWeek = [];
-          colIdx++;
-        }
-      }
-    }
-
-    // Push trailing week if days remaining
-    if (currentWeek.length > 0) {
-      while (currentWeek.length < 7) {
-        currentWeek.push(null);
-      }
-      weeksList.push(currentWeek);
-    }
-
-    return { weeks: weeksList, monthHeaders: monthCols };
-  }, [selectedYear, activitiesMap, todayStr]);
-
-  // Selected date human-readable label
+  // Selected date human-readable label in Indonesian
   const formattedSelectedDate = useMemo(() => {
     try {
       const [y, m, d] = selectedDate.split('-').map(Number);
@@ -225,86 +150,182 @@ export default function CalendarPage() {
     }
   };
 
-  // Monthly Calendar Days
-  const monthCalendarDays = useMemo(() => {
-    const firstDayIndex = new Date(selectedYear, currentMonth, 1).getDay();
-    const daysInMonth = new Date(selectedYear, currentMonth + 1, 0).getDate();
-    const days: (string | null)[] = [];
+  const handleJumpToToday = () => {
+    setSelectedYear(today.getFullYear());
+    setCurrentMonth(today.getMonth());
+    setSelectedDate(todayStr);
+  };
 
-    for (let i = 0; i < firstDayIndex; i++) {
-      days.push(null);
+  const handleSelectDate = (dateStr: string, cellMonth: number, cellYear: number) => {
+    setSelectedDate(dateStr);
+    if (cellYear !== selectedYear) {
+      setSelectedYear(cellYear);
     }
+    if (cellMonth !== currentMonth) {
+      setCurrentMonth(cellMonth);
+    }
+  };
+
+  // Month Statistics Calculation
+  const monthStats = useMemo(() => {
+    let completions = 0;
+    let activeDays = 0;
+    let xp = 0;
+
+    const daysInMonth = new Date(selectedYear, currentMonth + 1, 0).getDate();
     for (let d = 1; d <= daysInMonth; d++) {
       const monthStr = String(currentMonth + 1).padStart(2, '0');
       const dayStr = String(d).padStart(2, '0');
-      days.push(`${selectedYear}-${monthStr}-${dayStr}`);
+      const dateStr = `${selectedYear}-${monthStr}-${dayStr}`;
+      const act = activitiesMap[dateStr];
+      if (act && act.count > 0) {
+        completions += act.count;
+        activeDays += 1;
+        xp += act.xp;
+      }
     }
-    return days;
-  }, [selectedYear, currentMonth]);
+
+    const isCurrentMonthNow = selectedYear === today.getFullYear() && currentMonth === today.getMonth();
+    const daysCounted = isCurrentMonthNow ? today.getDate() : daysInMonth;
+    const consistencyRate = daysCounted > 0 ? Math.round((activeDays / daysCounted) * 100) : 0;
+
+    return { completions, activeDays, xp, consistencyRate, daysInMonth };
+  }, [selectedYear, currentMonth, activitiesMap, today]);
+
+  // Build 7-column Calendar Grid (Senin - Minggu) with date padding
+  const monthGridCells = useMemo(() => {
+    const firstDay = new Date(selectedYear, currentMonth, 1);
+    const firstDayOfWeek = firstDay.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+    // Monday-first offset: Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6
+    const startDayOffset = (firstDayOfWeek + 6) % 7;
+
+    const daysInCurrentMonth = new Date(selectedYear, currentMonth + 1, 0).getDate();
+    const daysInPrevMonth = new Date(selectedYear, currentMonth, 0).getDate();
+
+    const cells: MonthGridCell[] = [];
+
+    // 1. Previous month trailing days
+    const prevYear = currentMonth === 0 ? selectedYear - 1 : selectedYear;
+    const prevMonthNum = currentMonth === 0 ? 11 : currentMonth - 1;
+    for (let i = startDayOffset - 1; i >= 0; i--) {
+      const d = daysInPrevMonth - i;
+      const mStr = String(prevMonthNum + 1).padStart(2, '0');
+      const dStr = String(d).padStart(2, '0');
+      const dateStr = `${prevYear}-${mStr}-${dStr}`;
+      const dObj = new Date(prevYear, prevMonthNum, d);
+      const act = activitiesMap[dateStr];
+      cells.push({
+        dateStr,
+        dayNumber: d,
+        month: prevMonthNum,
+        year: prevYear,
+        isCurrentMonth: false,
+        isToday: dateStr === todayStr,
+        isFuture: dObj > today,
+        isPast: dObj < today && dateStr !== todayStr,
+        count: act?.count || 0,
+        xp: act?.xp || 0,
+        level: (act?.level ?? 0) as 0 | 1 | 2 | 3 | 4,
+      });
+    }
+
+    // 2. Current month days
+    for (let d = 1; d <= daysInCurrentMonth; d++) {
+      const mStr = String(currentMonth + 1).padStart(2, '0');
+      const dStr = String(d).padStart(2, '0');
+      const dateStr = `${selectedYear}-${mStr}-${dStr}`;
+      const dObj = new Date(selectedYear, currentMonth, d);
+      const act = activitiesMap[dateStr];
+      cells.push({
+        dateStr,
+        dayNumber: d,
+        month: currentMonth,
+        year: selectedYear,
+        isCurrentMonth: true,
+        isToday: dateStr === todayStr,
+        isFuture: dObj > today,
+        isPast: dObj < today && dateStr !== todayStr,
+        count: act?.count || 0,
+        xp: act?.xp || 0,
+        level: (act?.level ?? 0) as 0 | 1 | 2 | 3 | 4,
+      });
+    }
+
+    // 3. Next month leading padding (fill to 35 or 42 cells)
+    const totalSoFar = cells.length;
+    const targetTotal = totalSoFar <= 35 ? 35 : 42;
+    const nextYear = currentMonth === 11 ? selectedYear + 1 : selectedYear;
+    const nextMonthNum = currentMonth === 11 ? 0 : currentMonth + 1;
+    const paddingNeeded = targetTotal - totalSoFar;
+
+    for (let d = 1; d <= paddingNeeded; d++) {
+      const mStr = String(nextMonthNum + 1).padStart(2, '0');
+      const dStr = String(d).padStart(2, '0');
+      const dateStr = `${nextYear}-${mStr}-${dStr}`;
+      const dObj = new Date(nextYear, nextMonthNum, d);
+      const act = activitiesMap[dateStr];
+      cells.push({
+        dateStr,
+        dayNumber: d,
+        month: nextMonthNum,
+        year: nextYear,
+        isCurrentMonth: false,
+        isToday: dateStr === todayStr,
+        isFuture: dObj > today,
+        isPast: dObj < today && dateStr !== todayStr,
+        count: act?.count || 0,
+        xp: act?.xp || 0,
+        level: (act?.level ?? 0) as 0 | 1 | 2 | 3 | 4,
+      });
+    }
+
+    return cells;
+  }, [selectedYear, currentMonth, activitiesMap, todayStr, today]);
 
   return (
     <div className="space-y-6">
-      {/* 1. Header & View Mode Switcher */}
+      {/* 1. Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-            <span>Kalender &amp; Matriks Pertumbuhan</span>
+            <span>Kalender Kebiasaan</span>
             <span className="p-1.5 rounded-xl bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400">
               <Leaf className="w-5 h-5 sm:w-6 sm:h-6" />
             </span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Rekam jejak konsistensi kebiasaan dan kesuburan kebun virtualmu sepanjang tahun.
+            Pantau rutinitas harian, rekam jejak konsistensi, dan pertumbuhan kebunmu per bulan &amp; per tanggal.
           </p>
         </div>
 
-        {/* View Switcher Pill */}
-        <div className="inline-flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-[#121c17] border border-slate-200 dark:border-[#1e2e26] self-start sm:self-auto">
-          <button
-            onClick={() => setViewMode('matrix')}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all',
-              viewMode === 'matrix'
-                ? 'bg-white dark:bg-[#1a2c23] text-emerald-700 dark:text-emerald-300 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            )}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Matriks 52 Minggu</span>
-          </button>
-          <button
-            onClick={() => setViewMode('month')}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all',
-              viewMode === 'month'
-                ? 'bg-white dark:bg-[#1a2c23] text-emerald-700 dark:text-emerald-300 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            )}
-          >
-            <CalendarDays className="w-3.5 h-3.5" />
-            <span>Tampilan Bulanan</span>
-          </button>
-        </div>
+        {/* Quick Return to Today Button */}
+        <button
+          onClick={handleJumpToToday}
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white dark:bg-[#111a16] border border-slate-200 dark:border-[#1e2e26] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500 dark:hover:border-emerald-500/60 shadow-xs transition-all self-start sm:self-auto"
+        >
+          <CalendarDays className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <span>Kembali ke Hari Ini</span>
+        </button>
       </div>
 
-      {/* 2. Executive Metric Cards */}
+      {/* 2. Monthly Executive Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* Total Completions */}
+        {/* Total Completions in Month */}
         <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111a16] border border-slate-200 dark:border-[#1e2e26] shadow-sm flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-              Total Checklist {selectedYear}
+              Checklist {MONTH_NAMES_ID[currentMonth]}
             </span>
             <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-              {activityData?.totalCompletions ?? 0}
+              {monthStats.completions}
             </span>
           </div>
         </div>
 
-        {/* Non-Zero Days */}
+        {/* Non-Zero Days in Month */}
         <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111a16] border border-slate-200 dark:border-[#1e2e26] shadow-sm flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-2xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800/60 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
             <Sparkles className="w-6 h-6" />
@@ -314,254 +335,249 @@ export default function CalendarPage() {
               Hari Non-Zero (Disiplin)
             </span>
             <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-              {activityData?.activeDaysCount ?? 0} <span className="text-xs text-slate-400 font-normal">hari</span>
+              {monthStats.activeDays} <span className="text-xs text-slate-400 font-normal">/ {monthStats.daysInMonth} hari</span>
             </span>
           </div>
         </div>
 
-        {/* Total XP Earned */}
+        {/* Monthly XP Earned */}
         <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111a16] border border-slate-200 dark:border-[#1e2e26] shadow-sm flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
             <Zap className="w-6 h-6" />
           </div>
           <div>
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-              Akumulasi XP {selectedYear}
+              Akumulasi XP {MONTH_NAMES_ID[currentMonth]}
             </span>
             <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-              +{activityData?.totalXp ?? 0} <span className="text-xs text-slate-400 font-normal">XP</span>
+              +{monthStats.xp} <span className="text-xs text-slate-400 font-normal">XP</span>
             </span>
           </div>
         </div>
 
-        {/* Max Streak in Year */}
+        {/* Monthly Consistency Rate */}
         <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111a16] border border-slate-200 dark:border-[#1e2e26] shadow-sm flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/60 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
             <Flame className="w-6 h-6" />
           </div>
           <div>
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-              Rekor Streak Terpanjang
+              Konsistensi Bulan Ini
             </span>
             <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-              {activityData?.maxStreakInYear ?? 0} <span className="text-xs text-slate-400 font-normal">hari</span>
+              {monthStats.consistencyRate}%
             </span>
           </div>
         </div>
       </div>
 
-      {/* 3. Main Workspace: Grid + Inspector Card */}
+      {/* 3. Main Workspace: Monthly Calendar + Day Inspector */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-        {/* LEFT: Matrix or Month View (xl:col-span-8) */}
+        {/* LEFT: Monthly Calendar Grid (xl:col-span-8) */}
         <div className="xl:col-span-8 space-y-6">
-          {viewMode === 'matrix' ? (
-            /* ============================================================ */
-            /* GITHUB-STYLE BOTANICAL CONTRIBUTION MATRIX (52 WEEKS)        */
-            /* ============================================================ */
-            <div className="p-5 sm:p-7 rounded-3xl bg-white dark:bg-[#0e1713] border border-slate-200 dark:border-[#1e2e26] shadow-sm space-y-5">
-              {/* Matrix Topbar with Year Selector */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100 dark:border-[#1a2c23]">
-                <div>
-                  <h2 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span>
-                      {activityData?.totalCompletions ?? 0} checklist kebiasaan di tahun {selectedYear}
-                    </span>
-                  </h2>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">
-                    Setiap kotak mewakili hari kalender. Klik untuk meninjau rincian tugas.
-                  </span>
-                </div>
-
-                {/* Year Select Buttons (GitHub Style) */}
-                <div className="flex items-center gap-1.5 self-start sm:self-auto">
-                  {availableYears.map((yr) => (
-                    <button
-                      key={yr}
-                      onClick={() => setSelectedYear(yr)}
-                      className={cn(
-                        'px-3 py-1 rounded-xl text-xs font-bold transition-all',
-                        selectedYear === yr
-                          ? 'bg-emerald-600 text-white shadow-sm'
-                          : 'bg-slate-100 dark:bg-[#15231c] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1e342a]'
-                      )}
-                    >
-                      {yr}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Scrollable Heatmap Canvas */}
-              <div className="overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-emerald-500/20">
-                <div className="min-w-[780px]">
-                  {/* Month Labels Bar (Absolute positioning, no truncation) */}
-                  <div className="relative h-5 text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-2">
-                    {monthHeaders.map((header) => (
-                      <span
-                        key={`month-header-${header.month}`}
-                        className="absolute top-0 font-semibold text-slate-600 dark:text-slate-300 select-none whitespace-nowrap"
-                        style={{ left: `calc(34px + ${header.colIndex} * 16px)` }}
-                      >
-                        {MONTH_NAMES_ID[header.month]}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Heatmap Grid (7 rows x 53 cols) */}
-                  <div className="flex gap-[3px]">
-                    {/* Weekday Row Labels (Sen, Rab, Jum) */}
-                    <div className="flex flex-col gap-[3px] pr-2 justify-between text-[10px] font-bold text-slate-400 dark:text-slate-500 select-none w-7 text-right">
-                      <div className="h-[13px]"></div>
-                      <div className="h-[13px] leading-tight">Sen</div>
-                      <div className="h-[13px]"></div>
-                      <div className="h-[13px] leading-tight">Rab</div>
-                      <div className="h-[13px]"></div>
-                      <div className="h-[13px] leading-tight">Jum</div>
-                      <div className="h-[13px]"></div>
-                    </div>
-
-                    {/* Columns of Weeks */}
-                    {weeks.map((week, colIdx) => (
-                      <div key={`col-${colIdx}`} className="flex flex-col gap-[3px]">
-                        {week.map((day, rowIdx) => {
-                          if (!day) {
-                            return (
-                              <div
-                                key={`empty-${colIdx}-${rowIdx}`}
-                                className="w-[13px] h-[13px] opacity-0"
-                              />
-                            );
-                          }
-
-                          const isSelected = selectedDate === day.dateStr;
-
-                          // Color based on Level (HabitGrow Botanical Theme)
-                          let cellColor = 'bg-slate-100 dark:bg-[#15231c] border border-black/5 dark:border-white/5';
-                          if (day.level === 1) {
-                            cellColor = 'bg-emerald-200 dark:bg-[#0e4429] border border-emerald-300 dark:border-[#006d32]/60';
-                          } else if (day.level === 2) {
-                            cellColor = 'bg-emerald-400 dark:bg-[#006d32] border border-emerald-500 dark:border-emerald-600/60';
-                          } else if (day.level === 3) {
-                            cellColor = 'bg-emerald-500 dark:bg-[#26a641] border border-emerald-600 dark:border-emerald-400/60 shadow-xs shadow-emerald-500/20';
-                          } else if (day.level === 4) {
-                            cellColor = 'bg-teal-400 dark:bg-[#39d353] border border-teal-300 dark:border-mint-300 shadow-sm shadow-emerald-400/40 ring-1 ring-emerald-300/40';
-                          }
-
-                          return (
-                            <button
-                              key={day.dateStr}
-                              onClick={() => setSelectedDate(day.dateStr)}
-                              title={`${day.dateStr}: ${day.count} kebiasaan selesai (${day.xp} XP)`}
-                              className={cn(
-                                'w-[13px] h-[13px] sm:w-[14px] sm:h-[14px] rounded-[3.5px] transition-all relative group',
-                                cellColor,
-                                isSelected && 'ring-2 ring-emerald-500 dark:ring-emerald-400 scale-125 z-10 shadow-md',
-                                day.isToday && !isSelected && 'ring-1.5 ring-emerald-500 dark:ring-emerald-400',
-                                day.isFuture && 'opacity-40 cursor-default'
-                              )}
-                            />
-                          );
-                        })}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom Footer: Philosophy Hint + Botanical Scale Legend */}
-              <div className="pt-3 border-t border-slate-100 dark:border-[#1a2c23] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Keterangan: 1 checklist cukup untuk mempertahankan Non-Zero Day 🌱</span>
-                </div>
-
-                {/* Botanical Intensity Legend (GitHub Style) */}
-                <div className="flex items-center gap-1.5 select-none self-end sm:self-auto font-medium">
-                  <span className="text-[11px] text-slate-400 mr-1">Kurang</span>
-                  <span className="w-3 h-3 rounded-[3px] bg-slate-100 dark:bg-[#15231c] border border-black/5 dark:border-white/5" title="0 selesai" />
-                  <span className="w-3 h-3 rounded-[3px] bg-emerald-200 dark:bg-[#0e4429] border border-emerald-300 dark:border-[#006d32]/60" title="1 selesai" />
-                  <span className="w-3 h-3 rounded-[3px] bg-emerald-400 dark:bg-[#006d32] border border-emerald-500 dark:border-emerald-600/60" title="2-3 selesai" />
-                  <span className="w-3 h-3 rounded-[3px] bg-emerald-500 dark:bg-[#26a641] border border-emerald-600 dark:border-emerald-400/60" title="4-5 selesai" />
-                  <span className="w-3 h-3 rounded-[3px] bg-teal-400 dark:bg-[#39d353] border border-teal-300 dark:border-mint-300 shadow-xs" title="6+ selesai (Subur)" />
-                  <span className="text-[11px] text-slate-400 ml-1">Subur</span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* ============================================================ */
-            /* MONTHLY CALENDAR GRID (ALTERNATIVE VIEW)                     */
-            /* ============================================================ */
-            <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0e1713] border border-slate-200 dark:border-[#1e2e26] shadow-sm space-y-6">
-              {/* Month Navigation */}
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                  {FULL_MONTH_NAMES_ID[currentMonth]} {selectedYear}
-                </h2>
+          <div className="p-5 sm:p-7 rounded-3xl bg-white dark:bg-[#0e1713] border border-slate-200 dark:border-[#1e2e26] shadow-sm space-y-5">
+            {/* Topbar: Month Title & Year Navigation */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100 dark:border-[#1a2c23]">
+              <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1">
                   <button
                     onClick={prevMonth}
                     className="p-2 rounded-xl border border-slate-200 dark:border-[#1e2e26] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#15231c] transition"
+                    title="Bulan Sebelumnya"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={nextMonth}
                     className="p-2 rounded-xl border border-slate-200 dark:border-[#1e2e26] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#15231c] transition"
+                    title="Bulan Berikutnya"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
+
+                <div>
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+                    <span>{FULL_MONTH_NAMES_ID[currentMonth]} {selectedYear}</span>
+                  </h2>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">
+                    {monthStats.completions} checklist selesai &bull; {monthStats.activeDays} hari aktif
+                  </span>
+                </div>
               </div>
 
-              {/* Day Labels */}
-              <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs font-bold text-slate-400 uppercase tracking-wider">
-                {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map((w) => (
-                  <div key={w} className="py-2">
-                    {w}
-                  </div>
-                ))}
-              </div>
-
-              {/* Month Days */}
-              <div className="grid grid-cols-7 gap-1 sm:gap-2">
-                {monthCalendarDays.map((dateStr, idx) => {
-                  if (!dateStr) {
-                    return <div key={`empty-month-${idx}`} className="h-12 sm:h-14" />;
-                  }
-
-                  const isSelected = selectedDate === dateStr;
-                  const isToday = todayStr === dateStr;
-                  const dayNumber = Number(dateStr.split('-')[2]);
-                  const act = activitiesMap[dateStr];
-                  const count = act?.count || 0;
-
-                  return (
-                    <button
-                      key={dateStr}
-                      onClick={() => setSelectedDate(dateStr)}
-                      className={cn(
-                        'h-12 sm:h-14 rounded-2xl flex flex-col items-center justify-center p-1 text-xs font-bold transition-all relative',
-                        isSelected
-                          ? 'bg-emerald-600 text-white shadow-md scale-105 z-10'
-                          : isToday
-                          ? 'border-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300'
-                          : count > 0
-                          ? 'border border-emerald-300 dark:border-emerald-800/80 bg-emerald-50/40 dark:bg-emerald-950/20 text-slate-800 dark:text-slate-200'
-                          : 'border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300'
-                      )}
-                    >
-                      <span>{dayNumber}</span>
-                      {count > 0 && (
-                        <div className="flex gap-0.5 mt-1">
-                          <span className={cn('w-1.5 h-1.5 rounded-full', isSelected ? 'bg-white' : 'bg-emerald-500')} />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
+              {/* Year Navigation Controls */}
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#121c17] p-1 rounded-xl border border-slate-200 dark:border-[#1e2e26]">
+                  <button
+                    onClick={() => setSelectedYear((y) => y - 1)}
+                    className="p-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white transition"
+                    title="Tahun Sebelumnya"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-xs font-black px-2 text-slate-800 dark:text-slate-200">
+                    {selectedYear}
+                  </span>
+                  <button
+                    onClick={() => setSelectedYear((y) => y + 1)}
+                    className="p-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white transition"
+                    title="Tahun Berikutnya"
+                  >
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
-          )}
+
+            {/* Quick Month Selector Bar (Jan s/d Des) */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin scrollbar-thumb-emerald-500/20">
+              {MONTH_NAMES_ID.map((name, idx) => {
+                const isCurrent = currentMonth === idx;
+                return (
+                  <button
+                    key={name}
+                    onClick={() => setCurrentMonth(idx)}
+                    className={cn(
+                      'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap',
+                      isCurrent
+                        ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
+                        : 'bg-slate-100 dark:bg-[#15231c] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1f3329] hover:text-slate-900 dark:hover:text-white'
+                    )}
+                  >
+                    {name}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Weekdays Header: Senin s/d Minggu */}
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center text-xs font-bold uppercase tracking-wider">
+              {['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'].map((dayName, idx) => (
+                <div
+                  key={dayName}
+                  className={cn(
+                    'py-2 rounded-xl text-[11px] sm:text-xs font-extrabold',
+                    idx >= 5
+                      ? 'text-emerald-600/90 dark:text-emerald-400/90 bg-emerald-50/60 dark:bg-emerald-950/20'
+                      : 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#121c17]'
+                  )}
+                >
+                  <span className="hidden sm:inline">{dayName}</span>
+                  <span className="sm:hidden">{['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'][idx]}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* 7-Column Days Grid (Per Tanggal) */}
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+              {monthGridCells.map((cell) => {
+                const isSelected = selectedDate === cell.dateStr;
+
+                return (
+                  <button
+                    key={cell.dateStr}
+                    onClick={() => handleSelectDate(cell.dateStr, cell.month, cell.year)}
+                    className={cn(
+                      'min-h-[72px] sm:min-h-[96px] p-2 sm:p-2.5 rounded-2xl flex flex-col justify-between text-left transition-all duration-200 relative group border text-xs',
+                      // Selected state
+                      isSelected
+                        ? 'border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/50 ring-2 ring-emerald-500 dark:ring-emerald-400 shadow-md scale-[1.02] z-10'
+                        : cell.isToday
+                        ? 'border-emerald-400 dark:border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20 hover:border-emerald-500 shadow-xs'
+                        : cell.isCurrentMonth
+                        ? 'border-slate-200/90 dark:border-[#1e2e26] bg-white dark:bg-[#111a16] hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:bg-slate-50/70 dark:hover:bg-[#16231c]'
+                        : 'border-slate-100 dark:border-[#16221c]/50 bg-slate-50/30 dark:bg-[#0c1411]/30 opacity-35 hover:opacity-75',
+                      cell.isFuture && !isSelected && 'opacity-60'
+                    )}
+                  >
+                    {/* Top: Day Number & Today indicator */}
+                    <div className="flex items-center justify-between w-full">
+                      <span
+                        className={cn(
+                          'font-black text-xs sm:text-sm',
+                          isSelected
+                            ? 'text-emerald-700 dark:text-emerald-300'
+                            : cell.isToday
+                            ? 'text-emerald-600 dark:text-emerald-400 font-black'
+                            : cell.isCurrentMonth
+                            ? 'text-slate-800 dark:text-slate-100'
+                            : 'text-slate-400 dark:text-slate-600'
+                        )}
+                      >
+                        {cell.dayNumber}
+                      </span>
+
+                      {cell.isToday && (
+                        <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500 text-white shadow-xs">
+                          <span className="hidden sm:inline">Hari Ini</span>
+                          <span className="sm:hidden">&bull;</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Bottom: Botanical Activity Badge */}
+                    <div className="mt-1 w-full">
+                      {cell.count > 0 ? (
+                        <div
+                          className={cn(
+                            'w-full py-1 px-1.5 rounded-xl flex items-center justify-between text-[10px] font-bold transition-all',
+                            cell.level === 1 && 'bg-emerald-100 dark:bg-[#0e4429]/90 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-[#006d32]/60',
+                            cell.level === 2 && 'bg-emerald-200/90 dark:bg-[#006d32]/90 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-600/60',
+                            cell.level === 3 && 'bg-emerald-500 text-white border border-emerald-600 shadow-xs shadow-emerald-500/20',
+                            cell.level === 4 && 'bg-teal-500 text-white border border-teal-400 shadow-xs shadow-teal-500/30'
+                          )}
+                        >
+                          <div className="flex items-center gap-1 truncate">
+                            <span className="text-xs">{cell.level >= 4 ? '🌸' : cell.level >= 3 ? '🌳' : cell.level >= 2 ? '🌿' : '🌱'}</span>
+                            <span className="hidden md:inline truncate">{cell.count} selesai</span>
+                            <span className="md:hidden">{cell.count}</span>
+                          </div>
+                          <span className="text-[9px] opacity-80 shrink-0 hidden lg:inline">+{cell.xp}</span>
+                        </div>
+                      ) : cell.isToday ? (
+                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold italic truncate">
+                          Belum selesai
+                        </div>
+                      ) : (
+                        <div className="h-4" />
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Botanical Legend & Non-Zero Day Philosophy */}
+            <div className="pt-4 border-t border-slate-100 dark:border-[#1a2c23] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span>
+                  <strong>Filosofi Non-Zero Day:</strong> Minimal 1 checklist kebiasaan untuk menyiram pohon virtualmu 🌱
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5 select-none font-medium text-[11px] self-start lg:self-auto">
+                <span className="text-slate-400 mr-1">Kurang</span>
+                <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-[#15231c] border border-black/5 dark:border-white/5" title="0 selesai">
+                  0
+                </span>
+                <span className="px-2 py-0.5 rounded-lg bg-emerald-100 dark:bg-[#0e4429] text-emerald-800 dark:text-emerald-300 border border-emerald-200" title="1 selesai">
+                  🌱 1
+                </span>
+                <span className="px-2 py-0.5 rounded-lg bg-emerald-200 dark:bg-[#006d32] text-emerald-900 dark:text-white border border-emerald-300" title="2-3 selesai">
+                  🌿 2-3
+                </span>
+                <span className="px-2 py-0.5 rounded-lg bg-emerald-500 text-white" title="4-5 selesai">
+                  🌳 4-5
+                </span>
+                <span className="px-2 py-0.5 rounded-lg bg-teal-500 text-white" title="6+ selesai (Subur)">
+                  🌸 6+
+                </span>
+                <span className="text-slate-400 ml-1">Subur</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* RIGHT: Selected Day Inspector Card (xl:col-span-4) */}
