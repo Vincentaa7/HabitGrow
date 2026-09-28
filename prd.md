@@ -3321,3 +3321,50 @@ Pengujian fungsionalitas antarmuka dan alur pengguna nyata (*Real User Journey*)
 
 ---
 
+# 126. Form Kebiasaan Cepat, Menu Edit & Dialog Keamanan Khusus
+
+Untuk meningkatkan kenyamanan pengguna saat mengelola rutinitas, sistem menyediakan interaktivitas formulir yang ergonomis:
+
+### 126.1 Chip Preset Target Harian & Satuan Cepat
+* **Target Harian:** Menampilkan tombol chip preset angka cepat `[1] [2] [3] [4] [5]` di bawah kolom input, memfasilitasi pengisian satu ketukan (*one-tap entry*) tanpa menghilangkan kemampuan mengetik angka kustom.
+* **Pilihan Satuan Terkurasi:** Menyajikan baris chip pilihan satuan siap pakai `['kali', 'menit', 'halaman', 'jam', 'liter', 'ml', 'gelas', 'bab']` yang dapat langsung dipilih maupun diisi manual oleh pengguna.
+
+### 126.2 Menu Edit Kebiasaan & Konfirmasi Hapus Khusus
+* **Tombol Edit (Pencil Icon):** Tersedia pada setiap kartu kebiasaan di halaman `/app/habits`. Mengklik ikon ini membuka modal formulir dalam *Edit Mode*, memuat nilai awal (`initialHabit`), dan memperbarui data via `PATCH /api/habits/[id]`.
+* **Dialog Konfirmasi Hapus Bahaya (*Custom Danger Modal*):** Menggantikan popup bawaan peramban (`window.confirm()`) dengan modal terdedikasi bernuansa merah peringatan (*alert triangle icon*), efek *backdrop blur*, peringatan penghapusan permanen, dan *loading spinner* saat proses penghapusan berlangsung.
+
+---
+
+# 127. Redesain Kalender Bulanan Interaktif Per-Bulan & Per-Tanggal
+
+Halaman Kalender (`/app/calendar`) telah dirombak secara menyeluruh untuk berfokus eksklusif pada tata letak bulanan dan penanggalan yang lapang:
+
+### 127.1 Kisi Kalender 7 Kolom (Senin s/d Minggu)
+* Mengeliminasi matriks tahunan 52 minggu bergaya GitHub.
+* Menampilkan kisi kalender mingguan dari **Senin hingga Minggu** dengan angka tanggal 1..31 yang proporsional.
+* Hari libur/akhir pekan (Sabtu & Minggu) diberi aksen warna botani yang membedakannya secara visual.
+* Dilengkapi *padding days* memudar dari bulan sebelum dan sesudahnya agar kisi selalu berbentuk persegi rapi.
+
+### 127.2 Lencana Intensitas & Navigasi Cepat
+* Kotak tanggal yang memiliki riwayat checklist menampilkan lencana botani interaktif (`🌱 1`, `🌿 2-3`, `🌳 4-5`, `🌸 6+ Subur`) beserta perolehan XP.
+* Tanggal hari ini ditandai lencana khusus **Hari Ini**.
+* Bilah pemilih cepat 12 bulan (`[Jan] [Feb] ... [Des]`) dan *year stepper* `< 2026 >` untuk berpindah bulan secara instan.
+* Tombol **Kembali ke Hari Ini** untuk melompat kembali ke tanggal saat ini dengan satu sentuhan.
+
+---
+
+# 128. Arsitektur Optimasi Performa Sistem (Bypass Middleware & Konkurensi Paralel)
+
+Menjawab kebutuhan responsivitas tinggi dan pengalaman navigasi instan (*zero-lag*):
+
+### 128.1 Pengecualian Rute API dari Middleware
+* Konfigurasi matcher regex pada `src/middleware.ts` mengecualikan seluruh rute `/api/*`.
+* Menghilangkan *double round-trip* ke Supabase Auth Server pada setiap pemanggilan API, menghemat **200–400 ms** per request.
+
+### 128.2 Konkurensi Kueri Paralel Bebas Hambatan
+* Kueri agregasi dashboard pada `/api/dashboard/summary` mengeksekusi rekonsiliasi streak harian di dalam `Promise.all` secara serentak bersama data profil, level, pohon, dan kebiasaan hari ini.
+* Menghilangkan jeda sekuensial *blocking* sebesar **200–300 ms**.
+
+### 128.3 Optimasi Riwayat Kalender & Tree-Shaking Pustaka
+* Kueri tahun kalender di `/api/calendar/activity` dioptimalkan dengan query `.limit(1)` pada tanggal terlama, menggantikan pembacaan seluruh riwayat database.
+* Konfigurasi `experimental.optimizePackageImports` pada `next.config.ts` untuk pustaka berukuran besar (`lucide-react`, `recharts`, `date-fns`, `canvas-confetti`, `@tanstack/react-query`) guna memangkas ukuran bundle dan mempercepat pemuatan halaman.

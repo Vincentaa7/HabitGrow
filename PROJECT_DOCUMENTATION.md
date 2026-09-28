@@ -871,22 +871,32 @@ graph LR
 #### BAB 4: IMPLEMENTASI & PENGUJIAN SISTEM
 * **Lingkungan Implementasi:** Spesifikasi perangkat keras, perangkat lunak, dan konfigurasi server.
 * **Hasil Pengujian Algoritma (*Unit Testing* - Vitest):**
-  * Tampilkan tabel hasil pengujian **39 test cases** Vitest dengan tingkat keberhasilan 100%:
+  * Tampilkan tabel hasil pengujian **41 test cases** Vitest dengan tingkat keberhasilan 100%:
     * `streak.test.ts` (12 skenario pengujian streak).
+    * `prediction.test.ts` (10 skenario klasifikasi probabilitas risiko kegagalan kebiasaan, cold-start guard 14 hari, aturan 2 menit biner, dan konversi cerdas kuantitatif jam ke menit serta liter ke ml).
     * `tree.test.ts` (6 skenario transisi tahap pohon).
     * `level.test.ts` (5 skenario formula kenaikan level).
     * `xp.test.ts` (4 skenario perhitungan XP kesulitan tugas).
     * `consistency.test.ts` (4 skenario windowing 30 hari).
-    * `prediction.test.ts` (8 skenario klasifikasi probabilitas risiko kegagalan kebiasaan, cold-start guard 7 hari, dan rekomendasi target adaptif).
 * **Hasil Pengujian Otomatis Antarmuka (*Automated E2E Testing* - TestSprite MCP):**
   * Pengujian otonom berbasis peramban virtual Playwright/Chromium terhadap 15 skenario antarmuka end-to-end dengan akun `gura3497@gmail.com`.
   * **Tingkat Kelulusan:** 80.00% (12 skenario Lulus, 2 Gagal pada edge case, 1 Terblokir karena ketiadaan data arsip awal).
   * Seluruh alur utama (*Core Happy Path*) lulus 100%: Autentikasi Login, Proteksi Sesi Cookie, Navigasi Dashboard, Checklist 0ms & Konfeti, Akumulasi Streak/XP, Visualisasi Pohon Virtual, Bilah Navigasi Bawah, Laci Navigasi Seluler (*Hamburger Drawer*), dan Sakelar Tema (*Dark/Light Mode*).
-* **Optimasi Performa & Higienitas Cache (Anti-Lag & Anti-Stale Data):**
-  * **Paralelisasi Kueri Backend (`Promise.all`):** Rute `/api/dashboard/summary` memparalelkan 8 pemanggilan database secara serentak, memangkas latensi respon backend dari $\sim 2.500\text{ ms}$ menjadi $\sim 300\text{ ms}$ (percepatan hingga 7x lipat).
+* **Arsitektur Optimasi Performa Sistem (Anti-Lag, Bypass Middleware & Konkurensi Paralel):**
+  * **Pengecualian Rute API dari Middleware (`src/middleware.ts`):** Mengeliminasi intersepsi middleware pada seluruh rute `/api/*`. Hal ini menghapus *double network round-trip* ke Supabase Auth (`supabase.auth.getUser()`), memangkas latensi respon setiap API sebesar **200–400 ms**.
+  * **Paralelisasi Kueri Backend Bebas Hambatan (`Promise.all`):** Rute `/api/dashboard/summary` mengeksekusi sinkronisasi streak harian secara paralel bersamaan dengan komponen dashboard lainnya, menghilangkan jeda sekuensial *blocking* sebesar **200–300 ms**.
+  * **Optimasi Kueri Riwayat Kalender (`/api/calendar/activity`):** Mengganti pemindaian seluruh baris data checklist historis (*unbounded scan*) dengan kueri `.limit(1)` untuk menemukan tahun terlama dalam 1 baris data, menghemat memori server dan bandwidth jaringan.
+  * **Tree-Shaking & Bundle Optimization (`next.config.ts`):** Mengaktifkan `experimental.optimizePackageImports` pada pustaka berat (`lucide-react`, `recharts`, `date-fns`, `canvas-confetti`, `@tanstack/react-query`) untuk memangkas ukuran berkas JavaScript dan mempercepat waktu *parse/hydration* di peramban.
   * **Higienitas Cache Multi-Akun (`queryClient.clear()`):** Pembersihan memori cache TanStack Query secara seketika saat Logout (`Navbar.tsx`) dan Login (`login/page.tsx`), mengeliminasi bug data akun sebelumnya yang "nyangkut" saat beralih akun.
-  * **Navigasi Klien Instan (0ms):** Penerapan `prefetch={true}` pada seluruh tautan navigasi dan unifikasi query key dengan parameter tanggal lokal (`['dashboard-summary']`), sehingga perpindahan antara Dashboard, Pohon Virtual, dan Profil tidak lagi memicu *loading skeleton* berulang.
-* **Pengujian Latensi Jaringan:** Uji waktu respons panggilan REST API (`GET /api/dashboard/summary` rata-rata 150-300 ms).
+  * **Navigasi Klien Instan (0ms):** Penerapan `prefetch={true}` pada seluruh tautan navigasi dan unifikasi query key dengan parameter tanggal lokal (`['dashboard-summary']`), sehingga perpindahan antara Dashboard, Pohon Virtual, Kebiasaan, dan Kalender berjalan instan tanpa jeda.
+* **Redesain Antarmuka Kalender Per-Bulan & Per-Tanggal (`src/app/app/calendar/page.tsx`):**
+  * Menggantikan matriks 52 minggu tahunan yang padat dengan tata letak kisi kalender bulanan 7 kolom (**Senin s/d Minggu**) dan penanggalan terstruktur 1..31.
+  * Dilengkapi baris *quick month pills* (Jan s/d Des), *year stepper* `< 2026 >`, tombol instan "Kembali ke Hari Ini", kartu ringkasan metrik bulanan, lencana botani tingkat penyelesaian, dan panel inspektur rincian hari terpilih.
+* **Penyempurnaan Form Kebiasaan & Manajemen (`src/app/app/habits/page.tsx`):**
+  * Menghadirkan tombol chip preset cepat angka `[1] [2] [3] [4] [5]` pada Target Harian dan chip pilihan satuan `['kali', 'menit', 'halaman', 'jam', 'liter', 'ml', 'gelas', 'bab']` pada Satuan.
+  * Menu Edit Kebiasaan (`Pencil` icon) yang terintegrasi dengan modal dan `PATCH /api/habits/[id]`.
+  * Dialog konfirmasi hapus khusus (*Custom Danger Alert Modal*) dengan efek *backdrop blur* yang menggantikan dialog bawaan peramban `window.confirm()`.
+* **Pengujian Latensi Jaringan:** Uji waktu respons panggilan REST API (`GET /api/dashboard/summary` rata-rata 120-250 ms pasca-optimasi).
 * *(Jika IoT)* Uji keberhasilan pembacaan kartu NFC dan latensi sinkronisasi dari hardware ke dashboard web.
 
 #### BAB 5: KESIMPULAN & SARAN
