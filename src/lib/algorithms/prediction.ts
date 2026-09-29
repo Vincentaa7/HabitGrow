@@ -37,21 +37,20 @@ export interface PredictionInput {
 const DAY_NAMES = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
 /**
- * Calibrated Logistic Regression Weights (Trained on habit retention heuristic):
- * Baseline intercept: -2.3 (clean default state)
- * beta_1: 2.6 (Recent 14-day miss rate)
- * beta_2: 2.0 (Day-of-week historical vulnerability)
- * beta_3: 1.2 (Daily workload fatigue)
- * beta_4: 1.3 (Habit maturity / newness)
- * beta_5: 1.1 (Procrastination hour delay)
+ * Bobot Kriteria Metode Simple Additive Weighting (SAW) untuk SPK Retensi Kebiasaan:
+ * W1 (30%): Tingkat Terlewat 14 Hari Terakhir (Recent Miss Rate)
+ * W2 (25%): Kerentanan Historis Hari Terkait (Day-of-Week Vulnerability)
+ * W3 (15%): Beban Kognitif / Kesulitan Tugas Hari Ini (Daily Workload Fatigue)
+ * W4 (15%): Maturitas / Kerentanan Usia Kebiasaan (Habit Maturity & Fragility)
+ * W5 (15%): Pola Penundaan Larut Malam (Late Hour Procrastination)
+ * Total Bobot W = 1.00 (100%)
  */
-const BETA = {
-  INTERCEPT: -2.3,
-  MISS_RATE: 2.6,
-  WEEKDAY: 2.0,
-  WORKLOAD: 1.2,
-  MATURITY: 1.3,
-  LATE_HOUR: 1.1,
+export const SAW_WEIGHTS = {
+  MISS_RATE: 0.30,
+  WEEKDAY: 0.25,
+  WORKLOAD: 0.15,
+  MATURITY: 0.15,
+  LATE_HOUR: 0.15,
 };
 
 export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPrediction {
@@ -71,7 +70,7 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
 
   const completionDatesSet = new Set(completions.map((c) => c.date));
 
-  // --- Feature 1: Miss Rate in Recent 14 Days (X1) ---
+  // --- Kriteria 1: Tingkat Terlewat dalam 14 Hari Terakhir (C1) ---
   const startDate = parseDateString(habit.start_date);
   startDate.setHours(0, 0, 0, 0);
 
@@ -91,10 +90,9 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
     }
   }
 
-  const x1_missRate = past14ScheduledCount > 0 ? past14MissedCount / past14ScheduledCount : 0.2;
+  const c1_missRate = past14ScheduledCount > 0 ? past14MissedCount / past14ScheduledCount : 0.0;
 
-  // --- Feature 2: Day-of-Week Historical Vulnerability (X2) ---
-  // Captures 2 full calendar cycles (14 days), providing 2 evaluation points per weekday (0%, 50%, or 100%)
+  // --- Kriteria 2: Kerentanan Historis Hari yang Sama (C2) ---
   let sameWeekdayScheduledCount = 0;
   let sameWeekdayMissedCount = 0;
 
@@ -115,39 +113,39 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
     }
   }
 
-  const x2_weekday =
-    sameWeekdayScheduledCount > 0 ? sameWeekdayMissedCount / sameWeekdayScheduledCount : 0.25;
+  const c2_weekday =
+    sameWeekdayScheduledCount > 0 ? sameWeekdayMissedCount / sameWeekdayScheduledCount : 0.0;
 
-  // --- Feature 3: Daily Workload & Cognitive Fatigue (X3) ---
-  // Max cognitive load threshold ~ 16 difficulty points
-  const x3_workload = Math.min(1.0, Math.max(0.1, totalDifficultyPointsToday / 16));
+  // --- Kriteria 3: Beban Kognitif Harian Hari Ini (C3) ---
+  // Batas normalisasi beban kognitif maksimal 16 poin kesulitan harian
+  const c3_workload = Math.min(1.0, Math.max(0.0, totalDifficultyPointsToday / 16));
 
-  // --- Feature 4: Habit Maturity & Fragility (X4) ---
+  // --- Kriteria 4: Maturitas & Kerentanan Usia Kebiasaan (C4) ---
   const createdDate = habit.created_at ? new Date(habit.created_at) : startDate;
   const daysSinceCreation = Math.max(
     0,
     Math.round((evalDate.getTime() - createdDate.getTime()) / (1000 * 3600 * 24))
   );
 
-  let x4_maturity = 0.15;
+  let c4_maturity = 0.12;
   if (daysSinceCreation < 7) {
-    x4_maturity = 0.85; // highly fragile in first week
+    c4_maturity = 0.85; // sangat rentan pada minggu pertama
   } else if (daysSinceCreation < 14) {
-    x4_maturity = 0.65;
+    c4_maturity = 0.65;
   } else if (daysSinceCreation < 30) {
-    x4_maturity = 0.35;
+    c4_maturity = 0.35;
   } else {
-    x4_maturity = 0.12; // stable established habit
+    c4_maturity = 0.12; // kebiasaan mapan (> 30 hari)
   }
 
-  // --- Feature 5: Late Hour Procrastination Trend (X5) ---
+  // --- Kriteria 5: Pola Penundaan Larut Malam (C5) ---
   const recentCompletions = completions.filter((c) => {
     const cDate = parseDateString(c.date);
     const diff = Math.round((evalDate.getTime() - cDate.getTime()) / (1000 * 3600 * 24));
     return diff <= 14;
   });
 
-  let x5_lateHour = 0.25;
+  let c5_lateHour = 0.15;
   if (recentCompletions.length > 0) {
     const hours = recentCompletions.map((c) => {
       const d = new Date(c.completed_at);
@@ -156,36 +154,35 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
     const avgHour = hours.reduce((acc, h) => acc + h, 0) / hours.length;
 
     if (avgHour >= 22) {
-      x5_lateHour = 0.85; // usually completed near midnight
+      c5_lateHour = 0.85; // kecenderungan menumpuk lewat pukul 22:00
     } else if (avgHour >= 20) {
-      x5_lateHour = 0.65; // completed in evening
+      c5_lateHour = 0.65;
     } else if (avgHour >= 16) {
-      x5_lateHour = 0.4;
+      c5_lateHour = 0.40;
     } else {
-      x5_lateHour = 0.15; // completed in morning / afternoon
+      c5_lateHour = 0.15; // diselesaikan pagi / siang hari
     }
   }
 
-  // --- Logistic Logit z Calculation ---
-  const z =
-    BETA.INTERCEPT +
-    BETA.MISS_RATE * x1_missRate +
-    BETA.WEEKDAY * x2_weekday +
-    BETA.WORKLOAD * x3_workload +
-    BETA.MATURITY * x4_maturity +
-    BETA.LATE_HOUR * x5_lateHour;
+  // --- Perhitungan Matriks Penjumlahan Terbobot Metode SAW (Simple Additive Weighting) ---
+  // Seluruh kriteria bertipe BENEFIT (semakin tinggi nilainya, semakin tinggi kerentanan gagal)
+  // V = W1*R1 + W2*R2 + W3*R3 + W4*R4 + W5*R5
+  const preferenceScore =
+    SAW_WEIGHTS.MISS_RATE * c1_missRate +
+    SAW_WEIGHTS.WEEKDAY * c2_weekday +
+    SAW_WEIGHTS.WORKLOAD * c3_workload +
+    SAW_WEIGHTS.MATURITY * c4_maturity +
+    SAW_WEIGHTS.LATE_HOUR * c5_lateHour;
 
-  // Sigmoid probability: P = 1 / (1 + e^-z)
-  const probability = 1 / (1 + Math.exp(-z));
-  const failurePercentage = Math.min(99, Math.max(1, Math.round(probability * 100)));
+  const failurePercentage = Math.min(99, Math.max(1, Math.round(preferenceScore * 100)));
 
-  // Identify primary contributing factor
+  // Menentukan Faktor Kriteria Dominan Penyebab Risiko
   const weightedContributions = [
-    { factor: `Tingkat terlewat dalam 14 hari terakhir (${Math.round(x1_missRate * 100)}%)`, weight: BETA.MISS_RATE * x1_missRate },
-    { factor: `Pola historis sering terlewat setiap hari ${currentDayName}`, weight: BETA.WEEKDAY * x2_weekday },
-    { factor: 'Beban kebiasaan harian cukup padat hari ini', weight: BETA.WORKLOAD * x3_workload },
-    { factor: 'Kebiasaan baru masih dalam fase adaptasi rentan (< 14 hari)', weight: BETA.MATURITY * x4_maturity },
-    { factor: 'Pola pengerjaan cenderung menumpuk larut malam', weight: BETA.LATE_HOUR * x5_lateHour },
+    { factor: `Tingkat terlewat dalam 14 hari terakhir (${Math.round(c1_missRate * 100)}%)`, weight: SAW_WEIGHTS.MISS_RATE * c1_missRate },
+    { factor: `Pola historis sering terlewat setiap hari ${currentDayName}`, weight: SAW_WEIGHTS.WEEKDAY * c2_weekday },
+    { factor: 'Beban kebiasaan harian cukup padat hari ini', weight: SAW_WEIGHTS.WORKLOAD * c3_workload },
+    { factor: 'Kebiasaan baru masih dalam fase adaptasi rentan (< 14 hari)', weight: SAW_WEIGHTS.MATURITY * c4_maturity },
+    { factor: 'Pola pengerjaan cenderung menumpuk larut malam', weight: SAW_WEIGHTS.LATE_HOUR * c5_lateHour },
   ];
 
   weightedContributions.sort((a, b) => b.weight - a.weight);
@@ -245,11 +242,11 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
     risk_level: riskLevel,
     primary_factor: primaryFactor,
     factor_breakdown: {
-      miss_rate_score: Math.round(x1_missRate * 100),
-      weekday_vulnerability_score: Math.round(x2_weekday * 100),
-      workload_score: Math.round(x3_workload * 100),
-      maturity_score: Math.round(x4_maturity * 100),
-      late_hour_score: Math.round(x5_lateHour * 100),
+      miss_rate_score: Math.round(c1_missRate * 100),
+      weekday_vulnerability_score: Math.round(c2_weekday * 100),
+      workload_score: Math.round(c3_workload * 100),
+      maturity_score: Math.round(c4_maturity * 100),
+      late_hour_score: Math.round(c5_lateHour * 100),
     },
     suggested_action: suggestedAction,
   };

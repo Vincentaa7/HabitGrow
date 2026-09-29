@@ -57,7 +57,7 @@ HabitGrow mengatasi masalah tersebut melalui:
 * **Algoritma *Non-Zero Day Global Streak*:** Pengguna cukup menyelesaikan minimal 1 kebiasaan apa pun setiap hari agar api *streak* utama tidak padam.
 * **Sistem Metafora Pohon Virtual (*Botanical Progression*):** Rutinitas pengguna secara langsung memberi nutrisi pada pohon virtual interaktif yang berevolusi melalui 5 tahap kehidupan (*Seed* $\rightarrow$ *Sprout* $\rightarrow$ *Young Tree* $\rightarrow$ *Healthy Tree* $\rightarrow$ *Mature Tree*).
 * **Desain UI Berorientasi Manusia (*Human-Crafted Editorial*):** Menolak tata letak generik buatan AI; mengedepankan sapaan hangat personal, palet warna alam organik, kartu taktil dengan respons 0ms (*Optimistic UI*), dan konfeti perayaan instan.
-* **Sistem Peringatan Dini Prediktif (*Machine Learning Habit Churn Early Warning*):** Memprediksi kebiasaan yang berisiko terlewat hari ini menggunakan klasifikasi *Binary Logistic Regression* 5 fitur ($P \ge 60\%$), serta menyajikan aksi adaptif (*Smart Nudge*) 1-klik untuk menurunkan target sementara.
+* **Sistem Pendukung Keputusan (DSS) Deteksi Risiko & Rekomendasi Adaptif (*Simple Additive Weighting - SAW*):** Mengevaluasi kebiasaan yang berisiko terlewat hari ini menggunakan metode Multi-Criteria Decision Making **Simple Additive Weighting (SAW)** dengan 5 kriteria perilaku ($V_i \ge 0.50$), serta menyajikan rekomendasi keputusan preskriptif (*Smart Nudge / Aturan 2 Menit*) 1-klik untuk menurunkan target sementara.
 * **Kesiapan Arsitektur IoT (Khusus Skripsi Sistem Komputer):** Backend berbasis REST API murni yang siap menerima pemicu fisik dari mikrokontroler (ESP32/RFID/NFC) maupun perangkat display meja mini.
 
 ---
@@ -77,7 +77,7 @@ HabitGrow mengatasi masalah tersebut melalui:
 * **[FR-10] Analitik & Riwayat:** Menyajikan rekapitulasi data visual, kalender aktivitas, dan distribusi kebiasaan.
 * **[FR-11] Filter Dashboard Dinamis:** Memfasilitasi penyaringan daftar tugas hari ini (*Semua*, *Belum Selesai*, *Selesai*).
 * **[FR-12] Dukungan Tema Ganda:** Antarmuka responsif dengan transisi mulus antara Mode Gelap (*Dark Mode*) dan Mode Terang (*Light Mode*).
-* **[FR-13] Sistem Prediksi Risiko Kegagalan (Machine Learning Early Warning):** Sistem secara proaktif mengevaluasi riwayat 14 hari pengguna dengan model *Binary Logistic Regression*, menghitung probabilitas kegagalan ($P \ge 60\%$), dan menyajikan rekomendasi adaptif (*Smart Predictive Nudge*) dengan opsi penyesuaian target kuantitas 1-klik (`PATCH /api/habits/[id]`).
+* **[FR-13] Sistem Pendukung Keputusan (DSS) Risiko Kegagalan (*Simple Additive Weighting - SAW*):** Sistem secara proaktif mengevaluasi riwayat 14 hari pengguna menggunakan metode Multi-Criteria Decision Making **Simple Additive Weighting (SAW)** dengan 5 kriteria terbobot ($W_1 = 0.30, W_2 = 0.25, W_3 = 0.15, W_4 = 0.15, W_5 = 0.15$). Jika nilai preferensi $V_i \ge 0.50$ (50%), sistem menyajikan rekomendasi adaptif (*Decision Support Nudge / Aturan 2 Menit*) dengan opsi penyesuaian target kuantitas 1-klik (`PATCH /api/habits/[id]`).
 
 ### 2.2 Kebutuhan Non-Fungsional (Non-Functional Requirements)
 * **[NFR-01] Latensi Umpan Balik Antarmuka:** Perubahan status visual checklist harus $\le 50\text{ ms}$ di sisi klien tanpa menunggu *round-trip* server selesai.
@@ -132,7 +132,7 @@ graph TD
 * **Manajemen State & Cache Server:** TanStack React Query v5 (Optimistic Mutations, Automatic Invalidation, Cache Rollback).
 * **Styling & Desain:** Tailwind CSS v4, CSS Variables, Nature-inspired HSL color tokens.
 * **Backend Runtime:** Node.js 20+ / Next.js Serverless Edge & Node runtime.
-* **Mesin Machine Learning:** In-Browser / Serverless Edge Binary Logistic Regression Classifier (Sigmoid Evaluation, 5 Feature Vectors, waktu inferensi $< 5\text{ ms}$ tanpa GPU eksternal).
+* **Mesin Sistem Pendukung Keputusan (DSS):** Multi-Criteria Decision Making (MCDM) metode **Simple Additive Weighting (SAW)** dengan 5 Kriteria Terbobot ($C_1..C_5$) dan normalisasi linear benefit (waktu eksekusi $< 1\text{ ms}$ tanpa ketergantungan API pihak ketiga).
 * **Validasi Skema:** Zod v3 (validasi *runtime payload* ketat di sisi klien dan server).
 * **Basis Data:** PostgreSQL via Supabase (Auth, Foreign Keys, UUID v4, Triggers, RLS).
 * **Unit Testing:** Vitest v5 (menjamin kebenaran algoritma secara deterministik).
@@ -730,14 +730,14 @@ HabitGrow/
 │   │   │   ├── consistency.ts              # Rolling Window Consistency Formula
 │   │   │   ├── level.ts                    # Logika Threshold & Progresi XP
 │   │   │   ├── xp.ts                       # Multiplier XP Berdasarkan Kesulitan
-│   │   │   ├── prediction.ts               # Binary Logistic Regression Classifier (ML Churn)
-│   │   │   └── __tests__/                  # Unit Tests (34 Test Cases Passing)
+│   │   │   ├── prediction.ts               # Decision Support System (DSS) Metode SAW 5 Kriteria
+│   │   │   └── __tests__/                  # Unit Tests (41 Test Cases Passing)
 │   │   │       ├── streak.test.ts
 │   │   │       ├── tree.test.ts
 │   │   │       ├── level.test.ts
 │   │   │       ├── xp.test.ts
 │   │   │       ├── consistency.test.ts
-│   │   │       └── prediction.test.ts      # 3 Skenario Evaluasi ML Probabilitas & Nudge
+│   │   │       └── prediction.test.ts      # 10 Skenario Evaluasi DSS SAW & Nudge Preskriptif
 │   │   ├── services/                       # Lapisan Layanan Bisnis Database
 │   │   │   ├── habit.service.ts
 │   │   │   ├── streak.service.ts
@@ -852,20 +852,21 @@ graph LR
 * **Batasan Masalah:**
   1. Sistem dikembangkan pada platform web modern (Next.js & Supabase) dan didistribusikan untuk smartphone dalam bentuk berkas instalasi mandiri Android (*Standalone APK*) yang dipasang secara langsung (*sideloading*) pada perangkat penguji, tanpa melalui proses publikasi komersial di Google Play Store.
   2. Pengujian fungsionalitas dan retensi dibatasi pada pengguna aktif dengan frekuensi pemantauan harian.
-  3. Modul prediktif cerdas dijalankan secara komputasi ringan (*edge/serverless*) menggunakan 5 vektor fitur historis kebiasaan.
+  3. Modul Sistem Pendukung Keputusan (DSS) dijalankan secara komputasi ringan (*edge/serverless*) menggunakan metode Simple Additive Weighting (SAW) 5 kriteria terbobot.
 * **Tujuan & Manfaat Penelitian:** Menghasilkan platform pelacak kebiasaan yang mampu meningkatkan retensi kedisiplinan diri secara terukur dan adaptif.
 
 #### BAB 2: TINJAUAN PUSTAKA & DASAR TEORI
 * Teori Pembentukan Kebiasaan (*The Habit Loop: Cue, Routine, Reward* - Charles Duhigg & James Clear).
 * Konsep Psikologis *Non-Zero Day* dan Teori Gamifikasi (*Self-Determination Theory*).
-* Pemodelan Klasifikasi Probabilitas (*Binary Logistic Regression* dan Fungsi Sigmoid).
+* Sistem Pendukung Keputusan (DSS / SPK) dan Metode *Multi-Criteria Decision Making* (MCDM).
+* Metode *Simple Additive Weighting* (SAW): Konsep Kriteria Benefit, Normalisasi Matriks ($R$), dan Pembobotan Preferensi ($V$).
 * Arsitektur RESTful API, Serverless Computing, dan PostgreSQL Row Level Security (RLS).
 * *(Jika IoT)* Komunikasi Data IoT (HTTP REST Client pada ESP32, Protokol SPI/I2C, Modul RFID/NFC).
 
 #### BAB 3: METODOLOGI PENELITIAN & PERANCANGAN SISTEM
 * **Metode Pengembangan:** *Software Development Life Cycle* (SDLC) model Agile / Prototyping.
 * **Perancangan Basis Data:** ERD (13 tabel pada Bab 4 dokumen ini), relasi kardinalitas, dan kamus data lengkap.
-* **Formulasi Algoritma:** Tuliskan seluruh rumus matematika dari Bab 5 dokumen ini (*Streak*, *Consistency Rate*, *Tree Lifecycle*, *Leveling Curve*, *Logistic Regression ML*).
+* **Formulasi Algoritma & Perhitungan SPK SAW:** Tuliskan seluruh rumus matematika dari Bab 5 dokumen ini (*Streak*, *Consistency Rate*, *Tree Lifecycle*, *Leveling Curve*, serta Matriks Normalisasi & Penjumlahan Terbobot Metode SAW).
 * **Perancangan Antarmuka & REST API:** Diagram Sequence (Bab 7 dokumen ini) dan Tabel Endpoint API (Bab 6 dokumen ini).
 
 #### BAB 4: IMPLEMENTASI & PENGUJIAN SISTEM
@@ -873,7 +874,7 @@ graph LR
 * **Hasil Pengujian Algoritma (*Unit Testing* - Vitest):**
   * Tampilkan tabel hasil pengujian **41 test cases** Vitest dengan tingkat keberhasilan 100%:
     * `streak.test.ts` (12 skenario pengujian streak).
-    * `prediction.test.ts` (10 skenario klasifikasi probabilitas risiko kegagalan kebiasaan, cold-start guard 14 hari, aturan 2 menit biner, dan konversi cerdas kuantitatif jam ke menit serta liter ke ml).
+    * `prediction.test.ts` (10 skenario evaluasi Sistem Pendukung Keputusan metode Simple Additive Weighting [SAW], pembobotan 5 kriteria, cold-start guard 14 hari, aturan 2 menit biner, dan konversi cerdas kuantitatif jam ke menit serta liter ke ml).
     * `tree.test.ts` (6 skenario transisi tahap pohon).
     * `level.test.ts` (5 skenario formula kenaikan level).
     * `xp.test.ts` (4 skenario perhitungan XP kesulitan tugas).

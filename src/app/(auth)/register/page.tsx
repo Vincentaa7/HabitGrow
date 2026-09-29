@@ -17,6 +17,8 @@ export default function RegisterPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [isSuccessVerificationSent, setIsSuccessVerificationSent] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -39,6 +41,12 @@ export default function RegisterPage() {
       const json = await res.json();
       if (!json.success) {
         throw new Error(json.error?.message || 'Registrasi gagal. Silakan coba lagi.');
+      }
+
+      // If email confirmation is required by Supabase, session will be null
+      if (!json.data?.session) {
+        setIsSuccessVerificationSent(data.email);
+        return;
       }
 
       // Immediately clear cached queries so prior account data never lingers
@@ -85,13 +93,36 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        {errorMsg && (
-          <div className="mb-4 p-3 text-xs text-red-700 bg-red-50 dark:bg-red-950/50 dark:text-red-300 rounded-xl border border-red-200 dark:border-red-900">
-            {errorMsg}
+        {isSuccessVerificationSent ? (
+          <div className="text-center py-4 space-y-4">
+            <div className="w-16 h-16 mx-auto rounded-3xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 flex items-center justify-center text-3xl">
+              ✉️
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                Periksa Email Anda
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
+                Tautan verifikasi telah dikirim ke <span className="font-bold text-emerald-600 dark:text-emerald-400">{isSuccessVerificationSent}</span>.
+                Silakan buka kotak masuk atau folder spam email Anda dan klik tombol verifikasi untuk mengaktifkan akun.
+              </p>
+            </div>
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-sm"
+            >
+              Kembali ke Halaman Login
+            </Link>
           </div>
-        )}
+        ) : (
+          <>
+            {errorMsg && (
+              <div className="mb-4 p-3 text-xs text-red-700 bg-red-50 dark:bg-red-950/50 dark:text-red-300 rounded-xl border border-red-200 dark:border-red-900">
+                {errorMsg}
+              </div>
+            )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
               Nama Lengkap / Panggilan
@@ -156,6 +187,8 @@ export default function RegisterPage() {
             Masuk di sini
           </Link>
         </p>
+        </>
+        )}
       </div>
       </div>
     </div>

@@ -15,7 +15,7 @@
 **Frontend:** Next.js 16 + React 19 + TypeScript  
 **UI/UX:** Tailwind CSS + Vanilla CSS Tokens + Lucide React  
 **Data Fetching:** TanStack React Query (Optimistic UI & Cache Invalidation)  
-**Machine Learning:** Logistic Regression 5-Feature Churn Prediction Engine  
+**Decision Support System (DSS):** Simple Additive Weighting (SAW) 5-Criteria Habit Retention Engine  
 **Testing Framework:** Vitest (100% Core Algorithms) + TestSprite Autonomous E2E Testing  
 **Deployment:** Vercel + Supabase  
 
@@ -3180,42 +3180,32 @@ These three questions are the heart of the product.
 
 ---
 
-# 121. Machine Learning Predictive Habit Churn & Adaptive Nudge System
+# 121. Decision Support System (DSS) Simple Additive Weighting (SAW) & Adaptive Nudge System
 
-Versi 2.0 mengintegrasikan modul kecerdasan buatan berbasis *Binary Logistic Regression* yang beroperasi secara *serverless* dengan latensi sangat rendah ($\le 10\text{ ms}$).
+Versi 2.0 mengintegrasikan modul Sistem Pendukung Keputusan (DSS) berbasis *Multi-Criteria Decision Making* **Simple Additive Weighting (SAW)** yang beroperasi secara *serverless* dengan latensi sangat rendah ($\le 1\text{ ms}$).
 
 ### 121.1 Tujuan Modul
-Mendeteksi secara proaktif kebiasaan yang berisiko tinggi terlewatkan (*churn*) pada hari evaluasi berjalan ($P \ge 60\%$), serta menyajikan rekomendasi penyesuaian target 1-klik (*Adaptive Nudge*) agar pengguna tidak mengalami keputusasaan.
+Mengevaluasi secara proaktif kebiasaan yang berisiko tinggi terlewatkan (*churn*) pada hari evaluasi berjalan ($V_i \ge 0.50$), serta menyajikan rekomendasi penyesuaian target 1-klik (*Adaptive Decision Support Nudge*) agar pengguna tidak mengalami keputusasaan.
 
-### 121.2 Ekstraksi 5 Fitur Numerik
-Untuk setiap kebiasaan aktif yang terjadwal hari ini, sistem mengekstraksi riwayat 14 hari terakhir:
-1. $x_1$ (`completion_rate_7d`): Rasio penyelesaian dalam 7 hari terakhir $[0, 1]$.
-2. $x_2$ (`completion_rate_14d`): Rasio penyelesaian dalam 14 hari terakhir $[0, 1]$.
-3. $x_3$ (`days_since_last_completed`): Jumlah hari sejak kebiasaan ini terakhir diselesaikan ($\ge 0$).
-4. $x_4$ (`current_streak`): Rentetan keberhasilan kebiasaan saat ini ($\ge 0$).
-5. $x_5$ (`is_weekend`): Bobot faktor akhir pekan ($1$ untuk Sabtu/Minggu, $0$ untuk hari kerja).
+### 121.2 5 Kriteria Penilaian Terbobot (SAW Criteria)
+Untuk setiap kebiasaan aktif yang terjadwal hari ini, sistem mengevaluasi 5 kriteria perilaku terstandarisasi:
+1. $C_1$ (`miss_rate_14d`): Rasio terlewat dalam 14 hari terakhir $[0, 1]$ (Bobot $W_1 = 0.30$).
+2. $C_2$ (`same_weekday_miss_rate`): Rasio terlewat pada hari sepekan yang sama $[0, 1]$ (Bobot $W_2 = 0.25$).
+3. $C_3$ (`daily_workload`): Beban kognitif total poin kesulitan hari ini $[0, 1]$ (Bobot $W_3 = 0.15$).
+4. $C_4$ (`habit_fragility`): Tingkat kerentanan usia kebiasaan baru $[0, 1]$ (Bobot $W_4 = 0.15$).
+5. $C_5$ (`late_hour_procrastination`): Kecenderungan penundaan pengerjaan larut malam $[0, 1]$ (Bobot $W_5 = 0.15$).
 
-### 121.3 Formulasi Model & Nilai Bobot
-Log-odds $z$ dihitung dengan kombinasi linier terbobot:
-$$z = w_0 + w_1 x_1 + w_2 x_2 + w_3 \min(x_3, 5) + w_4 \min(x_4, 10) + w_5 x_5$$
-
-Vektor bobot terkalibrasi (*empirically calibrated weights*):
-* Bias ($w_0$): $+0.50$ (Kecenderungan risiko inersia awal)
-* Bobot Tren 7 Hari ($w_1$): $-2.00$ (Konsistensi seminggu sangat menurunkan risiko)
-* Bobot Tren 14 Hari ($w_2$): $-1.50$ (Konsistensi 2 minggu menurunkan risiko)
-* Bobot Hari Terlewat ($w_3$): $+0.80$ (Semakin lama tidak dikerjakan, risiko melonjak tajam)
-* Bobot Penyangga Streak ($w_4$): $-0.20$ (Streak panjang bertindak sebagai *habit buffer*)
-* Bobot Gangguan Akhir Pekan ($w_5$): $+0.40$ (Akhir pekan memiliki variansi jadwal tinggi)
-
-Probabilitas risiko kegagalan dihitung melalui fungsi aktivasi Sigmoid standar:
-$$P(\text{churn}) = \sigma(z) = \frac{1}{1 + e^{-z}}$$
+### 121.3 Formulasi Model SAW & Nilai Preferensi
+Seluruh kriteria bertipe *Benefit* (semakin tinggi nilainya, semakin besar risiko kegagalan yang membutuhkan intervensi).
+Nilai preferensi akhir dihitung melalui penjumlahan terbobot:
+$$V_i = \sum_{j=1}^{5} W_j \cdot R_{ij} = 0.30 C_1 + 0.25 C_2 + 0.15 C_3 + 0.15 C_4 + 0.15 C_5$$
 
 ### 121.4 Threshold & Tindakan Adaptif
-* **Ambang Batas Peringatan:** Jika $P(\text{churn}) \ge 0.60$ (Tingkat risiko $\ge 60\%$).
+* **Ambang Batas Peringatan:** Jika nilai preferensi $V_i \ge 0.50$ (Tingkat risiko $\ge 50\%$).
 * **Fase Adaptasi Dingin (*Cold-Start Guard* 14 Hari / 2 Minggu):**
   Evaluasi prediktif baru aktif setelah kebiasaan berusia $\ge 14\text{ hari}$ berdasarkan 3 landasan ilmiah:
   1. *Mengatasi Masalah Sampel Minim (Small Sample Noise):* Pada kebiasaan 2x seminggu (misal: Senin & Kamis), jendela 7 hari hanya menangkap 1 data point per hari tersebut. Jika terlewat sekali karena darurat, miss rate melonjak $100\%$ ($1/1$) memicu *false alarm*.
-  2. *Menangkap 2 Siklus Kalender Lengkap:* Rentang 14 hari menyediakan minimal 2 titik data evaluasi per hari sepekan dengan distribusi wajar ($0\%$, $50\%$, atau $100\%$), menstabilkan fitur $X_1$ dan $X_2$.
+  2. *Menangkap 2 Siklus Kalender Lengkap:* Rentang 14 hari menyediakan minimal 2 titik data evaluasi per hari sepekan dengan distribusi wajar ($0\%$, $50\%$, atau $100\%$), menstabilkan kriteria $C_1$ dan $C_2$.
   3. *Keseimbangan Memori (Recency vs Baseline):* Rentang 30 hari terlalu lambat mendeteksi kejenuhan (*burnout*), sedangkan 7 hari terlalu reaktif terhadap anomali sesaat. 14 hari adalah *sweet spot* psikologis deteksi tren penurunan motivasi.
 * **Aksi Nudge Adaptif (Dual Modality):**
   * *Tipe Kuantitatif:* Menampilkan rekomendasi pangkas target (`[⚡ Pangkas Target Jadi X]`) via `PATCH /api/habits/[id]` dan opsi sekunder `[Saya Sanggup Target Normal]` tanpa mutasi data. Dilengkapi konversi pintar 1 jam menjadi 30 menit serta 1 liter menjadi 500 ml.
