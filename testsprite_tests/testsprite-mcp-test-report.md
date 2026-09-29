@@ -92,7 +92,7 @@
 
 ---
 
-### Requirement Group 4: Predictive Machine Learning & Decision Support
+### Requirement Group 4: Decision Support System (DSS) SAW Early Warning
 
 #### Test TC011: Accept a predictive habit nudge
 - **Test Code:** [TC011_Accept_a_predictive_habit_nudge.py](./TC011_Accept_a_predictive_habit_nudge.py)
@@ -136,7 +136,7 @@
 | **1. User Authentication & Access Control** | 4 | 4 | 0 | 0 | **100%** |
 | **2. Daily Habit Tracking & Gamification Progression** | 4 | 4 | 0 | 0 | **100%** |
 | **3. Habit Management (CRUD Operations)** | 3 | 1 | 1 | 1 | **33.3%** |
-| **4. Predictive Machine Learning & Decision Support** | 1 | 0 | 1 | 0 | **0%** |
+| **4. Decision Support System (DSS) SAW** | 1 | 0 | 1 | 0 | **0%** |
 | **5. Mobile Navigation & Visual Theme System** | 3 | 3 | 0 | 0 | **100%** |
 | **TOTAL KESELURUHAN** | **15** | **12** | **2** | **1** | **80.00%** |
 

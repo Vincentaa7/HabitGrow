@@ -24,11 +24,11 @@
    * 5.4 Logika Siklus Hidup Pohon Virtual (*Tree Growth & Lifecycle*)
    * 5.5 Logika Perhitungan XP & Progresi Level
    * 5.6 Logika Mutasi Antarmuka Instan (*Optimistic UI State & Rollback*)
-   * 5.7 Logika Machine Learning: Prediksi Risiko Kegagalan (*Habit Churn*)
+   * 5.7 Formulasi Sistem Pendukung Keputusan (SPK) Metode SAW: Prediksi Risiko Kegagalan (*Habit Churn*)
 6. [Katalog Endpoint RESTful API](#6-katalog-endpoint-restful-api)
 7. [Alur Bisnis End-to-End (User Journey & State Machine)](#7-alur-bisnis-end-to-end-user-journey--state-machine)
    * 7.1 Alur Eksekusi Checklist Taktil (Optimistic UI & Server Sync)
-   * 7.2 Alur Sistem Prediksi Dini Machine Learning & Nudge Adaptif
+   * 7.2 Alur Sistem Pendukung Keputusan (SPK) SAW & Rekomendasi Adaptif
 8. [Struktur Direktori & Pemetaan Kode Sumber](#8-struktur-direktori--pemetaan-kode-sumber)
    * 8.1 Identitas Visual, Filosofi Logo & Lokasi Aset Gambar
 9. [Cetak Biru Integrasi IoT untuk Skripsi Sistem Komputer](#9-cetak-biru-integrasi-iot-untuk-skripsi-sistem-komputer)
@@ -42,7 +42,7 @@
 * **Nama Proyek:** HabitGrow
 * **Tagline:** *Gamified Habit Tracker & Virtual Tree Progression System*
 * **Platform:** Web Responsive (PWA-ready) & IoT Extensible
-* **Paradigma Inti:** *Non-Zero Day Principle*, *Visual Empathy*, *Botanical Metaphor Gamification*, *Machine Learning Early Warning*.
+* **Paradigma Inti:** *Non-Zero Day Principle*, *Visual Empathy*, *Botanical Metaphor Gamification*, *Decision Support System (DSS) Early Warning*.
 
 ### 1.2 Masalah yang Diselesaikan (*Problem Statement*)
 Aplikasi pelacak kebiasaan konvensional sering kali gagal mempertahankan retensi pengguna dalam jangka panjang karena:
@@ -85,7 +85,7 @@ HabitGrow mengatasi masalah tersebut melalui:
 * **[NFR-03] Kepatuhan Standar RESTful:** Seluruh komunikasi klien-server menggunakan protokol HTTP dengan kata kerja standar (`GET`, `POST`, `PATCH`, `DELETE`) dan payload berformat JSON.
 * **[NFR-04] Ketersediaan API untuk Eksternal:** API dirancang *stateless* sehingga dapat diakses oleh mikrokontroler IoT dengan autentikasi berbasis Bearer Token / Supabase JWT.
 * **[NFR-05] Keandalan Pengujian (*Test Coverage*):** Seluruh modul algoritma matematika inti wajib memiliki *unit tests* terotomatisasi dengan tingkat keberhasilan 100%.
-* **[NFR-06] Efisiensi Inferensi Model ML (Serverless Execution Latency):** Waktu komputasi ekstraksi 5 fitur dan inferensi probabilitas fungsi sigmoid pada serverless runtime harus $\le 10\text{ ms}$ per evaluasi tanpa memerlukan GPU atau microservice Python terpisah.
+* **[NFR-06] Efisiensi Komputasi Algoritma SPK SAW (Serverless Execution Latency):** Waktu komputasi normalisasi 5 kriteria dan perhitungan nilai preferensi SAW pada serverless runtime harus $\le 10\text{ ms}$ per evaluasi tanpa membebani performa server atau memerlukan microservice Python/GPU terpisah.
 * **[NFR-07] Ergonomi Responsif Seluler (Mobile Android & iOS UI/UX):** Antarmuka wajib mematuhi standar ergonomi *thumb zone* seluler (touch target $\ge 40\text{px}$), bilah navigasi bawah (*Bottom Navigation Bar*) terlabuh di dasar viewport dengan perlindungan *safe area* iOS (`env(safe-area-inset-bottom)`), laci navigasi samping (*Slide-over Hamburger Drawer*) untuk rute komprehensif dan profil/logout, serta tata letak metrik *Executive Command Bar* berbasis grid 3-kolom proporsional tanpa wrapping tak beraturan pada resolusi sempit ($360\text{px} - 430\text{px}$).
 
 ---
@@ -510,32 +510,57 @@ Dalam aplikasi pelacak kebiasaan, jeda jaringan sebesar $200 - 500\text{ ms}$ sa
 
 ---
 
-### 5.7 Algoritma Machine Learning: Prediksi Risiko Kegagalan Kebiasaan (*Habit Churn Prediction*)
+### 5.7 Formulasi Sistem Pendukung Keputusan (SPK) Metode Simple Additive Weighting (SAW)
 *Berkas Implementasi:* `src/lib/algorithms/prediction.ts` & `src/lib/services/prediction.service.ts`
 
 #### Definisi & Masalah yang Diselesaikan:
-Sistem secara proaktif mendeteksi kebiasaan terjadwal yang memiliki probabilitas tinggi untuk gagal/terlewat pada hari ini ($P(\text{Failure}) \ge 60\%$) sebelum hari berakhir, kemudian menyajikan rekomendasi adaptif (*Smart Predictive Nudge*) seperti penurunan target kuantitas sementara untuk mencegah pemutusan *streak*.
+Sistem secara proaktif mengevaluasi kebiasaan terjadwal yang memiliki tingkat kerentanan kegagalan/terlewat pada hari ini menggunakan metode Multi-Criteria Decision Making (MCDM) **Simple Additive Weighting (SAW)**. Ketika skor preferensi risiko mencapai ambang batas $V_i \ge 0.50$ (atau $50\%$) setelah masa adaptasi 14 hari, sistem menyajikan rekomendasi adaptif (*Smart Decision Support Nudge*) seperti penurunan target kuantitas sementara untuk mencegah pemutusan *streak*.
 
-#### Vektor Fitur ($X_1 \dots X_5$):
-1. **$X_1$ — Miss Rate 14 Hari Terakhir:** Rasio hari terjadwal yang terlewat dalam 2 minggu terakhir ($X_1 = \frac{\text{missed}}{\text{scheduled}}$).
-2. **$X_2$ — Day-of-Week Vulnerability (2 Siklus Mingguan Penuh):** Rasio historis kegagalan khusus pada hari yang sama dalam seminggu selama 14 hari terakhir ($X_2 = \frac{\text{sameWeekdayMissed}}{\text{sameWeekdayScheduled}}$). Menghasilkan minimal 2 titik data per hari kalender dengan distribusi rasio teratur ($0\%$, $50\%$, atau $100\%$).
-3. **$X_3$ — Daily Cognitive Workload:** Akumulasi bobot kesulitan kebiasaan yang terjadwal hari ini (Easy: 1, Med: 2, Hard: 3), dinormalisasi terhadap ambang kelelahan 16 poin ($X_3 = \min(1.0, \frac{\text{totalPts}}{16})$).
-4. **$X_4$ — Habit Maturity Fragility:** Usia kebiasaan sejak dibuat. Kebiasaan baru ($< 7\text{ hari}$) memiliki skor kerentanan tinggi ($X_4 = 0.85$), fase adaptasi lanjutan ($7-13\text{ hari}$) $X_4 = 0.65$, stabil ($14-29\text{ hari}$) $X_4 = 0.35$, sedangkan kebiasaan matang ($\ge 30\text{ hari}$) memiliki $X_4 = 0.12$.
-5. **$X_5$ — Late Hour Procrastination:** Rata-rata jam penyelesaian dalam 14 hari terakhir. Jika pengerjaan cenderung larut malam ($\ge 22.00$), $X_5 = 0.85$.
+#### Kriteria Keputusan ($C_1 \dots C_5$) dan Pembobotan ($W$):
+Seluruh kriteria bertipe **Benefit** (semakin tinggi nilainya, semakin besar risiko kebiasaan tersebut berpotensi terlewat/gagal hari ini). Total bobot $\sum_{j=1}^{5} W_j = 1.00$ (100%):
 
-#### Model Logit & Probabilitas Sigmoid:
-$$z = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \beta_3 X_3 + \beta_4 X_4 + \beta_5 X_5$$
+1. **$C_1$ — Recent Miss Rate 14 Hari Terakhir (Bobot $W_1 = 0.30$ / 30%):**
+   Rasio hari terjadwal yang terlewat dalam 2 minggu terakhir:
+   $$C_1 = \frac{\text{Jumlah Jadwal Terlewat}}{\text{Jumlah Total Jadwal 14 Hari Terakhir}} \in [0.0, 1.0]$$
+2. **$C_2$ — Day-of-Week Vulnerability (Bobot $W_2 = 0.25$ / 25%):**
+   Rasio historis kegagalan khusus pada hari yang sama dalam seminggu selama 14 hari terakhir (menangkap 2 siklus kalender penuh):
+   $$C_2 = \frac{\text{Terlewat pada Hari Serupa}}{\text{Jadwal pada Hari Serupa 14 Hari Terakhir}} \in [0.0, 1.0]$$
+3. **$C_3$ — Daily Cognitive Workload / Fatigue (Bobot $W_3 = 0.15$ / 15%):**
+   Akumulasi bobot kesulitan kebiasaan yang terjadwal hari ini (Easy: 1, Medium: 2, Hard: 3), dinormalisasi terhadap ambang kelelahan 16 poin:
+   $$C_3 = \min\left(1.0, \frac{\text{Total Poin Kesulitan Hari Ini}}{16}\right)$$
+4. **$C_4$ — Habit Maturity & Fragility (Bobot $W_4 = 0.15$ / 15%):**
+   Faktor kerentanan usia kebiasaan sejak dibuat. Kebiasaan baru masih dalam fase penyesuaian:
+   $$C_4 = \begin{cases} 
+   0.85, & \text{jika usia} < 7\text{ hari (fase kritis)} \\
+   0.65, & \text{jika } 7 \le \text{usia} \le 13\text{ hari} \\
+   0.35, & \text{jika } 14 \le \text{usia} \le 29\text{ hari (mulai stabil)} \\
+   0.12, & \text{jika usia} \ge 30\text{ hari (kebiasaan matang/terbentuk)}
+   \end{cases}$$
+5. **$C_5$ — Late Hour Procrastination (Bobot $W_5 = 0.15$ / 15%):**
+   Pola penundaan waktu pengerjaan berdasarkan rata-rata jam penyelesaian riwayat:
+   $$C_5 = \begin{cases} 
+   0.85, & \text{jika rata-rata jam} \ge 22.00\text{ (larut malam, rawan tertidur)} \\
+   0.65, & \text{jika } 20.00 \le \text{rata-rata jam} < 22.00 \\
+   0.40, & \text{jika } 16.00 \le \text{rata-rata jam} < 20.00 \\
+   0.15, & \text{jika rata-rata jam} < 16.00\text{ (pagi / siang hari)}
+   \end{cases}$$
 
-*Bobot Koefisien Terkalibrasi:*
-* $\beta_0 = -2.3$ (Log-odds dasar kondisi normal)
-* $\beta_1 = 2.6$ (Bobot rasio keterlewatan 14 hari)
-* $\beta_2 = 2.0$ (Bobot kerentanan hari kalender 2 siklus)
-* $\beta_3 = 1.2$ (Bobot kelelahan beban harian)
-* $\beta_4 = 1.3$ (Bobot usia kebiasaan baru)
-* $\beta_5 = 1.1$ (Bobot kebiasaan jam malam)
+#### Normalisasi Matriks ($R$) & Formulasi Nilai Preferensi SAW ($V_i$):
+Karena seluruh nilai kriteria $C_1 \dots C_5$ telah terpetakan secara proporsional dalam domain skala $[0.0, 1.0]$, maka elemen matriks ternormalisasi bernilai $R_{ij} = C_j$.
 
-Probabilitas Kegagalan ($P$):
-$$P(\text{Failure}) = \frac{1}{1 + e^{-z}} \times 100\%$$
+Formulasi nilai preferensi alternatif kebiasaan ke-$i$ ($V_i$):
+$$V_i = \sum_{j=1}^{5} W_j \cdot R_{ij}$$
+$$V_i = (0.30 \cdot C_1) + (0.25 \cdot C_2) + (0.15 \cdot C_3) + (0.15 \cdot C_4) + (0.15 \cdot C_5)$$
+
+Skor Persentase Risiko Kegagalan:
+$$\text{Failure Percentage} = \min(99, \max(1, \text{round}(V_i \times 100)))$$
+
+#### Klasifikasi Tingkat Risiko & Deteksi Faktor Dominan:
+* **Tingkat Risiko:**
+  * `HIGH` ($V_i \ge 0.70$ atau Skor $\ge 70\%$)
+  * `MODERATE` ($0.50 \le V_i < 0.70$ atau Skor $50\% - 69\%$)
+  * `LOW / AMAN` ($V_i < 0.50$ atau Skor $< 50\%$, tidak memicu banner)
+* **Explainability (Faktor Dominan):** Sistem mengurutkan kontribusi terbobot ($W_j \cdot R_{ij}$) dan menetapkan kriteria dengan nilai terbobot tertinggi sebagai penyebab utama risiko untuk ditampilkan secara transparan kepada pengguna.
 
 #### Landasan Ilmiah Pemilihan Jendela 14 Hari & Cold-Start Guard:
 Penetapan jendela observasi dan ambang batas aktivasi model prediktif pada **14 hari (2 minggu)** didasarkan pada tiga pertimbangan metodologis dan psikologis:
@@ -647,7 +672,7 @@ sequenceDiagram
     end
 ```
 
-### 7.2 Alur Sistem Prediksi Dini Machine Learning & Nudge Adaptif
+### 7.2 Alur Sistem Pendukung Keputusan (SPK) SAW & Nudge Adaptif
 
 ```mermaid
 sequenceDiagram
@@ -655,24 +680,24 @@ sequenceDiagram
     actor User as Pengguna
     participant UI as Dashboard & PredictionAlertBanner
     participant API as GET /api/dashboard/summary
-    participant ML as PredictionService & Logistic Classifier
+    participant DSS as PredictionService & SAW Engine
     participant DB as PostgreSQL (Supabase)
 
     User->>UI: Membuka halaman Dashboard HabitGrow
     UI->>API: Request data ringkasan harian
     API->>DB: Query daftar kebiasaan hari ini & riwayat 14 hari
     DB-->>API: Data mentah kebiasaan dan status completion
-    API->>ML: Evaluasi kebiasaan belum tuntas (Cek Usia Kebiasaan >= 14 Hari)
+    API->>DSS: Evaluasi kebiasaan belum tuntas (Cek Usia Kebiasaan >= 14 Hari)
     alt Usia Kebiasaan < 14 Hari (Masa Adaptasi Awal 2 Siklus)
-        ML-->>API: Lewati prediksi (Cegah false alarm & noise sampel minim)
+        DSS-->>API: Lewati evaluasi (Cegah false alarm & noise sampel minim)
     else Usia Kebiasaan >= 14 Hari
-        ML->>ML: Ekstraksi fitur (X1 s/d X5), hitung logit z & Sigmoid P(Failure)
-        alt Probabilitas P >= 60%
-            ML-->>API: Buat rekomendasi adaptif (LOWER_TARGET jika >1, EARLY_NUDGE jika =1)
+        DSS->>DSS: Normalisasi 5 Kriteria (C1-C5) & Hitung Nilai Preferensi SAW (Vi)
+        alt Nilai Preferensi Vi >= 0.50 (Skor Risiko >= 50%)
+            DSS-->>API: Buat rekomendasi adaptif (LOWER_TARGET jika >1, CHECKLIST_2MIN jika =1)
         end
     end
     API-->>UI: Response JSON 200 OK (Memuat daftar at_risk_habits)
-    UI->>User: Tampilkan PredictionAlertBanner (Penyebab Utama, Rekomendasi AI & Tombol Aksi)
+    UI->>User: Tampilkan PredictionAlertBanner (Penyebab Utama, Rekomendasi SPK & Tombol Aksi)
     
     opt Pengguna Memilih Aksi Adaptif
         alt Opsi LOWER_TARGET
@@ -847,7 +872,7 @@ graph LR
 * **Rumusan Masalah:**
   1. Bagaimana merancang arsitektur perangkat lunak pelacak kebiasaan yang memitigasi efek keputusasaan (*streak fatigue*) menggunakan prinsip *Non-Zero Day*?
   2. Bagaimana merumuskan model metamorfosis pohon virtual berbasis konsistensi bergulir 30 hari?
-  3. Bagaimana mengimplementasikan sistem peringatan dini berbasis regresi logistik untuk memprediksi risiko kegagalan kebiasaan (*habit churn*) secara adaptif?
+  3. Bagaimana mengimplementasikan Sistem Pendukung Keputusan (SPK) menggunakan metode Simple Additive Weighting (SAW) untuk memprediksi dan memitigasi risiko kegagalan kebiasaan (*habit churn*) secara adaptif?
   4. *(Jika IoT)* Bagaimana mengintegrasikan modul pemicu fisik NFC dan mikrokontroler ESP32 dengan RESTful API server cloud secara andal?
 * **Batasan Masalah:**
   1. Sistem dikembangkan pada platform web modern (Next.js & Supabase) dan didistribusikan untuk smartphone dalam bentuk berkas instalasi mandiri Android (*Standalone APK*) yang dipasang secara langsung (*sideloading*) pada perangkat penguji, tanpa melalui proses publikasi komersial di Google Play Store.

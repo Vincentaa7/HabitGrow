@@ -291,7 +291,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* 2. Alert Banners (Broken Streak & Machine Learning Predictive Nudge) */}
+      {/* 2. Alert Banners (Broken Streak & Decision Support System (DSS) SAW Predictive Nudge) */}
       <div className="space-y-3">
         <StreakAlertBanner brokenStreaks={summary.broken_streaks} />
         <PredictionAlertBanner predictions={summary.at_risk_habits} />

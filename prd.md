@@ -1,6 +1,6 @@
 # PRD — HabitGrow
 
-## Gamified Habit Tracker with Virtual Tree Progression & Machine Learning Early Warning
+## Gamified Habit Tracker with Virtual Tree Progression & Decision Support System (SAW)
 
 **Document Version:** 2.0 (Production & Automated Testing Ready)  
 **Last Updated:** 26 September 2026  
@@ -149,7 +149,7 @@ Versi HabitGrow 2.0 mempertahankan fokus tajam pada pembentukan kebiasaan person
 * Pasar digital (*Marketplace*), mata uang kripto (Crypto), atau NFT.
 * Sistem pembayaran/transaksi moneter (*Real-money rewards*).
 * Integrasi perangkat wearable medis atau diagnosis kesehatan klinis.
-* Chatbot percakapan generatif yang lambat (Sistem digantikan oleh *Machine Learning Predictive Early Warning* deterministik 5-fitur berlatensi $\le 10\text{ ms}$).
+* Chatbot percakapan generatif yang lambat (Sistem digantikan oleh *Decision Support System (DSS) SAW Early Warning* deterministik 5-kriteria berlatensi $\le 10\text{ ms}$).
 
 ---
 
@@ -3288,7 +3288,7 @@ Untuk menjamin keandalan sistem berskala produksi dan kepatuhan standar tugas ak
 ### 125.1 Pengujian Unit Matematika & Algoritma (Vitest)
 Menjalankan 41 pengujian unit terotomatisasi dengan tingkat kelulusan 100%:
 * `streak.test.ts` (12 tests): Validasi Non-Zero Day, kalkulasi streak individual, rekor streak terpanjang, dan deteksi broken streak.
-* `prediction.test.ts` (10 tests): Validasi ekstraksi 5 fitur numerik, formulasi sigmoid, ambang batas $P \ge 60\%$, filter cold-start 14 hari, aturan 2 menit biner, serta konversi cerdas jam ke menit dan liter ke ml.
+* `prediction.test.ts` (10 tests): Validasi 5 kriteria terbobot SAW, normalisasi benefit, nilai preferensi $V_i$, filter cold-start 14 hari, aturan 2 menit biner, serta konversi cerdas jam ke menit dan liter ke ml.
 * `tree.test.ts` (6 tests): Validasi 5 tahap evolusi botani (*Seed* $\rightarrow$ *Mature Tree*) dan ambang batas kesehatan pohon.
 * `level.test.ts` (5 tests): Validasi ambang batas XP kumulatif dan kenaikan level pengguna.
 * `consistency.test.ts` (4 tests): Validasi skor konsistensi bergulir 30 hari (*Rolling 30-Day Consistency*).

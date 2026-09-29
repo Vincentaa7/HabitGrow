@@ -261,8 +261,8 @@
         "auth_required": true
       },
       {
-        "name": "Machine Learning Predictive Churn Nudge",
-        "description": "5-feature logistic regression calculating churn probability with 1-click adaptive adjustment",
+        "name": "Decision Support System (DSS) SAW Predictive Churn Nudge",
+        "description": "5-criteria Simple Additive Weighting (SAW) calculating churn vulnerability with 1-click adaptive adjustment",
         "files": [
           "src/lib/algorithms/prediction.ts",
           "src/components/dashboard/PredictionAlertBanner.tsx",
