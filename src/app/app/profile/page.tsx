@@ -85,10 +85,22 @@ export default function ProfilePage() {
   };
 
   const handleTestLockScreenPush = async (delaySeconds: number = 5) => {
+    if (!isPushSubscribed) {
+      setPushStatusMessage('⏳ Mengaktifkan izin & mendaftarkan Web Push...');
+      const subRes = await subscribeToPush();
+      if (!subRes.success) {
+        setPushStatusMessage(`⚠️ ${subRes.error || 'Izin notifikasi diperlukan untuk menerima push.'}`);
+        setTimeout(() => setPushStatusMessage(null), 5000);
+        return;
+      }
+    }
+
     setIsSendingPush(true);
     setPushCountdown(delaySeconds);
     setPushStatusMessage(
-      `📱 Mengirim Web Push dalam ${delaySeconds} detik! Kunci layar ponsel Anda sekarang atau tutup aplikasi untuk menguji push latar belakang.`
+      delaySeconds > 0
+        ? `📱 Mengirim Web Push dalam ${delaySeconds} detik! Kunci layar ponsel Anda sekarang (cukup tekan tombol Power 1x untuk mengunci layar, JANGAN matikan daya ponsel) untuk melihat notifikasi muncul.`
+        : '📱 Mengirim notifikasi Web Push ke ponsel Anda...'
     );
 
     try {

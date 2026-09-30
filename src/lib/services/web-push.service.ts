@@ -2,12 +2,22 @@
 import webpush from 'web-push';
 import { SupabaseClient } from '@supabase/supabase-js';
 
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
-const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:vince@habitgrow.app';
+const DEFAULT_VAPID_PUBLIC_KEY =
+  'BCQlzSePtrm5DtLF3XjnMJq5wlCN-vbdDNuRvkiWvmBNNTcIqJkAR1QHLl40wvlzBpLT9Yqm2bo1702Ez8GeJJg';
+const DEFAULT_VAPID_PRIVATE_KEY =
+  '1Jt8j75bw6-aGVpKgOwOHc6wvImWjDq4JWejgkwXv7A';
+const DEFAULT_VAPID_SUBJECT = 'mailto:vince@habitgrow.app';
+
+const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY;
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || DEFAULT_VAPID_PRIVATE_KEY;
+const vapidSubject = process.env.VAPID_SUBJECT || DEFAULT_VAPID_SUBJECT;
 
 if (vapidPublicKey && vapidPrivateKey) {
-  webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+  try {
+    webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+  } catch (e) {
+    console.warn('VAPID setup warning:', e);
+  }
 }
 
 export interface PushPayload {

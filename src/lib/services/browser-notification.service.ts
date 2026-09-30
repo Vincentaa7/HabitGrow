@@ -97,10 +97,9 @@ export class BrowserNotificationService {
 
       await navigator.serviceWorker.ready;
 
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!vapidPublicKey) {
-        return { success: false, error: 'VAPID Public Key belum dikonfigurasi' };
-      }
+      const DEFAULT_VAPID_PUBLIC_KEY =
+        'BCQlzSePtrm5DtLF3XjnMJq5wlCN-vbdDNuRvkiWvmBNNTcIqJkAR1QHLl40wvlzBpLT9Yqm2bo1702Ez8GeJJg';
+      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY;
 
       let subscription = await registration.pushManager.getSubscription();
 
