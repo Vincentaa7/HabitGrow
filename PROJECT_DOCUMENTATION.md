@@ -128,14 +128,16 @@ graph TD
 
 ### 3.1 Rincian Tech Stack
 * **Framework Frontend:** Next.js 16.3.5 (App Router, Turbopack Engine).
-* **Library Antarmuka:** React 19, Lucide React (ikonografi modern), Canvas Confetti (efek selebrasi).
+* **Library Antarmuka:** React 19, Lucide React (ikonografi modern), Canvas Confetti (efek selebrasi taktil).
 * **Manajemen State & Cache Server:** TanStack React Query v5 (Optimistic Mutations, Automatic Invalidation, Cache Rollback).
 * **Styling & Desain:** Tailwind CSS v4, CSS Variables, Nature-inspired HSL color tokens.
-* **Backend Runtime:** Node.js 20+ / Next.js Serverless Edge & Node runtime.
-* **Mesin Sistem Pendukung Keputusan (DSS):** Multi-Criteria Decision Making (MCDM) metode **Simple Additive Weighting (SAW)** dengan 5 Kriteria Terbobot ($C_1..C_5$) dan normalisasi linear benefit (waktu eksekusi $< 1\text{ ms}$ tanpa ketergantungan API pihak ketiga).
+* **Backend Runtime & Arsitektur API:** Node.js 20+ / Next.js Serverless Route Handlers (RESTful API murni dengan verba HTTP baku `GET`, `POST`, `PATCH`, `DELETE`).
+* **Mesin Sistem Pendukung Keputusan (DSS):** Multi-Criteria Decision Making (MCDM) metode **Simple Additive Weighting (SAW)** dengan 5 Kriteria Terbobot ($C_1..C_5$) dan normalisasi linear benefit (waktu eksekusi $< 1\text{ ms}$ secara deterministik).
 * **Validasi Skema:** Zod v3 (validasi *runtime payload* ketat di sisi klien dan server).
-* **Basis Data:** PostgreSQL via Supabase (Auth, Foreign Keys, UUID v4, Triggers, RLS).
-* **Unit Testing:** Vitest v5 (menjamin kebenaran algoritma secara deterministik).
+* **Basis Data & Keamanan:** PostgreSQL 15 via Supabase Cloud (Row Level Security / RLS, Foreign Keys, UUID v4, Triggers).
+* **Otentikasi & Verifikasi Email:** Supabase Auth dengan PKCE Flow & SSR Callback Route (`/auth/callback`) untuk pertukaran kode verifikasi email lintas perangkat (*mobile-friendly*).
+* **Platform Hosting & Distribusi:** Vercel Cloud Platform (URL Produksi: `https://habitsgrow.vercel.app/`) dengan kapabilitas Progressive Web App (PWA) responsif seluler.
+* **Unit Testing:** Vitest v5 (menjamin kebenaran seluruh formula algoritma matematika 100% lulus 41 test cases).
 
 ---
 
@@ -562,20 +564,50 @@ $$\text{Failure Percentage} = \min(99, \max(1, \text{round}(V_i \times 100)))$$
   * `LOW / AMAN` ($V_i < 0.50$ atau Skor $< 50\%$, tidak memicu banner)
 * **Explainability (Faktor Dominan):** Sistem mengurutkan kontribusi terbobot ($W_j \cdot R_{ij}$) dan menetapkan kriteria dengan nilai terbobot tertinggi sebagai penyebab utama risiko untuk ditampilkan secara transparan kepada pengguna.
 
+#### Simulasi Kasus Nyata Perhitungan SAW (Contoh Komputasi):
+Misalkan hari evaluasi adalah hari **Rabu**, dan sistem mengevaluasi kebiasaan *"Baca Buku 30 Halaman"*:
+
+1. **Pengumpulan Data Mentah & Normalisasi ($C_1 \dots C_5$):**
+   * **$C_1$ (Miss Rate 14 Hari):** Dalam 14 hari terakhir, pengguna bolong 4 kali dari 14 jadwal.  
+     $$C_1 = \frac{4}{14} = 0.2857 \approx \mathbf{0.28}$$
+   * **$C_2$ (Kerentanan Hari Rabu):** Dalam 14 hari terakhir ada 2 kali hari Rabu. Pengguna bolong 1 kali pada hari Rabu.  
+     $$C_2 = \frac{1}{2} = \mathbf{0.50}$$
+   * **$C_3$ (Beban Kesulitan Harian):** Pengguna memiliki 4 jadwal kebiasaan hari ini dengan tingkat kesulitan: Minum Air (`EASY` = 1), Baca Buku (`MEDIUM` = 2), Belajar Coding (`HARD` = 3), dan Olahraga (`MEDIUM` = 2). Total kesulitan $= 1 + 2 + 3 + 2 = 8$ poin dari ambang batas lelah 16 poin:  
+     $$C_3 = \frac{8}{16} = \mathbf{0.50}$$  
+     *(Catatan: Jika total poin $\ge 16$, fungsi `Math.min(1.0, total/16)` mengunci nilainya maksimal tetap $1.0$ sesuai batas atas kejenuhan mental kognitif).*
+   * **$C_4$ (Usia Kebiasaan):** Kebiasaan telah berjalan 20 hari (fase adaptasi menengah). Berdasarkan tabel bobot umur, $C_4 = \mathbf{0.35}$.
+   * **$C_5$ (Pola Jam Malam):** Rata-rata jam penyelesaian riwayat adalah pukul 22.30 malam ($\ge 22.00$, rawan tertidur/menunda). Maka $C_5 = \mathbf{0.85}$.
+
+2. **Matriks Perhitungan Terbobot SAW:**
+
+| Kriteria ($j$) | Deskripsi Indikator | Nilai Normalisasi ($R_{ij}$) | Bobot Kriteria ($W_j$) | Nilai Terbobot ($W_j \times R_{ij}$) |
+| :---: | :--- | :---: | :---: | :---: |
+| **$C_1$** | Tingkat Terlewat 14 Hari | $0.28$ | $0.30$ | **$0.084$** |
+| **$C_2$** | Kerentanan Hari Serupa (Rabu) | $0.50$ | $0.25$ | **$0.125$** |
+| **$C_3$** | Beban Kognitif Hari Ini | $0.50$ | $0.15$ | **$0.075$** |
+| **$C_4$** | Kerentanan Usia Kebiasaan | $0.35$ | $0.15$ | **$0.052$** |
+| **$C_5$** | Pola Penundaan Larut Malam | $0.85$ | $0.15$ | **$0.128$** |
+| **TOTAL** | **Nilai Preferensi Alternatif ($V_i$)** | — | **$1.00$** | **$0.464$ (Skor: $46\%$)** |
+
+3. **Pengambilan Keputusan:**
+   * Skor Risiko $= 0.464 \times 100\% = \mathbf{46\%}$.
+   * Karena skor $< 50\%$, status dikategorikan sebagai **LOW (AMAN)**, sehingga banner intervensi tidak perlu dimunculkan agar tidak mengganggu fokus pengguna.
+   * **Skenario Risiko Tinggi:** Seandainya $C_1$ bolong 7 hari ($C_1 = 7/14 = 0.50$), maka total $V_i$ melonjak menjadi **$0.530$ ($53\%$)**. Sistem seketika mengaktifkan status **MODERATE RISK**, mendeteksi $C_5$ dan $C_1$ sebagai faktor dominan, dan menerbitkan rekomendasi adaptif.
+
 #### Landasan Ilmiah Pemilihan Jendela 14 Hari & Cold-Start Guard:
 Penetapan jendela observasi dan ambang batas aktivasi model prediktif pada **14 hari (2 minggu)** didasarkan pada tiga pertimbangan metodologis dan psikologis:
 1. **Mengatasi Masalah Sampel Minim (*Small Sample Noise*):**
    Jika pengguna memiliki kebiasaan yang hanya dijadwalkan 2 kali seminggu (misalnya Senin dan Kamis), jendela 7 hari hanya menangkap 1 kali kesempatan per hari tersebut. Jika pengguna melewatkannya sekali saja karena urusan darurat, tingkat kegagalan (*miss rate*) seketika melonjak menjadi $100\%$ ($1/1$). Hal ini memicu *false alarm* (peringatan palsu) yang mengganggu kenyamanan pengguna.
 2. **Menangkap 2 Siklus Kalender Lengkap:**
-   Dengan rentang 14 hari, setiap hari dalam seminggu memiliki minimal 2 titik data evaluasi. Rasio keterlewatan menjadi lebih terdistribusi secara wajar ($0\%$, $50\%$, atau $100\%$), sehingga nilai fitur $X_1$ (*Miss Rate*) dan $X_2$ (*Day-of-Week Vulnerability*) menjadi jauh lebih representatif dan stabil.
+   Dengan rentang 14 hari, setiap hari dalam seminggu memiliki minimal 2 titik data evaluasi. Rasio keterlewatan menjadi lebih terdistribusi secara wajar ($0\%$, $50\%$, atau $100\%$), sehingga nilai kriteria $C_1$ (*Miss Rate*) dan $C_2$ (*Day-of-Week Vulnerability*) menjadi jauh lebih representatif dan stabil.
 3. **Keseimbangan Memori (*Recency vs. Baseline Memory Balance*):**
    Rentang 30 hari terlalu lambat dalam mendeteksi kejenuhan pengguna (*burnout*), sedangkan 7 hari terlalu reaktif terhadap anomali sesaat. Rentang 14 hari (2 minggu) adalah *sweet spot* psikologis untuk mendeteksi tren penurunan motivasi sebelum kebiasaan benar-benar ditinggalkan.
 
-#### Aturan Tindakan Adaptif (*Adaptive Nudge Action*):
+#### Aturan Tindakan Adaptif (*Adaptive Decision Support Nudge*):
 * **Cold-Start Guard (Filter Ambang Batas 2 Minggu / 14 Hari):**
   * Kebiasaan baru dengan usia $< 14\text{ hari}$ berada dalam *initial onboarding baseline period*. Peringatan prediksi risiko dini otomatis **dinonaktifkan** selama 14 hari pertama untuk menangkap 2 siklus kalender utuh dan mencegah *false alarm* pada pengguna atau kebiasaan baru.
-* **Kriteria Evaluasi ($P \ge 60\%$ setelah 14 hari):**
-  * Diklasifikasikan sebagai `HIGH` ($P \ge 70\%$) atau `MODERATE` ($60\% \le P < 70\%$).
+* **Kriteria Evaluasi ($V_i \ge 0.50$ atau Skor Risiko $\ge 50\%$ setelah 14 hari):**
+  * Diklasifikasikan sebagai `HIGH` ($V_i \ge 0.70$) atau `MODERATE` ($0.50 \le V_i < 0.70$).
   * **Jalur 1 — Tipe Kuantitatif (`target_value > 1` atau Satuan Jam/Liter):**
     * *Pesan Rekomendasi:* `"Beban hari ini terdeteksi tinggi. Amankan streak dengan memangkas target menjadi [X] [Satuan]."`
     * *Formulasi Pangkas:* $\text{Target Baru} = \max\left(1, \left\lfloor \frac{\text{Target Lama}}{2} \right\rfloor\right)$.
@@ -589,7 +621,7 @@ Penetapan jendela observasi dan ambang batas aktivasi model prediktif pada **14 
     * *Aksi Tombol Utama:* `[✓ Tandai Selesai Cepat (2 Menit)]` yang langsung mengeksekusi `POST /api/habits/[id]/complete` dengan ledakan konfeti dan pembaruan antarmuka instan (0ms).
     * *Aksi Alternatif:* `[⏰ Ingatkan 1 Jam Lagi]` yang menunda (*snooze*) penayangan banner peringatan selama 60 menit via *client-side local storage*.
 * **Penyajian Antarmuka Antirumpang:**
-  * Komponen `PredictionAlertBanner` menyajikan kotak *callout* rekomendasi AI secara visual dan eksplisit sehingga pengguna mendapatkan instruksi tindakan yang jelas sebelum memilih opsi.
+  * Komponen `PredictionAlertBanner` menyajikan kotak *callout* rekomendasi SPK secara visual dan eksplisit sehingga pengguna mendapatkan instruksi tindakan yang jelas sebelum memilih opsi.
 
 ---
 
@@ -852,33 +884,37 @@ graph LR
 
 ## 10. PANDUAN PENULISAN PROPOSAL & BAB SKRIPSI
 
-### 10.1 Pilihan Judul Skripsi yang Layak Diajukan
+### 10.1 Pilihan Judul Skripsi yang Layak Diajukan (Sesuai Pedoman ITB STIKOM Bali Maks. 14 Kata)
 
-#### Pilihan A (Jalur Sistem Komputer / IoT — Sangat Direkomendasikan):
-> **"Rancang Bangun Sistem Pemantau Kebiasaan Diri Berbasis Gamifikasi Pohon Virtual Terintegrasi Perangkat IoT Ambient Desk Companion"**
+Berdasarkan pedoman akademik ITB STIKOM Bali yang membatasi panjang judul Tugas Akhir **maksimal 14 kata**, berikut adalah 5 pilihan judul resmi yang telah diverifikasi jumlah katanya dan sangat direkomendasikan untuk diajukan dalam proposal:
 
-#### Pilihan B (Jalur Rekayasa Perangkat Lunak / Algoritma):
-> **"Penerapan Algoritma Non-Zero Day Streak dan Rolling Consistency Score pada Aplikasi Pelacak Kebiasaan Berbasis Gamifikasi Metafora Pohon"**
-
-#### Pilihan C (Jalur Sistem Cerdas / Data Science):
-> **"Analisis Pola Konsistensi dan Prediksi Kegagalan Rutinitas Pengguna pada Platform Gamifikasi HabitGrow Menggunakan Algoritma Klasifikasi"**
+* **Opsi 1 (10 Kata — Sangat Direkomendasikan / Paling Kuat & Padat):**  
+  > *"Sistem Pendukung Keputusan Habit Tracker Menggunakan Metode Simple Additive Weighting"*
+* **Opsi 2 (11 Kata — Menonjolkan Nama Aplikasi HabitGrow):**  
+  > *"Penerapan Metode Simple Additive Weighting pada Sistem Pendukung Keputusan Aplikasi HabitGrow"*
+* **Opsi 3 (13 Kata — Menegaskan Platform Web):**  
+  > *"Sistem Pendukung Keputusan Habit Tracker Berbasis Web Menggunakan Metode Simple Additive Weighting"*
+* **Opsi 4 (12 Kata — Menonjolkan Nilai Tambah Gamifikasi):**  
+  > *"Sistem Pendukung Keputusan Habit Tracker Berbasis Gamifikasi dengan Metode Simple Additive Weighting"*
+* **Opsi 5 (13 Kata — Kombinasi Lengkap Penerapan Metode & Web):**  
+  > *"Penerapan Metode Simple Additive Weighting pada Sistem Pendukung Keputusan Habit Tracker Berbasis Web"*
 
 ---
 
 ### 10.2 Kerangka Bab Skripsi (Pedoman Penyusunan Bab 1 s/d Bab 5)
 
 #### BAB 1: PENDAHULUAN
-* **Latar Belakang:** Fenomena rendahnya konsistensi pembentukan kebiasaan baru (*habit dropout*); kelemahan sistem streak konvensional yang menghukum pengguna secara berlebihan; pentingnya pendekatan gamifikasi empatik dan integrasi fisik di meja kerja.
+* **Latar Belakang:** Fenomena rendahnya konsistensi pembentukan kebiasaan baru (*habit dropout*); kelemahan sistem streak konvensional yang menghukum pengguna secara berlebihan (*streak fatigue* & *what-the-hell effect*); pentingnya integrasi Sistem Pendukung Keputusan untuk mencegah kegagalan secara proaktif sebelum hari berakhir serta gamifikasi empatik pertumbuhan pohon virtual.
 * **Rumusan Masalah:**
   1. Bagaimana merancang arsitektur perangkat lunak pelacak kebiasaan yang memitigasi efek keputusasaan (*streak fatigue*) menggunakan prinsip *Non-Zero Day*?
   2. Bagaimana merumuskan model metamorfosis pohon virtual berbasis konsistensi bergulir 30 hari?
   3. Bagaimana mengimplementasikan Sistem Pendukung Keputusan (SPK) menggunakan metode Simple Additive Weighting (SAW) untuk memprediksi dan memitigasi risiko kegagalan kebiasaan (*habit churn*) secara adaptif?
   4. *(Jika IoT)* Bagaimana mengintegrasikan modul pemicu fisik NFC dan mikrokontroler ESP32 dengan RESTful API server cloud secara andal?
 * **Batasan Masalah:**
-  1. Sistem dikembangkan pada platform web modern (Next.js & Supabase) dan didistribusikan untuk smartphone dalam bentuk berkas instalasi mandiri Android (*Standalone APK*) yang dipasang secara langsung (*sideloading*) pada perangkat penguji, tanpa melalui proses publikasi komersial di Google Play Store.
+  1. Sistem dikembangkan berbasis Web Responsif modern (Next.js 16, React 19, Supabase PostgreSQL) dan di-deploy secara publik di Vercel (`https://habitsgrow.vercel.app/`) dengan kapabilitas *Progressive Web App* (PWA) tanpa memerlukan proses publikasi komersial ke Google Play Store.
   2. Pengujian fungsionalitas dan retensi dibatasi pada pengguna aktif dengan frekuensi pemantauan harian.
   3. Modul Sistem Pendukung Keputusan (DSS) dijalankan secara komputasi ringan (*edge/serverless*) menggunakan metode Simple Additive Weighting (SAW) 5 kriteria terbobot.
-* **Tujuan & Manfaat Penelitian:** Menghasilkan platform pelacak kebiasaan yang mampu meningkatkan retensi kedisiplinan diri secara terukur dan adaptif.
+* **Tujuan & Manfaat Penelitian:** Menghasilkan platform pelacak kebiasaan berbasis web yang mampu meningkatkan retensi kedisiplinan diri secara terukur, interaktif, dan adaptif.
 
 #### BAB 2: TINJAUAN PUSTAKA & DASAR TEORI
 * Teori Pembentukan Kebiasaan (*The Habit Loop: Cue, Routine, Reward* - Charles Duhigg & James Clear).
