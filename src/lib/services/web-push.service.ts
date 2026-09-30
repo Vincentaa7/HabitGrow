@@ -2,17 +2,7 @@
 import webpush from 'web-push';
 import { SupabaseClient } from '@supabase/supabase-js';
 
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
 const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:vince@habitgrow.app';
-
-if (vapidPublicKey && vapidPrivateKey) {
-  try {
-    webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
-  } catch (e) {
-    console.warn('VAPID setup warning:', e);
-  }
-}
 
 export interface PushPayload {
   title: string;
@@ -89,13 +79,42 @@ export class WebPushService {
   }
 
   /**
+   * Initializes or refreshes VAPID credentials at runtime
+   */
+  static ensureVapidConfig(): boolean {
+    const pub = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    const priv = process.env.VAPID_PRIVATE_KEY;
+    const sub = process.env.VAPID_SUBJECT || vapidSubject;
+
+    if (!pub || !priv) {
+      return false;
+    }
+
+    try {
+      webpush.setVapidDetails(sub, pub, priv);
+      return true;
+    } catch (e) {
+      console.warn('VAPID setup warning:', e);
+      return false;
+    }
+  }
+
+  /**
    * Sends a Web Push notification to a user's device even if their browser/phone is closed
    */
   static async sendPushToUser(
     supabase: SupabaseClient,
     userId: string,
     payload: PushPayload
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; statusCode?: number }> {
+    const isConfigured = this.ensureVapidConfig();
+    if (!isConfigured) {
+      return {
+        success: false,
+        error: 'Kunci VAPID belum dikonfigurasi di Environment Variables server (Vercel).',
+      };
+    }
+
     const subscription = await this.getSubscription(supabase, userId);
     if (!subscription) {
       return { success: false, error: 'User does not have an active push subscription' };
@@ -114,15 +133,25 @@ export class WebPushService {
       await webpush.sendNotification(subscription, payloadString);
       return { success: true };
     } catch (error: any) {
-      // If subscription expired or was unsubscribed (HTTP 410 Gone / 404), remove it
-      if (error?.statusCode === 410 || error?.statusCode === 404) {
+      const statusCode = error?.statusCode || (typeof error?.status === 'number' ? error.status : undefined);
+
+      // If subscription expired, revoked, or key mismatched (HTTP 410, 404, 400, 401), clean up stale record
+      if (statusCode === 410 || statusCode === 404 || statusCode === 400 || statusCode === 401) {
         await supabase
           .from('notifications')
           .delete()
           .eq('user_id', userId)
           .eq('type', 'PUSH_SUBSCRIPTION');
       }
-      return { success: false, error: error?.message || 'Failed to send web push' };
+
+      let errorMessage = error?.message || 'Failed to send web push';
+      if (statusCode === 400 || statusCode === 401 || errorMessage.includes('unexpected response code')) {
+        errorMessage = 'Kunci VAPID tidak cocok dengan langganan peramban lama. Silakan hubungkan ulang notifikasi di Profil.';
+      } else if (statusCode === 410 || statusCode === 404) {
+        errorMessage = 'Langganan notifikasi peramban telah kedaluwarsa. Silakan aktifkan kembali di Profil.';
+      }
+
+      return { success: false, error: errorMessage, statusCode };
     }
   }
 }

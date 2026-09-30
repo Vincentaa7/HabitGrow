@@ -87,7 +87,7 @@ export default function ProfilePage() {
   const handleTestLockScreenPush = async (delaySeconds: number = 5) => {
     if (!isPushSubscribed) {
       setPushStatusMessage('⏳ Mengaktifkan izin & mendaftarkan Web Push...');
-      const subRes = await subscribeToPush();
+      const subRes = await subscribeToPush(true);
       if (!subRes.success) {
         setPushStatusMessage(`⚠️ ${subRes.error || 'Izin notifikasi diperlukan untuk menerima push.'}`);
         setTimeout(() => setPushStatusMessage(null), 5000);
@@ -266,7 +266,7 @@ export default function ProfilePage() {
                 type="button"
                 disabled={isRequesting}
                 onClick={async () => {
-                  const res = await subscribeToPush();
+                  const res = await subscribeToPush(true);
                   if (res.success) {
                     await sendServerTestPush(0);
                   }
@@ -275,6 +275,28 @@ export default function ProfilePage() {
               >
                 <Bell className="w-4 h-4" />
                 <span>{isRequesting ? 'Mendaftarkan Service Worker...' : 'Hubungkan & Aktifkan Web Push'}</span>
+              </button>
+            )}
+
+            {isPushSubscribed && (
+              <button
+                type="button"
+                disabled={isRequesting || isSendingPush}
+                onClick={async () => {
+                  setPushStatusMessage('🔄 Menyinkronkan ulang kunci Web Push...');
+                  const res = await subscribeToPush(true);
+                  if (res.success) {
+                    setPushStatusMessage('✅ Kunci Web Push berhasil disinkronkan ke server! Menguji push...');
+                    await sendServerTestPush(0);
+                  } else {
+                    setPushStatusMessage(`⚠️ ${res.error || 'Gagal menyinkronkan notifikasi'}`);
+                  }
+                }}
+                className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer disabled:opacity-50"
+                title="Sinkronkan ulang kunci notifikasi jika VAPID baru saja diperbarui di server"
+              >
+                <RefreshCw className={cn('w-3.5 h-3.5 text-emerald-500', isRequesting && 'animate-spin')} />
+                <span>Sinkronkan Ulang Notifikasi</span>
               </button>
             )}
 

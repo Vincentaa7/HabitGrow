@@ -49,6 +49,7 @@ export async function POST(request: Request) {
           success: false,
           error: {
             code: 'PUSH_FAILED',
+            statusCode: result.statusCode,
             message: result.error || 'Gagal mengirim push notifikasi. Pastikan izin push diaktifkan di peramban ini.',
           },
         },

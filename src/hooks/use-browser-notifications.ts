@@ -41,10 +41,10 @@ export function useBrowserNotifications() {
     }
   }, []);
 
-  const subscribeToPush = useCallback(async () => {
+  const subscribeToPush = useCallback(async (forceResubscribe: boolean = false) => {
     setIsRequesting(true);
     try {
-      const res = await BrowserNotificationService.subscribeToPush();
+      const res = await BrowserNotificationService.subscribeToPush(forceResubscribe);
       if (res.success) {
         setIsPushSubscribed(true);
         setPermission('granted');

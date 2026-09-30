@@ -13,6 +13,8 @@ vi.mock('web-push', () => ({
 describe('WebPushService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = 'mock-public-key';
+    process.env.VAPID_PRIVATE_KEY = 'mock-private-key';
   });
 
   const mockSubscription = {
@@ -191,6 +193,51 @@ describe('WebPushService', () => {
     });
 
     expect(result.success).toBe(false);
+    expect(mockDelete).toHaveBeenCalled();
+  });
+
+  it('handles 401 / unexpected response code key mismatch by deleting stale subscription and returning friendly error', async () => {
+    const mockDelete = vi.fn().mockReturnThis();
+    const mockEq1 = vi.fn().mockReturnThis();
+    const mockEq2 = vi.fn().mockResolvedValue({ error: null });
+
+    const mockSupabase: any = {
+      from: vi.fn().mockImplementation((table: string) => {
+        if (table === 'notifications') {
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            order: vi.fn().mockReturnThis(),
+            limit: vi.fn().mockResolvedValue({
+              data: [{ message: JSON.stringify(mockSubscription) }],
+              error: null,
+            }),
+            delete: () => {
+              mockDelete();
+              return {
+                eq: (k1: string, v1: any) => {
+                  mockEq1(k1, v1);
+                  return { eq: mockEq2 };
+                },
+              };
+            },
+          };
+        }
+        return {};
+      }),
+    };
+
+    const err401: any = new Error('Received unexpected response code');
+    err401.statusCode = 401;
+    (webpush.sendNotification as any).mockRejectedValueOnce(err401);
+
+    const result = await WebPushService.sendPushToUser(mockSupabase, 'user-123', {
+      title: 'Halo!',
+      body: 'Test push',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Kunci VAPID tidak cocok');
     expect(mockDelete).toHaveBeenCalled();
   });
 });

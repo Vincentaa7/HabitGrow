@@ -15,6 +15,16 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
+function arrayBufferToBase64Url(buffer: ArrayBuffer | null | undefined): string {
+  if (!buffer) return '';
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return window.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
 export class BrowserNotificationService {
   /**
    * Checks if Notification API is supported in the current browser environment.
@@ -74,8 +84,9 @@ export class BrowserNotificationService {
 
   /**
    * Subscribes the current device to Web Push and registers subscription to HabitGrow server.
+   * If forceResubscribe is true or key rotation is detected, old subscription is unsubscribed first.
    */
-  static async subscribeToPush(): Promise<{
+  static async subscribeToPush(forceResubscribe: boolean = false): Promise<{
     success: boolean;
     subscription?: PushSubscription;
     error?: string;
@@ -106,6 +117,27 @@ export class BrowserNotificationService {
       }
 
       let subscription = await registration.pushManager.getSubscription();
+
+      let shouldUnsubscribe = forceResubscribe;
+
+      // Auto-detect key mismatch if options.applicationServerKey exists
+      if (subscription && !shouldUnsubscribe && subscription.options?.applicationServerKey) {
+        const currentServerKey = arrayBufferToBase64Url(subscription.options.applicationServerKey);
+        const expectedServerKey = vapidPublicKey.replace(/=+$/, '');
+        if (currentServerKey && currentServerKey !== expectedServerKey) {
+          console.warn('[HabitGrow Push] VAPID key mismatch detected. Unsubscribing stale subscription...');
+          shouldUnsubscribe = true;
+        }
+      }
+
+      if (subscription && shouldUnsubscribe) {
+        try {
+          await subscription.unsubscribe();
+        } catch (e) {
+          console.warn('[HabitGrow Push] Could not unsubscribe old subscription:', e);
+        }
+        subscription = null;
+      }
 
       if (!subscription) {
         const convertedKey = urlBase64ToUint8Array(vapidPublicKey);
@@ -155,9 +187,13 @@ export class BrowserNotificationService {
   }
 
   /**
-   * Dispatches a real background push from server to device (tested with locked screen or closed tab)
+   * Dispatches a real background push from server to device (tested with locked screen or closed tab).
+   * Automatically auto-heals and retries if stale subscription / key mismatch is detected.
    */
-  static async sendServerTestPush(delaySeconds: number = 0): Promise<{
+  static async sendServerTestPush(
+    delaySeconds: number = 0,
+    retryOnMismatch: boolean = true
+  ): Promise<{
     success: boolean;
     message?: string;
   }> {
@@ -170,9 +206,28 @@ export class BrowserNotificationService {
 
       const json = await response.json();
       if (!response.ok || !json.success) {
+        const rawMessage = json.error?.message || '';
+
+        // Auto-heal on stale subscription / VAPID key mismatch
+        if (
+          retryOnMismatch &&
+          (rawMessage.includes('unexpected response code') ||
+           rawMessage.includes('kunci lama') ||
+           rawMessage.includes('VAPID') ||
+           rawMessage.includes('kedaluwarsa') ||
+           json.error?.code === 'PUSH_FAILED')
+        ) {
+          console.warn('[HabitGrow Push] Stale push subscription detected. Re-subscribing with latest VAPID keys...');
+          const resub = await this.subscribeToPush(true);
+          if (resub.success) {
+            // Re-attempt test push once
+            return await this.sendServerTestPush(delaySeconds, false);
+          }
+        }
+
         return {
           success: false,
-          message: json.error?.message || 'Gagal mengirim push notifikasi dari server.',
+          message: rawMessage || 'Gagal mengirim push notifikasi dari server.',
         };
       }
 
