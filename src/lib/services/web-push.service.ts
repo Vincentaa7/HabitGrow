@@ -2,15 +2,9 @@
 import webpush from 'web-push';
 import { SupabaseClient } from '@supabase/supabase-js';
 
-const DEFAULT_VAPID_PUBLIC_KEY =
-  'BCQlzSePtrm5DtLF3XjnMJq5wlCN-vbdDNuRvkiWvmBNNTcIqJkAR1QHLl40wvlzBpLT9Yqm2bo1702Ez8GeJJg';
-const DEFAULT_VAPID_PRIVATE_KEY =
-  '1Jt8j75bw6-aGVpKgOwOHc6wvImWjDq4JWejgkwXv7A';
-const DEFAULT_VAPID_SUBJECT = 'mailto:vince@habitgrow.app';
-
-const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY;
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || DEFAULT_VAPID_PRIVATE_KEY;
-const vapidSubject = process.env.VAPID_SUBJECT || DEFAULT_VAPID_SUBJECT;
+const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:vince@habitgrow.app';
 
 if (vapidPublicKey && vapidPrivateKey) {
   try {
@@ -39,13 +33,14 @@ export class WebPushService {
   ): Promise<boolean> {
     const serialized = JSON.stringify(subscription);
 
-    const { data: existing } = await supabase
+    const { data: existingRows } = await supabase
       .from('notifications')
       .select('id')
       .eq('user_id', userId)
       .eq('type', 'PUSH_SUBSCRIPTION')
-      .limit(1)
-      .single();
+      .limit(1);
+
+    const existing = existingRows && existingRows.length > 0 ? existingRows[0] : null;
 
     if (existing) {
       const { error } = await supabase
@@ -82,13 +77,12 @@ export class WebPushService {
       .eq('user_id', userId)
       .eq('type', 'PUSH_SUBSCRIPTION')
       .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+      .limit(1);
 
-    if (error || !data?.message) return null;
+    if (error || !data || data.length === 0 || !data[0]?.message) return null;
 
     try {
-      return JSON.parse(data.message) as webpush.PushSubscription;
+      return JSON.parse(data[0].message) as webpush.PushSubscription;
     } catch {
       return null;
     }
@@ -112,8 +106,9 @@ export class WebPushService {
         title: payload.title,
         body: payload.body,
         url: payload.url || '/app/dashboard',
-        tag: payload.tag || 'habitgrow-alert',
-        icon: payload.icon || '/image/habitgrow_logo.svg',
+        tag: (payload.tag || 'habitgrow-alert') + '-' + Date.now(),
+        icon: payload.icon || '/icons/icon-192x192.png',
+        badge: '/icons/icon-192x192.png',
       });
 
       await webpush.sendNotification(subscription, payloadString);

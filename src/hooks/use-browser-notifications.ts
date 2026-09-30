@@ -55,8 +55,8 @@ export function useBrowserNotifications() {
     }
   }, []);
 
-  const sendTestNotification = useCallback(() => {
-    return BrowserNotificationService.sendTestNotification();
+  const sendTestNotification = useCallback(async () => {
+    return await BrowserNotificationService.sendTestNotification();
   }, []);
 
   const sendServerTestPush = useCallback((delaySeconds: number = 0) => {
@@ -67,8 +67,8 @@ export function useBrowserNotifications() {
     return BrowserNotificationService.triggerSmartReminders();
   }, []);
 
-  const sendAtRiskWarning = useCallback((habitName: string, riskPercentage: number) => {
-    return BrowserNotificationService.sendAtRiskWarning(habitName, riskPercentage);
+  const sendAtRiskWarning = useCallback(async (habitName: string, riskPercentage: number) => {
+    return await BrowserNotificationService.sendAtRiskWarning(habitName, riskPercentage);
   }, []);
 
   return {

@@ -31,8 +31,7 @@ describe('WebPushService', () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
-            limit: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({ data: null, error: null }),
+            limit: vi.fn().mockResolvedValue({ data: [], error: null }),
             insert: mockInsert,
           };
         }
@@ -67,8 +66,7 @@ describe('WebPushService', () => {
           return {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
-            limit: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({ data: { id: 'existing-notif-id' }, error: null }),
+            limit: vi.fn().mockResolvedValue({ data: [{ id: 'existing-notif-id' }], error: null }),
             update: (...args: any[]) => {
               mockUpdate(...args);
               return { eq: mockEq };
@@ -100,9 +98,8 @@ describe('WebPushService', () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: { message: JSON.stringify(mockSubscription) },
+        limit: vi.fn().mockResolvedValue({
+          data: [{ message: JSON.stringify(mockSubscription) }],
           error: null,
         }),
       }),
@@ -118,9 +115,8 @@ describe('WebPushService', () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: { message: 'invalid-json{' },
+        limit: vi.fn().mockResolvedValue({
+          data: [{ message: 'invalid-json{' }],
           error: null,
         }),
       }),
@@ -136,9 +132,8 @@ describe('WebPushService', () => {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockReturnThis(),
-        single: vi.fn().mockResolvedValue({
-          data: { message: JSON.stringify(mockSubscription) },
+        limit: vi.fn().mockResolvedValue({
+          data: [{ message: JSON.stringify(mockSubscription) }],
           error: null,
         }),
       }),
@@ -167,9 +162,8 @@ describe('WebPushService', () => {
             select: vi.fn().mockReturnThis(),
             eq: vi.fn().mockReturnThis(),
             order: vi.fn().mockReturnThis(),
-            limit: vi.fn().mockReturnThis(),
-            single: vi.fn().mockResolvedValue({
-              data: { message: JSON.stringify(mockSubscription) },
+            limit: vi.fn().mockResolvedValue({
+              data: [{ message: JSON.stringify(mockSubscription) }],
               error: null,
             }),
             delete: () => {

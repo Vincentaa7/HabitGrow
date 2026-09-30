@@ -87,7 +87,7 @@ export class BrowserNotificationService {
     try {
       const perm = await this.requestPermission();
       if (perm !== 'granted') {
-        return { success: false, error: 'Izin notifikasi tidak diberikan' };
+        return { success: false, error: 'Izin notifikasi belum diberikan di peramban' };
       }
 
       const registration = await this.registerServiceWorker();
@@ -97,9 +97,13 @@ export class BrowserNotificationService {
 
       await navigator.serviceWorker.ready;
 
-      const DEFAULT_VAPID_PUBLIC_KEY =
-        'BCQlzSePtrm5DtLF3XjnMJq5wlCN-vbdDNuRvkiWvmBNNTcIqJkAR1QHLl40wvlzBpLT9Yqm2bo1702Ez8GeJJg';
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || DEFAULT_VAPID_PUBLIC_KEY;
+      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidPublicKey) {
+        return {
+          success: false,
+          error: 'NEXT_PUBLIC_VAPID_PUBLIC_KEY belum dikonfigurasi di Environment Variables.',
+        };
+      }
 
       let subscription = await registration.pushManager.getSubscription();
 
@@ -111,11 +115,14 @@ export class BrowserNotificationService {
         });
       }
 
+      // Explicitly serialize to clean JSON
+      const serializedSubscription = subscription.toJSON ? subscription.toJSON() : subscription;
+
       // Save subscription to HabitGrow database via server endpoint
       const response = await fetch('/api/notifications/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subscription }),
+        body: JSON.stringify({ subscription: serializedSubscription }),
       });
 
       if (!response.ok) {
@@ -210,61 +217,74 @@ export class BrowserNotificationService {
   }
 
   /**
-   * Sends a local browser notification if permission is granted.
+   * Universal method to show notification (supports Android Chrome via ServiceWorker and Desktop via Notification)
    */
-  static sendNotification(
+  static async sendNotification(
     title: string,
     options?: NotificationOptions
-  ): Notification | null {
+  ): Promise<boolean> {
     if (!this.isSupported() || Notification.permission !== 'granted') {
-      return null;
+      return false;
     }
 
-    try {
-      const defaultOptions: NotificationOptions = {
-        icon: '/image/habitgrow_logo.svg',
-        badge: '/image/habitgrow_logo.svg',
-        silent: false,
-        ...options,
-      };
+    const defaultOptions: NotificationOptions = {
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-192x192.png',
+      silent: false,
+      tag: 'habitgrow-' + Date.now(),
+      ...options,
+    };
 
-      return new Notification(title, defaultOptions);
+    // 1. Android Chrome FORBIDS `new Notification()`, so we MUST use ServiceWorkerRegistration.showNotification
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        if (registration && 'showNotification' in registration) {
+          await registration.showNotification(title, defaultOptions);
+          return true;
+        }
+      } catch (swErr) {
+        console.warn('showNotification through serviceWorker failed, falling back to window Notification:', swErr);
+      }
+    }
+
+    // 2. Desktop Fallback (Windows/Mac/Linux browsers)
+    try {
+      new Notification(title, defaultOptions);
+      return true;
     } catch (e) {
       console.warn('Gagal memicu browser notification:', e);
-      return null;
+      return false;
     }
   }
 
   /**
    * Sends an immediate test notification to verify setup.
    */
-  static sendTestNotification(): boolean {
-    const notif = this.sendNotification('🌿 HabitGrow — Pengingat Aktif!', {
+  static async sendTestNotification(): Promise<boolean> {
+    return this.sendNotification('🌿 HabitGrow — Pengingat Aktif!', {
       body: 'Sistem pengingat browser berhasil diaktifkan. Pohon virtualmu akan mengingatkanmu saat ada kebiasaan yang berisiko terlewat!',
-      tag: 'habitgrow-test',
+      tag: 'habitgrow-test-' + Date.now(),
     });
-    return notif !== null;
   }
 
   /**
    * Sends an early warning notification triggered by the Decision Support System (SAW).
    */
-  static sendAtRiskWarning(habitName: string, riskPercentage: number): boolean {
-    const notif = this.sendNotification(`⚠️ Peringatan Dini SPK: ${habitName}`, {
+  static async sendAtRiskWarning(habitName: string, riskPercentage: number): Promise<boolean> {
+    return this.sendNotification(`⚠️ Peringatan Dini SPK: ${habitName}`, {
       body: `Tingkat risiko terlewat hari ini mencapai ${riskPercentage}%. Buka HabitGrow sekarang untuk memangkas target atau selesaikan versi ringannya!`,
-      tag: `at-risk-${habitName.toLowerCase().replace(/\s+/g, '-')}`,
+      tag: `at-risk-${habitName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`,
     });
-    return notif !== null;
   }
 
   /**
    * Sends a streak defense reminder before midnight.
    */
-  static sendStreakReminder(streakDays: number, uncompletedCount: number): boolean {
-    const notif = this.sendNotification(`🔥 Amankan Streak ${streakDays} Hari!`, {
+  static async sendStreakReminder(streakDays: number, uncompletedCount: number): Promise<boolean> {
+    return this.sendNotification(`🔥 Amankan Streak ${streakDays} Hari!`, {
       body: `Kamu masih punya ${uncompletedCount} kebiasaan yang belum tuntas hari ini. Rawat pohonmu sebelum pergantian hari!`,
-      tag: 'habitgrow-streak-reminder',
+      tag: `habitgrow-streak-${Date.now()}`,
     });
-    return notif !== null;
   }
 }

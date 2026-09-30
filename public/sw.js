@@ -1,12 +1,13 @@
 // public/sw.js - HabitGrow Service Worker for Background Web Push Notifications & PWA Installation
 
-const CACHE_NAME = 'habitgrow-cache-v1';
+const CACHE_NAME = 'habitgrow-cache-v2';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
-  '/image/habitgrow_logo.svg',
+  '/icons/icon-maskable-192x192.png',
+  '/icons/icon-maskable-512x512.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -35,13 +36,9 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event listener required by Google Chrome for PWA installability criteria
 self.addEventListener('fetch', (event) => {
-  // Only intercept GET requests
   if (event.request.method !== 'GET') return;
-
-  // Let browser handle chrome extensions or external schemas
   if (!event.request.url.startsWith(self.location.origin)) return;
 
-  // Network first with cache fallback
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
@@ -50,7 +47,6 @@ self.addEventListener('fetch', (event) => {
       .catch(() => {
         return caches.match(event.request).then((cachedResponse) => {
           if (cachedResponse) return cachedResponse;
-          // Fallback to offline / root if navigating
           if (event.request.mode === 'navigate') {
             return caches.match('/');
           }
@@ -78,13 +74,19 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  // Ensure PNG raster icon for Android compatibility (SVG is rejected by Android NotificationManager)
+  const iconUrl = data.icon && !data.icon.endsWith('.svg') ? data.icon : '/icons/icon-192x192.png';
+  const badgeUrl = data.badge && !data.badge.endsWith('.svg') ? data.badge : '/icons/icon-192x192.png';
+  const uniqueTag = (data.tag ? data.tag : 'habitgrow') + '-' + Date.now();
+
   const options = {
     body: data.body,
-    icon: data.icon || '/icons/icon-192x192.png',
-    badge: data.badge || '/icons/icon-192x192.png',
+    icon: iconUrl,
+    badge: badgeUrl,
     vibrate: [200, 100, 200],
-    tag: data.tag || 'habitgrow-push',
+    tag: uniqueTag,
     renotify: true,
+    requireInteraction: true,
     data: {
       url: data.url || '/app/dashboard',
     },
@@ -96,7 +98,15 @@ self.addEventListener('push', (event) => {
     ],
   };
 
-  event.waitUntil(self.registration.showNotification(data.title, options));
+  event.waitUntil(
+    self.registration.showNotification(data.title, options).catch((err) => {
+      console.warn('showNotification failed with full options, retrying with fallback:', err);
+      return self.registration.showNotification(data.title, {
+        body: data.body,
+        icon: '/icons/icon-192x192.png',
+      });
+    })
+  );
 });
 
 self.addEventListener('notificationclick', (event) => {
