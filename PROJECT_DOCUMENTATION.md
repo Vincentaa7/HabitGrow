@@ -307,6 +307,21 @@ sequenceDiagram
 4. **Trigger Otomatis SPK SAW & Pengingat Streak (`/api/cron/reminders`):**
    * Sistem evaluasi dapat dijalankan secara berkala (misal: pukul 19:00 atau 21:00) menggunakan cron scheduler. Endpoint ini mengevaluasi apakah ada kebiasaan yang berisiko terlewat ($V_i \ge 0.50$) atau sisa kebiasaan yang mengancam pemutusan streak aktif pengguna, kemudian langsung memicu push notifikasi darurat ke perangkat pengguna.
 
+#### 3.7.1 Fungsi & Peran Tombol "Evaluasi SPK SAW Sekarang" (On-Demand Trigger vs Automated Cron):
+Di halaman profil pengguna (`/app/profile`), terdapat tombol interaktif **"Evaluasi SPK SAW Sekarang"**. Tombol ini memiliki peran penting:
+1. **Pemicu Evaluasi Seketika (*On-Demand Execution*):**
+   * Secara normal, cron job berjalan otomatis pada waktu malam (misal pukul 20:00). Namun, untuk keperluan **pengujian pengguna (user testing), pengujian dosen penguji saat sidang skripsi, atau demonstrasi live**, sistem tidak mungkin menunggu jadwal malam tiba. Tombol ini memungkinkan pengguna atau penguji memicu komputasi SPK SAW secara *real-time* kapan saja.
+2. **Alur Komputasi yang Dijalankan:**
+   * Begitu tombol ditekan, frontend mengirim permintaan `POST /api/cron/reminders` dengan sesi pengguna aktif.
+   * Server mengeksekusi `PredictionService.getAtRiskHabitsToday()`:
+     1. Menarik seluruh jadwal kebiasaan hari ini yang belum selesai.
+     2. Menghitung 5 kriteria SAW ($C_1$ s/d $C_5$) dan nilai preferensi $V_i$.
+     3. Jika ditemukan kebiasaan berisiko ($V_i \ge 0.50$), server langsung meracik pesan rekomendasi preskriptif dan mengirimkan notifikasi Web Push ke ponsel pengguna:  
+        `"⚠️ Peringatan SPK: [Nama Kebiasaan] - Risiko terlewat [X]%. [Tips Mitigasi]"`
+     4. Jika tidak ada kebiasaan berisiko tinggi tetapi pengguna memiliki streak aktif yang belum terlindungi, server mengirimkan notifikasi penyelamatan streak (*Streak Defense Reminder*).
+3. **Umpan Balik Transparan:**
+   * Antarmuka menampilkan status langsung: `"✅ Evaluasi SPK selesai. Mengirim [X] notifikasi push."` sehingga pengguna dan evaluator skripsi dapat memvalidasi bahwa mesin SPK SAW berfungsi secara aktif dan nyata.
+
 ---
 
 ## 4. PERANCANGAN BASIS DATA & SKEMA ERD
@@ -823,18 +838,25 @@ HabitGrow/
 │   │       ├── dashboard/summary/          # API Aggregator Ringkasan Dashboard + ML Risk
 │   │       ├── calendar/                   # API Matriks Aktivitas (/activity & /day)
 │   │       ├── categories/                 # API Kategori
-│   │       └── achievements/               # API Pencapaian
+│   │       ├── achievements/               # API Pencapaian
+│   │       ├── notifications/              # API Web Push (/subscribe & /test-push)
+│   │       └── cron/reminders/             # API Evaluator Otomatis SPK SAW & Background Push
 │   ├── components/                         # Komponen Antarmuka Reusable
 │   │   ├── habits/
 │   │   │   ├── HabitCard.tsx               # Kartu Kebiasaan Taktil (0ms Optimistic UI)
 │   │   │   ├── HabitFormModal.tsx          # Modal Tambah/Edit Kebiasaan
 │   │   │   ├── StreakAlertBanner.tsx       # Banner Empatis Streak Putus
 │   │   │   └── PredictionAlertBanner.tsx   # Banner Peringatan Dini ML + Aksi Adaptif 1-Klik
+│   │   ├── notifications/
+│   │   │   └── NotificationPermissionBanner.tsx # Banner Persetujuan Web Push PWA
 │   │   ├── tree/
 │   │   │   └── TreeVisualization.tsx       # Komponen SVG Animasi Pohon (5 Tahap)
 │   │   ├── layout/
-│   │   │   └── Navbar.tsx                  # Navigasi Atas Responsif & Pengganti Tema
+│   │   │   └── Navbar.tsx                  # Navigasi Responsif, Drawer & Tombol PWA Install
 │   │   └── ui/                             # Komponen Atomik (Button, Input, ThemeToggle)
+│   ├── hooks/                              # Custom React Hooks
+│   │   ├── use-browser-notifications.ts    # Hook Manajemen Izin & Web Push Dispatch
+│   │   └── use-pwa-install.ts              # Hook Deteksi Event beforeinstallprompt (WebAPK)
 │   ├── lib/
 │   │   ├── algorithms/                     # PURE LOGIC (Dapat Diuji Tanpa Database)
 │   │   │   ├── streak.ts                   # Algoritma Non-Zero Day & Broken Streak
@@ -855,8 +877,12 @@ HabitGrow/
 │   │   │   ├── streak.service.ts
 │   │   │   ├── consistency.service.ts
 │   │   │   ├── achievement.service.ts
-│   │   │   └── prediction.service.ts       # Ekstraksi Fitur 14 Hari & Skoring Risiko
-│   │   ├── supabase/                       # Klien Supabase (Client, Server, Middleware)
+│   │   │   ├── prediction.service.ts       # Ekstraksi Fitur 14 Hari & Skoring Risiko
+│   │   │   ├── web-push.service.ts         # Layanan Enkripsi VAPID & Dispatch Push Server
+│   │   │   ├── browser-notification.service.ts # Service Worker & PushManager Bridge
+│   │   │   └── __tests__/
+│   │   │       └── web-push.test.ts        # Unit Tests Web Push Service (6 Tests Passing)
+│   │   ├── supabase/                       # Klien Supabase (Client, Server, Admin)
 │   │   ├── validators/                     # Zod Schemas
 │   │   └── utils.ts                        # Helper Format Tanggal Indonesia & Greeting
 │   └── types/                              # Definisi TypeScript & Tipe Database
@@ -864,7 +890,10 @@ HabitGrow/
 │   ├── habitgrow_logo.jpg                  # Logo Render 3D Glassmorphic Botani (1024x1024)
 │   ├── habitgrow_logo.svg                  # Vektor Master Scalable Icon (Squircle 512x512)
 │   └── habitgrow_brand_horizontal.svg      # Vektor Brand Horizontal Lengkap dengan Tipografi
-├── public/                                 # Aset Statis Web Publik
+├── public/                                 # Aset Statis Web Publik & PWA Engine
+│   ├── sw.js                               # Background Service Worker (Push & Cache Fetch Handler)
+│   ├── manifest.json                       # Web App Manifest Standar W3C PWA
+│   ├── icons/                              # Paket Ikon PWA PNG (192x192, 512x512, Apple Touch)
 │   └── image/                              # Salinan Aset Logo untuk Browser & PWA
 ├── supabase/
 │   ├── migrations/                         # Berkas Migrasi SQL (Schema & RLS)
