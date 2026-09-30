@@ -22,9 +22,10 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const dateParam = searchParams.get('date');
+    const rangeParam = searchParams.get('range') === '30' ? '30' : '7';
     const evalDate = dateParam ? parseDateString(dateParam) : new Date();
 
-    const data = await AnalyticsService.getWeeklyOverview(supabase, user.id, evalDate);
+    const data = await AnalyticsService.getWeeklyOverview(supabase, user.id, evalDate, rangeParam);
     return NextResponse.json({ success: true, data });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Gagal memuat data analitik';

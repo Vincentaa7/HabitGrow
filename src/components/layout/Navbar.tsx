@@ -17,16 +17,19 @@ import {
   Menu,
   X,
   ChevronRight,
+  Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { BrandLogo } from '@/components/ui/BrandLogo';
+import { usePwaInstall } from '@/hooks/use-pwa-install';
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isInstallable, isInstalled, promptInstall } = usePwaInstall();
 
   // Close mobile drawer on route change
   useEffect(() => {
@@ -212,6 +215,29 @@ export function Navbar() {
 
             {/* Drawer Bottom Actions */}
             <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
+              {!isInstalled && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (isInstallable) {
+                      await promptInstall();
+                    } else {
+                      alert('Untuk menginstal di HP: Ketuk ikon titik tiga di kanan atas Chrome, lalu pilih "Instal aplikasi" atau "Tambahkan ke Layar Utama".');
+                    }
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-sm shadow-emerald-500/20 transition cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white">
+                      <Download className="w-4 h-4" />
+                    </div>
+                    <span>Instal Aplikasi ke HP</span>
+                  </div>
+                  <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-md font-semibold">PWA</span>
+                </button>
+              )}
+
               <Link
                 href="/app/profile"
                 prefetch={true}

@@ -10,6 +10,8 @@ import { TreeVisualization } from '@/components/tree/TreeVisualization';
 import { HabitFormModal } from '@/components/habits/HabitFormModal';
 import { StreakAlertBanner } from '@/components/habits/StreakAlertBanner';
 import { PredictionAlertBanner } from '@/components/habits/PredictionAlertBanner';
+import { NotificationPermissionBanner } from '@/components/notifications/NotificationPermissionBanner';
+import { BrowserNotificationService } from '@/lib/services/browser-notification.service';
 import {
   formatIndonesianDate,
   formatFirstName,
@@ -138,6 +140,29 @@ export default function DashboardPage() {
     }
     return summary.today_habits;
   }, [summary?.today_habits, filter]);
+
+  // 4. Proactive Browser Push Notification for At-Risk Habits (SPK SAW Early Warning)
+  React.useEffect(() => {
+    if (
+      typeof window !== 'undefined' &&
+      'Notification' in window &&
+      Notification.permission === 'granted' &&
+      summary?.at_risk_habits &&
+      summary.at_risk_habits.length > 0
+    ) {
+      const topRisk = summary.at_risk_habits[0];
+      const todayStr = new Date().toISOString().split('T')[0];
+      const notifiedKey = `habitgrow_notified_${topRisk.habit_id}_${todayStr}`;
+
+      if (!sessionStorage.getItem(notifiedKey)) {
+        BrowserNotificationService.sendAtRiskWarning(
+          topRisk.habit_name,
+          topRisk.failure_probability
+        );
+        sessionStorage.setItem(notifiedKey, 'true');
+      }
+    }
+  }, [summary?.at_risk_habits]);
 
   if (isLoading) {
     return (
@@ -291,8 +316,9 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* 2. Alert Banners (Broken Streak & Decision Support System (DSS) SAW Predictive Nudge) */}
+      {/* 2. Alert Banners (Notification Opt-in, Broken Streak & Decision Support System (DSS) SAW Predictive Nudge) */}
       <div className="space-y-3">
+        <NotificationPermissionBanner />
         <StreakAlertBanner brokenStreaks={summary.broken_streaks} />
         <PredictionAlertBanner predictions={summary.at_risk_habits} />
       </div>

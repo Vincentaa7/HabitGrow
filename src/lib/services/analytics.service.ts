@@ -5,10 +5,12 @@ import { isHabitScheduledOnDate, toDateString, parseDateString } from '../algori
 import { calculateHabitConsistency } from '../algorithms/consistency';
 
 export interface WeeklyChartData {
-  day: string; // 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'
+  day: string; // 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min' or 'DD/MM'
   date: string;
   completed: number;
   scheduled: number;
+  percentage: number;
+  isMissed: boolean;
 }
 
 export interface HabitPerformanceItem {
@@ -23,31 +25,45 @@ export interface HabitPerformanceItem {
 
 export class AnalyticsService {
   /**
-   * Retrieves 7-day weekly completion overview (Mon-Sun)
+   * Retrieves completion overview for a given range (7 days weekly Mon-Sun or 30 days rolling)
    */
   static async getWeeklyOverview(
     supabase: SupabaseClient,
     userId: string,
-    evalDate: Date = new Date()
+    evalDate: Date = new Date(),
+    range: '7' | '30' = '7'
   ): Promise<WeeklyChartData[]> {
     const today = new Date(evalDate);
     today.setHours(0, 0, 0, 0);
 
-    // Find the Monday of current week
-    const currentDay = today.getDay(); // 0 is Sun, 1 is Mon
-    const distanceToMonday = (currentDay + 6) % 7;
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - distanceToMonday);
+    const dates: Date[] = [];
+    const dayLabels: string[] = [];
 
-    const weekDates: Date[] = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      weekDates.push(d);
+    if (range === '30') {
+      // 30 consecutive days up to today
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        dates.push(d);
+        dayLabels.push(`${d.getDate()}/${d.getMonth() + 1}`);
+      }
+    } else {
+      // Find the Monday of current week
+      const currentDay = today.getDay(); // 0 is Sun, 1 is Mon
+      const distanceToMonday = (currentDay + 6) % 7;
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - distanceToMonday);
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        dates.push(d);
+      }
+      dayLabels.push('Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min');
     }
 
-    const startDateStr = toDateString(weekDates[0]);
-    const endDateStr = toDateString(weekDates[6]);
+    const startDateStr = toDateString(dates[0]);
+    const endDateStr = toDateString(dates[dates.length - 1]);
 
     // Fetch active habits
     const { data: habitsData } = await supabase
@@ -69,9 +85,7 @@ export class AnalyticsService {
       (completionsData || []).map((c) => `${c.habit_id}_${c.date}`)
     );
 
-    const dayLabels = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
-
-    return weekDates.map((dateObj, idx) => {
+    return dates.map((dateObj, idx) => {
       const dateStr = toDateString(dateObj);
       let scheduled = 0;
       let completed = 0;
@@ -87,11 +101,22 @@ export class AnalyticsService {
         }
       }
 
+      const percentage =
+        scheduled > 0
+          ? Math.round((completed / scheduled) * 100)
+          : completed > 0
+          ? 100
+          : 0;
+
+      const isMissed = scheduled > 0 && completed === 0;
+
       return {
         day: dayLabels[idx],
         date: dateStr,
         completed,
         scheduled,
+        percentage,
+        isMissed,
       };
     });
   }

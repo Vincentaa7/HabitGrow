@@ -16,6 +16,7 @@
    * 3.4 Landasan Teori Ilmiah & Model Perilaku Pengguna (Behavioral Psychology)
    * 3.5 Arsitektur Distribusi & Generasi File Instalasi Mobile (Android APK)
    * 3.6 Arsitektur Antarmuka Responsif Mobile (Android/iOS), Drawer Hamburger & Eliminasi Containing-Block Bug
+   * 3.7 Arsitektur Web Push Latar Belakang (Service Worker, VAPID, FCM & PWA Notifikasi Layar Terkunci)
 4. [Perancangan Basis Data & Skema ERD](#4-perancangan-basis-data--skema-erd)
 5. [Formulasi Algoritma & Logika Matematika Inti](#5-formulasi-algoritma--logika-matematika)
    * 5.1 Logika Non-Zero Day Global Daily Streak
@@ -78,6 +79,7 @@ HabitGrow mengatasi masalah tersebut melalui:
 * **[FR-11] Filter Dashboard Dinamis:** Memfasilitasi penyaringan daftar tugas hari ini (*Semua*, *Belum Selesai*, *Selesai*).
 * **[FR-12] Dukungan Tema Ganda:** Antarmuka responsif dengan transisi mulus antara Mode Gelap (*Dark Mode*) dan Mode Terang (*Light Mode*).
 * **[FR-13] Sistem Pendukung Keputusan (DSS) Risiko Kegagalan (*Simple Additive Weighting - SAW*):** Sistem secara proaktif mengevaluasi riwayat 14 hari pengguna menggunakan metode Multi-Criteria Decision Making **Simple Additive Weighting (SAW)** dengan 5 kriteria terbobot ($W_1 = 0.30, W_2 = 0.25, W_3 = 0.15, W_4 = 0.15, W_5 = 0.15$). Jika nilai preferensi $V_i \ge 0.50$ (50%), sistem menyajikan rekomendasi adaptif (*Decision Support Nudge / Aturan 2 Menit*) dengan opsi penyesuaian target kuantitas 1-klik (`PATCH /api/habits/[id]`).
+* **[FR-14] Sistem Notifikasi & Pengingat Proaktif Browser (Web Notification API):** Sistem terintegrasi dengan Web Notification API standar peramban untuk mengirimkan notifikasi pengingat kebiasaan harian dan peringatan dini (*Early Warning Push Notification*) secara otomatis langsung ke layar perangkat pengguna saat metode SAW mendeteksi risiko kegagalan kebiasaan sebelum tengah malam.
 
 ### 2.2 Kebutuhan Non-Fungsional (Non-Functional Requirements)
 * **[NFR-01] Latensi Umpan Balik Antarmuka:** Perubahan status visual checklist harus $\le 50\text{ ms}$ di sisi klien tanpa menunggu *round-trip* server selesai.
@@ -255,6 +257,55 @@ Pengalaman pengguna (*User Experience*) pada peramban seluler (Chrome Android & 
 * **Metrik 3-Kolom Rapat:** Tiga kartu statistik inti (Streak, Level XP, Konsistensi) diorganisasikan dalam grid 3-kolom seimbang (`grid grid-cols-3 gap-2 w-full`) dengan teks ringkas terpotong rapi (*no wrapping*), diikuti tombol "+ Tambah Kebiasaan" selebar penuh (*full-width CTA*) di bawahnya agar mudah dijangkau ibu jari pengguna dengan satu tangan.
 * **Header & Tab Filter Seluler:** Judul "Rencana Kebiasaan Hari Ini" dan tombol "Kelola Semua" terkunci rapi pada satu baris (`flex items-center justify-between`), serta tab filter `Semua`, `Belum`, `Selesai` terbagi proporsional 3-kolom rata di layar sempit.
 * **Kartu Kebiasaan (*HabitCard*):** Diberi padding rapat `p-3.5 sm:p-5`, avatar ikon `w-10 h-10`, lencana kategori mikro, serta tombol centang lingkaran taktil berukuran optimal (`w-9 h-9 sm:w-11 sm:h-11`) dengan utilitas `touch-manipulation` untuk respons sentuhan berlatensi 0ms.
+
+### 3.7 Arsitektur Web Push Latar Belakang (Service Worker, VAPID, FCM & PWA Notifikasi Layar Terkunci)
+
+Salah satu pertanyaan fundamental dalam perancangan aplikasi pelacak kebiasaan berbasis web adalah: **"Apakah aplikasi web tetap dapat mengirimkan pengingat dan peringatan dini SPK ketika ponsel dalam keadaan layar terkunci (lock screen) dan peramban (Chrome/Safari) tidak sedang dibuka?"**
+
+Pada aplikasi web generasi lampau, notifikasi hanya dapat muncul jika tab halaman sedang aktif terbuka (*in-app notification*). Namun, dengan standar **Progressive Web App (PWA)** modern, HabitGrow menerapkan arsitektur **Web Push Notifications** standar W3C & IETF (RFC 8030, RFC 8291, RFC 8292) yang mampu membangunkan sistem operasi ponsel secara independen di latar belakang:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Pengguna (Ponsel Layar Terkunci)
+    participant OS as OS Ponsel (Android / iOS)
+    participant SW as Service Worker (public/sw.js)
+    participant FCM as Push Service (Google FCM / Apple APNs)
+    participant Server as Server HabitGrow (Next.js API)
+    participant Cron as Evaluator SPK SAW / Cron Job
+
+    Note over User,SW: Fase 1: Registrasi & Handshake Awal (Sekali Saja)
+    User->>SW: Klik "Aktifkan Web Push" di Dashboard/Profil
+    SW->>OS: Minta Izin Notifikasi (Notification.requestPermission())
+    OS-->>SW: Izin Diberikan ("granted")
+    SW->>FCM: pushManager.subscribe(VAPID Public Key)
+    FCM-->>SW: PushSubscription (Endpoint URL + Kunci Enkripsi p256dh & auth)
+    SW->>Server: POST /api/notifications/subscribe { subscription }
+    Server->>Server: Simpan ke tabel notifications (type: 'PUSH_SUBSCRIPTION')
+
+    Note over User,OS: Fase 2: Pengiriman Notifikasi Saat Layar Mati / Chrome Ditutup
+    Cron->>Server: POST /api/cron/reminders (Pukul 19:00 / Terjadwal)
+    Server->>Server: Evaluasi Matriks SPK SAW (Deteksi Habit Risiko Vi >= 0.50)
+    Server->>FCM: webpush.sendNotification(PushSubscription, Encrypted Payload)
+    FCM->>OS: Kirim Sinyal Push Jaringan ke Device Token
+    Note over OS: Ponsel berdering/bergetar di Lock Screen
+    OS->>SW: Bangunkan Background Service Worker (event: 'push')
+    SW->>OS: self.registration.showNotification(Title, { vibrate, tag, data })
+    OS-->>User: Tampilkan Banner Notifikasi Peringatan SPK di Lock Screen!
+    User->>OS: Tap Notifikasi di Lock Screen
+    OS->>SW: Tangani event: 'notificationclick'
+    SW->>OS: Buka/Fokuskan Tab https://habitgrow.app/app/dashboard
+```
+
+#### Komponen Utama Arsitektur Web Push HabitGrow:
+1. **Voluntary Application Server Identification (VAPID):**
+   * Menggunakan pasangan kunci kurva eliptik P-256 (`NEXT_PUBLIC_VAPID_PUBLIC_KEY` dan `VAPID_PRIVATE_KEY`). Kunci ini menandatangani token JWT secara kriptografis sehingga Push Service (Google FCM / Apple APNs) dapat memverifikasi bahwa sinyal push memang berasal dari server resmi HabitGrow tanpa memerlukan akun developer berbayar.
+2. **Background Service Worker (`public/sw.js`):**
+   * Beroperasi pada *thread* terpisah di luar konteks DOM halaman web. Ketika sistem operasi perangkat menerima paket data dari FCM/APNs, OS mengalokasikan siklus CPU mikro untuk mengeksekusi `self.addEventListener('push')`, menguraikan payload JSON, memicu pola getaran ponsel (`vibrate: [200, 100, 200]`), dan menampilkan dialog notifikasi sistem.
+3. **Penyimpanan Subscription Fleksibel (Supabase):**
+   * Langganan push disimpan pada tabel relasional `public.notifications` dengan `type = 'PUSH_SUBSCRIPTION'` dan `message = JSON.stringify(subscription)`. Jika pengguna mencabut izin atau token kedaluwarsa (HTTP 410 Gone), server secara otomatis membersihkan rekaman tersebut untuk menjaga kebersihan basis data.
+4. **Trigger Otomatis SPK SAW & Pengingat Streak (`/api/cron/reminders`):**
+   * Sistem evaluasi dapat dijalankan secara berkala (misal: pukul 19:00 atau 21:00) menggunakan cron scheduler. Endpoint ini mengevaluasi apakah ada kebiasaan yang berisiko terlewat ($V_i \ge 0.50$) atau sisa kebiasaan yang mengancam pemutusan streak aktif pengguna, kemudian langsung memicu push notifikasi darurat ke perangkat pengguna.
 
 ---
 
@@ -664,8 +715,12 @@ Seluruh endpoint menerima header `Content-Type: application/json` dan cookie ses
 | **POST** | `/api/habits/[id]/complete` | **Mencatat checklist kebiasaan hari ini** | `{ date?: string, note?: string }` | `{ success: true, data: { xp_earned, streak, tree } }` | `200 OK` |
 | **GET** | `/api/categories` | Mendapatkan daftar kategori aktif | *-* | `{ success: true, data: Category[] }` | `200 OK` |
 | **GET** | `/api/achievements` | Mendapatkan daftar pencapaian user | *-* | `{ success: true, data: Achievement[] }` | `200 OK` |
-| **GET** | `/api/analytics/weekly` | Mendapatkan performa mingguan per tanggal lokal | `?date=YYYY-MM-DD` | `{ success: true, data: WeeklyChartData[] }` | `200 OK` |
+| **GET** | `/api/analytics/weekly` | Mendapatkan performa penyelesaian per tanggal lokal & rentang hari (Mingguan/Bulanan) | `?date=YYYY-MM-DD&range=7\|30` | `{ success: true, data: WeeklyChartData[] }` | `200 OK` |
 | **GET** | `/api/analytics/performance` | Mendapatkan ringkasan performa kebiasaan | `?date=YYYY-MM-DD` | `{ success: true, data: PerformanceSummary }` | `200 OK` |
+| **POST** | `/api/notifications/subscribe` | Menyimpan langganan Web Push perangkat ke basis data | `{ subscription: PushSubscription }` | `{ success: true, message }` | `200 OK` |
+| **DELETE**| `/api/notifications/subscribe` | Mencabut langganan Web Push pengguna | *-* | `{ success: true, message }` | `200 OK` |
+| **POST** | `/api/notifications/test-push` | Menguji pengiriman push notification dari server ke ponsel pengguna (mendukung jeda waktu) | `{ delaySeconds?: number }` | `{ success: true, message }` | `200 OK` |
+| **POST** | `/api/cron/reminders` | Evaluator otomatis/cron SPK SAW & Pengingat Streak Latar Belakang | Bearer CRON_SECRET atau Session | `{ success: true, dispatched, details }` | `200 OK` |
 
 ---
 
