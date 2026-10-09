@@ -1,6 +1,6 @@
 // public/sw.js - HabitGrow Service Worker for Background Web Push Notifications & PWA Installation
 
-const CACHE_NAME = 'habitgrow-cache-v2';
+const CACHE_NAME = 'habitgrow-cache-v3';
 const PRECACHE_URLS = [
   '/',
   '/manifest.json',

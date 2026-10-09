@@ -300,43 +300,65 @@ export default function ProfilePage() {
               </button>
             )}
 
-            {/* Test Server Push with 5s delay for Lock Screen Testing */}
-            <button
-              type="button"
-              disabled={isSendingPush}
-              onClick={() => handleTestLockScreenPush(5)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold text-xs shadow-sm transition cursor-pointer disabled:opacity-50"
-            >
-              <Smartphone className="w-4 h-4 text-emerald-400" />
-              <span>
-                {pushCountdown > 0
-                  ? `Mengirim dalam ${pushCountdown}s (Kunci Layar HP!)...`
-                  : 'Uji Push Layar HP Terkunci (Jeda 5 Detik)'}
-              </span>
-            </button>
-
-            {/* Test Immediate Server Push */}
-            <button
-              type="button"
-              disabled={isSendingPush}
-              onClick={() => handleTestLockScreenPush(0)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-xs cursor-pointer disabled:opacity-50"
-            >
-              <Send className="w-4 h-4 text-emerald-500" />
-              <span>Uji Push Langsung</span>
-            </button>
-
-            {/* Trigger On-Demand SPK Evaluation */}
-            <button
-              type="button"
-              disabled={isEvaluatingSaw}
-              onClick={handleTriggerSawEvaluation}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-xs font-bold text-emerald-700 dark:text-emerald-300 transition shadow-xs cursor-pointer disabled:opacity-50"
-            >
-              <RefreshCw className={cn('w-4 h-4', isEvaluatingSaw && 'animate-spin')} />
-              <span>Evaluasi SPK SAW Sekarang</span>
-            </button>
           </div>
+
+          {/* Mode Demo Penguji & Pengembang (Tersembunyi) */}
+          <details className="group border border-slate-200/80 dark:border-slate-800 rounded-xl p-3.5 bg-slate-50/50 dark:bg-slate-900/40 text-xs">
+            <summary className="font-semibold text-slate-600 dark:text-slate-400 cursor-pointer list-none flex items-center justify-between select-none">
+              <span className="flex items-center gap-2">
+                <span>🛠️</span>
+                <span>Mode Demo &amp; Pengujian Sistem (Khusus Penguji)</span>
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-slate-200/60 dark:bg-slate-800 text-slate-500 group-open:rotate-180 transition-transform">
+                ▼
+              </span>
+            </summary>
+
+            <div className="pt-3.5 mt-2 border-t border-slate-200/60 dark:border-slate-800/60 space-y-3">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Gunakan tombol di bawah ini untuk menguji simulasi pengiriman notifikasi dan kalkulasi risiko tanpa harus menunggu jadwal cron malam.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                {/* Test Server Push with 5s delay for Lock Screen Testing */}
+                <button
+                  type="button"
+                  disabled={isSendingPush}
+                  onClick={() => handleTestLockScreenPush(5)}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-medium text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
+                >
+                  <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>
+                    {pushCountdown > 0
+                      ? `Mengirim dalam ${pushCountdown}s...`
+                      : 'Simulasi Push Layar Terkunci (5s)'}
+                  </span>
+                </button>
+
+                {/* Test Immediate Server Push */}
+                <button
+                  type="button"
+                  disabled={isSendingPush}
+                  onClick={() => handleTestLockScreenPush(0)}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 transition shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  <Send className="w-3.5 h-3.5 text-emerald-500" />
+                  <span>Simulasi Push Langsung</span>
+                </button>
+
+                {/* Trigger On-Demand SPK Evaluation */}
+                <button
+                  type="button"
+                  disabled={isEvaluatingSaw}
+                  onClick={handleTriggerSawEvaluation}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-xs font-medium text-emerald-700 dark:text-emerald-300 transition shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className={cn('w-3.5 h-3.5', isEvaluatingSaw && 'animate-spin')} />
+                  <span>Uji Evaluasi Prediksi Sekarang</span>
+                </button>
+              </div>
+            </div>
+          </details>
 
           {/* Real-time status / countdown feedback banner */}
           {pushStatusMessage && (

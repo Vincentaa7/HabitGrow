@@ -1,9 +1,9 @@
 {
-  "name": "HabitGrow — Gamified Habit Tracker & SPK",
+  "name": "HabitGrow — Pelacak Kebiasaan & Pohon Virtual",
   "short_name": "HabitGrow",
-  "description": "Bangun kebiasaan positif setiap hari dengan pohon virtual & peringatan dini SPK cerdas.",
-  "id": "/app/dashboard",
-  "start_url": "/app/dashboard",
+  "description": "Bangun kebiasaan positif setiap hari dengan pohon virtual & pengingat konsistensi.",
+  "id": "/",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#090e0c",

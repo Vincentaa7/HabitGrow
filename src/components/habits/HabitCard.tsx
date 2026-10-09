@@ -22,6 +22,16 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   zap: Zap,
 };
 
+const CATEGORY_NAMES_ID: Record<string, string> = {
+  Health: 'Kesehatan',
+  'Personal Growth': 'Pengembangan Diri',
+  Fitness: 'Kebugaran',
+  Productivity: 'Produktivitas',
+  Finance: 'Keuangan',
+  Mindfulness: 'Ketenangan Diri',
+  Education: 'Edukasi',
+};
+
 export function HabitCard({ habit, onComplete }: HabitCardProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isCompleted, setIsCompleted] = useState(habit.is_completed_today);
@@ -98,7 +108,7 @@ export function HabitCard({ habit, onComplete }: HabitCardProps) {
 
             {habit.category_name && (
               <span className="text-[9px] sm:text-[10px] font-semibold tracking-wider px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#1a2620] text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/50">
-                {habit.category_name}
+                {CATEGORY_NAMES_ID[habit.category_name] || habit.category_name}
               </span>
             )}
 

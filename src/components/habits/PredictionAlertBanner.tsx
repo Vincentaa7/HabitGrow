@@ -174,9 +174,9 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
             {/* Content Details */}
             <div className="space-y-1.5 flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-950/80 text-violet-700 dark:text-violet-300 text-[10px] font-bold tracking-wider uppercase border border-violet-200/60 dark:border-violet-800/50">
-                  <Sparkles className="w-3 h-3" />
-                  Smart Predictive Nudge
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 text-[10px] font-bold tracking-wider uppercase border border-amber-200/60 dark:border-amber-800/50">
+                  <ShieldAlert className="w-3 h-3" />
+                  Perhatian Rutinitas
                 </span>
 
                 <span
@@ -187,13 +187,12 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                       : 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-900/40'
                   )}
                 >
-                  <ShieldAlert className="w-3 h-3 inline mr-1" />
-                  Risiko Terlewat: {current.failure_probability}%
+                  Peluang Terlewat: {current.failure_probability}%
                 </span>
               </div>
 
               <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                Tugas <span className="underline decoration-violet-400 font-extrabold">&ldquo;{current.habit_name}&rdquo;</span> Rawan Terlewat Hari Ini
+                Tugas <span className="font-extrabold">&ldquo;{current.habit_name}&rdquo;</span> Rawan Terlewat Hari Ini
               </h4>
 
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl">
@@ -201,13 +200,13 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
               </p>
 
               {/* Recommendation Callout Box */}
-              <div className="p-3 rounded-2xl bg-white/80 dark:bg-slate-900/70 border border-violet-200/90 dark:border-violet-800/60 flex items-start gap-2.5 shadow-xs max-w-2xl backdrop-blur-xs">
-                <div className="w-6 h-6 rounded-lg bg-violet-100 dark:bg-violet-950 text-violet-600 dark:text-violet-300 flex items-center justify-center shrink-0 mt-0.5">
+              <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/70 border border-slate-200/90 dark:border-slate-800/60 flex items-start gap-2.5 shadow-xs max-w-2xl backdrop-blur-xs">
+                <div className="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
                   <Sparkles className="w-3.5 h-3.5" />
                 </div>
                 <div className="text-xs leading-relaxed">
-                  <span className="font-bold text-violet-900 dark:text-violet-200 mr-1.5">
-                    Rekomendasi AI:
+                  <span className="font-bold text-slate-900 dark:text-white mr-1.5">
+                    Saran Praktis:
                   </span>
                   <span className="font-semibold text-slate-700 dark:text-slate-200">
                     {current.suggested_action.message}

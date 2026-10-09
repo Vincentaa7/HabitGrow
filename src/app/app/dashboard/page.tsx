@@ -11,7 +11,6 @@ import { HabitFormModal } from '@/components/habits/HabitFormModal';
 import { StreakAlertBanner } from '@/components/habits/StreakAlertBanner';
 import { PredictionAlertBanner } from '@/components/habits/PredictionAlertBanner';
 import { NotificationPermissionBanner } from '@/components/notifications/NotificationPermissionBanner';
-import { BrowserNotificationService } from '@/lib/services/browser-notification.service';
 import {
   formatIndonesianDate,
   formatFirstName,
@@ -27,21 +26,39 @@ import {
   ArrowRight,
   Trophy,
   Calendar as CalendarIcon,
-  Sprout,
   CheckCircle2,
   ListTodo,
   ExternalLink,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 
 type FilterType = 'all' | 'pending' | 'completed';
+
+const ACHIEVEMENT_TRANSLATIONS: Record<string, string> = {
+  '7 Day Streak': 'Streak 7 Hari',
+  '3 Day Streak': 'Streak 3 Hari',
+  '30 Day Streak': 'Streak 30 Hari',
+  'Mature Tree': 'Pohon Dewasa',
+  'Healthy Tree': 'Pohon Sehat',
+  'First Habit': 'Kebiasaan Pertama',
+  'Seedling Master': 'Master Tunas',
+};
+
+const STAGE_NAMES_ID: Record<string, string> = {
+  Seed: 'Benih',
+  Sprout: 'Tunas',
+  'Young Tree': 'Pohon Muda',
+  'Healthy Tree': 'Pohon Sehat',
+  'Mature Tree': 'Pohon Dewasa',
+};
 
 export default function DashboardPage() {
   const queryClient = useQueryClient();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [filter, setFilter] = useState<FilterType>('all');
 
-  // 1. Fetch Dashboard Summary (uses client local date to avoid server UTC mismatch)
+  // 1. Fetch Dashboard Summary
   const { data: summary, isLoading, error } = useQuery<DashboardSummary>({
     queryKey: ['dashboard-summary'],
     queryFn: async () => {
@@ -63,7 +80,7 @@ export default function DashboardPage() {
     },
   });
 
-  // 3. Complete Habit Mutation with Optimistic UI updates (records with client local date)
+  // 3. Complete Habit Mutation with Optimistic UI updates
   const completeMutation = useMutation({
     mutationFn: async (habitId: string) => {
       const localDate = toDateString(new Date());
@@ -98,8 +115,8 @@ export default function DashboardPage() {
           completed_count: newCompletedCount,
           completion_percentage: newPercentage,
           streak: {
+            ...previousSummary.streak,
             current_streak: newCurrentStreak,
-            longest_streak: Math.max(previousSummary.streak.longest_streak, newCurrentStreak),
           },
           user_level: {
             ...previousSummary.user_level,
@@ -107,11 +124,7 @@ export default function DashboardPage() {
           },
           today_habits: previousSummary.today_habits.map((h) =>
             h.id === habitId
-              ? {
-                  ...h,
-                  is_completed_today: true,
-                  current_streak: h.current_streak + 1,
-                }
+              ? { ...h, is_completed_today: true, current_streak: h.current_streak + 1 }
               : h
           ),
         });
@@ -126,51 +139,25 @@ export default function DashboardPage() {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['user-tree'] });
     },
   });
 
-  // Filtered habits memo
+  // Filter habits based on active tab
   const filteredHabits = useMemo(() => {
     if (!summary?.today_habits) return [];
-    if (filter === 'pending') {
-      return summary.today_habits.filter((h) => !h.is_completed_today);
-    }
-    if (filter === 'completed') {
-      return summary.today_habits.filter((h) => h.is_completed_today);
-    }
+    if (filter === 'completed') return summary.today_habits.filter((h) => h.is_completed_today);
+    if (filter === 'pending') return summary.today_habits.filter((h) => !h.is_completed_today);
     return summary.today_habits;
   }, [summary?.today_habits, filter]);
-
-  // 4. Proactive Browser Push Notification for At-Risk Habits (SPK SAW Early Warning)
-  React.useEffect(() => {
-    if (
-      typeof window !== 'undefined' &&
-      'Notification' in window &&
-      Notification.permission === 'granted' &&
-      summary?.at_risk_habits &&
-      summary.at_risk_habits.length > 0
-    ) {
-      const topRisk = summary.at_risk_habits[0];
-      const todayStr = new Date().toISOString().split('T')[0];
-      const notifiedKey = `habitgrow_notified_${topRisk.habit_id}_${todayStr}`;
-
-      if (!sessionStorage.getItem(notifiedKey)) {
-        BrowserNotificationService.sendAtRiskWarning(
-          topRisk.habit_name,
-          topRisk.failure_probability
-        );
-        sessionStorage.setItem(notifiedKey, 'true');
-      }
-    }
-  }, [summary?.at_risk_habits]);
 
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-20 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
+        <div className="h-64 rounded-2xl bg-slate-200 dark:bg-slate-800" />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-8 h-96 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
-          <div className="lg:col-span-4 h-96 bg-slate-200 dark:bg-slate-800 rounded-3xl" />
+          <div className="lg:col-span-8 h-80 rounded-2xl bg-slate-200 dark:bg-slate-800" />
+          <div className="lg:col-span-4 h-80 rounded-2xl bg-slate-200 dark:bg-slate-800" />
         </div>
       </div>
     );
@@ -178,21 +165,15 @@ export default function DashboardPage() {
 
   if (error || !summary) {
     return (
-      <div className="p-10 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm max-w-md mx-auto my-12">
-        <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-red-100 dark:bg-red-950/60 text-red-600 flex items-center justify-center">
-          ⚠️
-        </div>
-        <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">
-          Gagal Memuat Halaman
-        </h3>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
-          {error instanceof Error ? error.message : 'Terjadi kendala saat mengambil data dashboard.'}
+      <div className="p-8 text-center rounded-2xl bg-white dark:bg-[#0c1410] border border-red-200 dark:border-red-900 shadow-sm space-y-3">
+        <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+          {error instanceof Error ? error.message : 'Gagal memuat data dashboard'}
         </p>
         <button
           onClick={() => queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] })}
-          className="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition shadow-md shadow-emerald-600/20"
+          className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition"
         >
-          Coba Muat Ulang
+          Muat Ulang Halaman
         </button>
       </div>
     );
@@ -218,7 +199,7 @@ export default function DashboardPage() {
 
   // Next tree evolution milestone calculation
   const stageThresholds = [
-    { stage: 'Seed', min: 0, nextMin: 20, nextName: 'Tunas Baru' },
+    { stage: 'Seed', min: 0, nextMin: 20, nextName: 'Tunas' },
     { stage: 'Sprout', min: 20, nextMin: 40, nextName: 'Pohon Muda' },
     { stage: 'Young Tree', min: 40, nextMin: 60, nextName: 'Pohon Sehat' },
     { stage: 'Healthy Tree', min: 60, nextMin: 80, nextName: 'Pohon Dewasa' },
@@ -226,237 +207,250 @@ export default function DashboardPage() {
   ];
   const currentThreshold = stageThresholds.find((t) => t.stage === tree.stage) || stageThresholds[1];
   const pointsToNext = Math.max(0, Math.round(currentThreshold.nextMin - tree.consistency_score));
+  const currentStageIndonesian = STAGE_NAMES_ID[tree.stage] || tree.stage;
 
   return (
     <div className="space-y-6">
-      {/* 1. Streamlined Executive Command Bar (Combines Greeting, 3 Core Stats, & Quick Action) */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-500/10 via-white to-teal-500/10 dark:from-[#0f1713] dark:via-[#111a16] dark:to-[#0f1713] border border-emerald-100/90 dark:border-emerald-900/40 p-4 sm:p-5 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          {/* Left: Greeting & Date */}
-          <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
-              <CalendarIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+      {/* 1. PANGGUNG POHON VIRTUAL (CENTERPIECE UTAMA DASHBOARD) */}
+      <section className="rounded-2xl bg-white dark:bg-[#0c1410] border border-slate-200/90 dark:border-slate-800 p-5 sm:p-7 shadow-xs">
+        {/* Top Header of the Showcase */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800/80">
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <CalendarIcon className="w-3.5 h-3.5" />
               <span>{currentDateStr}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-slate-400 dark:text-slate-600">|</span>
-              <span className="text-slate-600 dark:text-slate-400">
-                {isAllCompleted
-                  ? 'Semua tuntas! 🎉'
-                  : `${completed_count}/${total_scheduled_today} tugas selesai`}
-              </span>
             </div>
-
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-              <span>{timeGreeting},</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300">
-                {firstName}
-              </span>
-              <span>🌱</span>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-0.5">
+              {timeGreeting}, {firstName}
             </h1>
           </div>
 
-          {/* Center/Right: 3 Compact Metric Tiles + Action Button */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full lg:w-auto">
-            <div className="grid grid-cols-3 gap-2 w-full sm:flex sm:items-center sm:gap-3">
-              {/* Stat 1: Streak */}
-              <div className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-900/40 min-w-0">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 flex items-center justify-center shrink-0">
-                  <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-amber-500 text-amber-500 animate-pulse" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white leading-tight truncate">
-                    {streak.current_streak} Hari
-                  </div>
-                  <div className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">
-                    Streak
-                  </div>
-                </div>
-              </div>
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            <Link
+              href="/app/tree"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 transition"
+            >
+              <span>Kebun Virtual</span>
+              <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+            </Link>
 
-              {/* Stat 2: Level & XP */}
-              <div className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/70 dark:border-emerald-900/40 min-w-0">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 flex items-center justify-center shrink-0">
-                  <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-emerald-500 text-emerald-500" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white leading-tight truncate">
-                    Lvl {user_level.level}
-                  </div>
-                  <div className="text-[9px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-bold truncate">
-                    {user_level.total_xp} XP
-                  </div>
-                </div>
-              </div>
-
-              {/* Stat 3: Pohon & Konsistensi */}
-              <div className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 rounded-2xl bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200/70 dark:border-teal-900/40 min-w-0">
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-teal-100 dark:bg-teal-900/60 text-teal-600 flex items-center justify-center shrink-0">
-                  <Sprout className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-teal-600 dark:text-teal-400" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-[11px] sm:text-xs font-black text-slate-900 dark:text-white leading-tight truncate">
-                    {Math.round(tree.consistency_score)}%
-                  </div>
-                  <div className="text-[9px] sm:text-[10px] text-teal-700 dark:text-teal-300 font-semibold truncate">
-                    {tree.stage}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Button: Create Habit */}
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition hover:scale-[1.02] sm:hover:scale-105 active:scale-95 shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-xs transition"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Tambah Kebiasaan</span>
             </button>
           </div>
         </div>
+
+        {/* Center Stage: The Living Virtual Tree with Integrated Metrics */}
+        <div className="pt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          {/* Left Metrics Pillar */}
+          <div className="lg:col-span-3 space-y-3 order-2 lg:order-1">
+            {/* Streak Metric */}
+            <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40">
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
+                <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
+                <span>Konsistensi Beruntun</span>
+              </div>
+              <div className="text-lg font-extrabold text-slate-900 dark:text-white">
+                {streak.current_streak} Hari Streak
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Rekor terbaik: {streak.longest_streak} hari
+              </p>
+            </div>
+
+            {/* Level & XP Metric */}
+            <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40">
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
+                <Zap className="w-4 h-4 text-emerald-500" />
+                <span>Level &amp; Pengalaman</span>
+              </div>
+              <div className="text-lg font-extrabold text-slate-900 dark:text-white">
+                Level {user_level.level}
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                <span>Total XP</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                  {user_level.total_xp} XP
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Central Tree Terrarium Showcase */}
+          <div className="lg:col-span-6 flex flex-col items-center justify-center text-center order-1 lg:order-2 py-2">
+            <div className="relative">
+              <TreeVisualization
+                stage={tree.stage}
+                health={tree.health}
+                size="md"
+                showStageName={false}
+              />
+            </div>
+
+            <div className="mt-3 space-y-1">
+              <div className="inline-flex items-center gap-2">
+                <span className="text-base font-extrabold text-slate-900 dark:text-white">
+                  {currentStageIndonesian}
+                </span>
+                <span className="text-xs px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-semibold">
+                  Kesehatan: {Math.round(tree.health)}%
+                </span>
+              </div>
+
+              {/* Evolution milestone bar */}
+              <div className="w-full max-w-xs mx-auto pt-2 space-y-1.5">
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                  <span>Skor Konsistensi: {Math.round(tree.consistency_score)}%</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                    {tree.stage === 'Mature Tree'
+                      ? 'Fase Maksimal 🌟'
+                      : `+${pointsToNext}% ke ${currentThreshold.nextName}`}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-5 gap-1.5">
+                  {stageThresholds.map((stg, idx) => {
+                    const isCurrent = stg.stage === tree.stage;
+                    const isPassed = tree.consistency_score >= stg.min;
+
+                    return (
+                      <div
+                        key={stg.stage}
+                        className={cn(
+                          'h-1.5 rounded-full transition-all duration-300',
+                          isCurrent
+                            ? 'bg-emerald-500 shadow-xs'
+                            : isPassed
+                            ? 'bg-emerald-400/70 dark:bg-emerald-600'
+                            : 'bg-slate-200 dark:bg-slate-800'
+                        )}
+                        title={`Tahap ${idx + 1}: ${STAGE_NAMES_ID[stg.stage] || stg.stage}`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Metrics Pillar */}
+          <div className="lg:col-span-3 space-y-3 order-3">
+            {/* Today's Completion Metric */}
+            <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40">
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Penyelesaian Hari Ini</span>
+              </div>
+              <div className="text-lg font-extrabold text-slate-900 dark:text-white">
+                {completed_count} dari {total_scheduled_today} Selesai
+              </div>
+              <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden mt-2">
+                <div
+                  className="bg-emerald-600 h-full rounded-full transition-all duration-300"
+                  style={{ width: `${completion_percentage}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Quick Status Pill */}
+            <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40">
+              <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">
+                Kondisi Pohon
+              </div>
+              <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                {isAllCompleted
+                  ? 'Pohon mendapat nutrisi penuh hari ini ✨'
+                  : pendingCount > 0
+                  ? `${pendingCount} kebiasaan menanti untuk disiram`
+                  : 'Belum ada jadwal aktif hari ini'}
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* 2. Alert Banners (Notification Opt-in, Broken Streak & Decision Support System (DSS) SAW Predictive Nudge) */}
+      {/* 2. ALERT BANNERS (PENGINGAT & REKOMENDASI) */}
       <div className="space-y-3">
         <NotificationPermissionBanner />
         <StreakAlertBanner brokenStreaks={summary.broken_streaks} />
         <PredictionAlertBanner predictions={summary.at_risk_habits} />
       </div>
 
-      {/* 3. Main Workspace: Left (Habit Hub Checklist) + Right (Sanctuary Pohon & Achievements) */}
+      {/* 3. MAIN WORKSPACE: KEBIASAAN HARI INI & PENCAPAIAN */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT COLUMN: Unified Habit Hub (High Density & 2-Column Responsive Grid) */}
-        <div className="lg:col-span-8 xl:col-span-8 space-y-4">
-          {/* Habit Hub Header & Segment Controls */}
-          <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-[#0f1713] border border-slate-200/90 dark:border-[#1e2e26] shadow-xs space-y-3.5">
+        {/* Kolom Utama (8 Kolom): Daftar Kebiasaan Hari Ini */}
+        <div className="lg:col-span-8 space-y-4">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#0c1410] border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3.5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <h2 className="text-sm sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-1.5 sm:gap-2">
-                  <ListTodo className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />
-                  <span className="truncate">Rencana Kebiasaan Hari Ini</span>
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <ListTodo className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>Daftar Kebiasaan Hari Ini</span>
                 </h2>
-                <span className="text-[11px] sm:text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 shrink-0">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                   {completed_count}/{total_scheduled_today}
                 </span>
               </div>
 
               <Link
                 href="/app/habits"
-                className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 flex items-center gap-1 shrink-0"
+                className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
               >
                 Kelola Semua
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
-            {/* Compact Progress Track */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-slate-600 dark:text-slate-400 text-[11px]">
-                  {isAllCompleted
-                    ? 'Target Harian Selesai Sempurna! 🎉'
-                    : `${pendingCount} kebiasaan tersisa hari ini`}
-                </span>
-                <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs">
-                  {completion_percentage}% Selesai
-                </span>
-              </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-800/80 h-2.5 rounded-full overflow-hidden p-0.5">
-                <div
-                  className="bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 h-full rounded-full transition-all duration-500 shadow-xs"
-                  style={{ width: `${completion_percentage}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Filter Tabs */}
-            <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800/80 flex-wrap gap-2">
-              <div className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 text-xs font-medium gap-1 sm:gap-0">
+            {/* Segment Controls Filter */}
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 text-xs">
+              {(
+                [
+                  { id: 'all', label: `Semua (${total_scheduled_today})` },
+                  { id: 'pending', label: `Belum Selesai (${pendingCount})` },
+                  { id: 'completed', label: `Selesai (${completed_count})` },
+                ] as const
+              ).map((tab) => (
                 <button
+                  key={tab.id}
                   type="button"
-                  onClick={() => setFilter('all')}
+                  onClick={() => setFilter(tab.id)}
                   className={cn(
-                    'py-1.5 px-2 sm:px-3 sm:py-1 rounded-lg transition-all text-center text-[11px] sm:text-xs font-medium',
-                    filter === 'all'
-                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-xs'
+                    'flex-1 py-1.5 rounded-lg font-medium transition text-center cursor-pointer',
+                    filter === tab.id
+                      ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold shadow-xs'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   )}
                 >
-                  Semua ({today_habits.length})
+                  {tab.label}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setFilter('pending')}
-                  className={cn(
-                    'py-1.5 px-2 sm:px-3 sm:py-1 rounded-lg transition-all text-center text-[11px] sm:text-xs font-medium',
-                    filter === 'pending'
-                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                  )}
-                >
-                  <span className="hidden sm:inline">Belum Selesai</span>
-                  <span className="sm:hidden">Belum</span> ({pendingCount})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFilter('completed')}
-                  className={cn(
-                    'py-1.5 px-2 sm:px-3 sm:py-1 rounded-lg transition-all text-center text-[11px] sm:text-xs font-medium',
-                    filter === 'completed'
-                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold shadow-xs'
-                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                  )}
-                >
-                  Selesai ({completed_count})
-                </button>
-              </div>
-
-              {isAllCompleted && (
-                <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-200/60 dark:border-emerald-900/60">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  100% Tuntas
-                </span>
-              )}
+              ))}
             </div>
           </div>
 
-          {/* Celebratory Banner when 100% completed */}
-          {isAllCompleted && filter !== 'pending' && (
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 dark:from-emerald-950/40 dark:via-teal-950/30 dark:to-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 flex items-center gap-3">
-              <span className="text-xl">🎉</span>
-              <p className="text-xs font-bold text-emerald-950 dark:text-emerald-100">
-                Seluruh target harian sudah terlaksana! Pohon virtualmu bertumbuh subur hari ini.
-              </p>
-            </div>
-          )}
-
-          {/* Habit Items Grid: 2 Columns on Desktop to Eliminate Vertical Scrolling! */}
+          {/* Habit Cards Grid */}
           {today_habits.length === 0 ? (
-            <div className="p-8 text-center rounded-3xl bg-white dark:bg-[#0f1713] border border-slate-200/90 dark:border-[#1e2e26] shadow-xs">
-              <div className="w-14 h-14 mx-auto mb-2 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-2xl">
-                🌱
-              </div>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                Kebunmu Sedang Menanti
-              </h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1 mb-4">
-                Belum ada kebiasaan yang dijadwalkan untuk hari ini. Mulai dengan menanam satu kebiasaan sederhana!
+            <div className="p-8 text-center rounded-2xl bg-white dark:bg-[#0c1410] border border-dashed border-slate-200 dark:border-slate-800 space-y-2">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Belum ada kebiasaan yang dijadwalkan untuk hari ini.
               </p>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="px-4 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-md shadow-emerald-600/20 transition"
+                className="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-500 transition"
               >
-                Tanam Kebiasaan Pertama
+                + Tambah Kebiasaan Baru
               </button>
             </div>
           ) : filteredHabits.length === 0 ? (
-            <div className="p-6 text-center rounded-3xl bg-white dark:bg-[#0f1713] border border-slate-200/90 dark:border-[#1e2e26] shadow-xs">
-              <span className="text-2xl">✨</span>
-              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">
+            <div className="p-6 text-center rounded-2xl bg-white dark:bg-[#0c1410] border border-slate-200/90 dark:border-slate-800">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {filter === 'pending'
-                  ? 'Tidak ada kebiasaan tertunda!'
-                  : 'Belum ada kebiasaan yang diselesaikan.'}
-              </h4>
+                  ? 'Semua kebiasaan hari ini sudah tuntas! 🎉'
+                  : 'Belum ada kebiasaan yang diselesaikan hari ini.'}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -473,89 +467,13 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* RIGHT COLUMN: Sanctuary Pohon (Terrarium) & Recent Achievements */}
-        <div className="lg:col-span-4 xl:col-span-4 space-y-4">
-          {/* Botanical Terrarium / Sanctuary Pohon */}
-          <div className="relative overflow-hidden p-5 rounded-3xl bg-gradient-to-b from-emerald-500/10 via-white to-teal-500/10 dark:from-emerald-950/40 dark:via-[#0c1410] dark:to-[#09100d] border border-emerald-200/70 dark:border-emerald-900/50 shadow-xs flex flex-col items-center text-center">
-            {/* Ambient Terrarium Glow Behind Tree */}
-            <div className="absolute top-1/4 w-36 h-36 rounded-full bg-emerald-400/20 dark:bg-emerald-500/10 blur-2xl pointer-events-none" />
-
-            {/* Top Card Navigation */}
-            <div className="w-full flex items-center justify-between mb-1">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">
-                <Sprout className="w-4 h-4" />
-                Sanctuary Pohon
-              </span>
-              <Link
-                href="/app/tree"
-                className="text-xs font-semibold text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1 transition"
-              >
-                Detail
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            {/* Tree Visualization with Soft Halo */}
-            <div className="py-1 relative">
-              <TreeVisualization
-                stage={tree.stage}
-                health={tree.health}
-                size="md"
-                showStageName={true}
-              />
-            </div>
-
-            {/* Tree Lifecycle Stages Progression Dots */}
-            <div className="w-full mt-2 pt-3 border-t border-emerald-100/80 dark:border-emerald-950/80 space-y-1.5">
-              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                <span>Evolusi Pohon</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                  {tree.stage === 'Mature Tree'
-                    ? 'Tahap Puncak 🌟'
-                    : `+${pointsToNext}% ke ${currentThreshold.nextName}`}
-                </span>
-              </div>
-
-              {/* 5-stage mini indicator dots */}
-              <div className="grid grid-cols-5 gap-1.5">
-                {stageThresholds.map((stg, idx) => {
-                  const isCurrent = stg.stage === tree.stage;
-                  const isPassed = tree.consistency_score >= stg.min;
-
-                  return (
-                    <div
-                      key={stg.stage}
-                      className={cn(
-                        'h-1.5 rounded-full transition-all duration-300',
-                        isCurrent
-                          ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50 ring-2 ring-emerald-300 dark:ring-emerald-700'
-                          : isPassed
-                          ? 'bg-emerald-400/80 dark:bg-emerald-600'
-                          : 'bg-slate-200 dark:bg-slate-800'
-                      )}
-                      title={`Tahap ${idx + 1}: ${stg.stage}`}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Direct action link to Virtual Tree Page */}
-            <Link
-              href="/app/tree"
-              className="mt-3.5 w-full py-2 px-3 rounded-xl bg-white dark:bg-slate-800/90 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 border border-slate-200/80 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 transition flex items-center justify-center gap-1.5 shadow-xs"
-            >
-              <span>Buka Kebun Virtual Lengkap</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          {/* Recent Achievements Widget */}
-          <div className="p-4 rounded-3xl bg-white dark:bg-[#0f1713] border border-slate-200/90 dark:border-[#1e2e26] shadow-xs space-y-3">
+        {/* Kolom Pendamping (4 Kolom): Pencapaian Terkini */}
+        <div className="lg:col-span-4 space-y-4">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#0c1410] border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+              <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Trophy className="w-4 h-4 text-amber-500" />
-                Pencapaian Terkini
+                <span>Pencapaian Terkini</span>
               </h3>
               <Link
                 href="/app/achievements"
@@ -566,25 +484,22 @@ export default function DashboardPage() {
             </div>
 
             {recent_achievements.length === 0 ? (
-              <div className="py-4 text-center">
-                <span className="text-xl">🏆</span>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                  Belum ada pencapaian terbuka. Terus selesaikan habit harian untuk mengoleksi trofi!
-                </p>
+              <div className="py-5 text-center text-xs text-slate-500 dark:text-slate-400">
+                Selesaikan kebiasaan secara konsisten untuk membuka trofi pencapaian.
               </div>
             ) : (
               <div className="space-y-2">
                 {recent_achievements.slice(0, 3).map((ach) => (
                   <div
                     key={ach.id}
-                    className="flex items-center gap-2.5 p-2 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 hover:border-amber-200 dark:hover:border-amber-900/40 transition group"
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 transition"
                   >
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-100 to-amber-50 dark:from-amber-950/80 dark:to-amber-900/40 text-amber-600 border border-amber-200/50 dark:border-amber-800/40 flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 border border-amber-200/50 dark:border-amber-800/40 flex items-center justify-center shrink-0 text-sm">
                       🏆
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                        {ach.name}
+                        {ACHIEVEMENT_TRANSLATIONS[ach.name] || ach.name}
                       </h4>
                       <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                         {ach.description}

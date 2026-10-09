@@ -27,11 +27,11 @@ export function TreeVisualization({
   };
 
   const stageLabels: Record<TreeStage, { name: string; tag: string; color: string }> = {
-    Seed: { name: 'Benih (Seed)', tag: 'Level Pohon 1/5', color: 'text-amber-500' },
-    Sprout: { name: 'Tunas (Sprout)', tag: 'Level Pohon 2/5', color: 'text-emerald-500' },
-    'Young Tree': { name: 'Pohon Muda (Young Tree)', tag: 'Level Pohon 3/5', color: 'text-teal-500' },
-    'Healthy Tree': { name: 'Pohon Sehat (Healthy Tree)', tag: 'Level Pohon 4/5', color: 'text-emerald-600' },
-    'Mature Tree': { name: 'Pohon Dewasa (Mature Tree)', tag: 'Level Pohon 5/5', color: 'text-green-500' },
+    Seed: { name: 'Benih', tag: 'Tahap 1/5', color: 'text-amber-500' },
+    Sprout: { name: 'Tunas', tag: 'Tahap 2/5', color: 'text-emerald-500' },
+    'Young Tree': { name: 'Pohon Muda', tag: 'Tahap 3/5', color: 'text-teal-500' },
+    'Healthy Tree': { name: 'Pohon Sehat', tag: 'Tahap 4/5', color: 'text-emerald-600' },
+    'Mature Tree': { name: 'Pohon Dewasa', tag: 'Tahap 5/5', color: 'text-green-500' },
   };
 
   const currentInfo = stageLabels[stage] || stageLabels.Seed;

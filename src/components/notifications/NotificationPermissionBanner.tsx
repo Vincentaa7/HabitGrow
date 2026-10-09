@@ -77,13 +77,10 @@ export function NotificationPermissionBanner() {
         </div>
         <div>
           <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <span>Aktifkan Pengingat Web Push</span>
-            <span className="px-1.5 py-0.2 rounded-md bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 text-[10px] font-extrabold uppercase tracking-wide">
-              Peringatan Dini SPK
-            </span>
+            <span>Aktifkan Pengingat Harian</span>
           </h4>
           <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 max-w-xl">
-            Izinkan notifikasi agar sistem SPK dapat mengirimkan peringatan dini (*early warning*) langsung ke ponsel atau peramban Anda, bahkan saat aplikasi sedang tidak dibuka.
+            Izinkan notifikasi agar Anda mendapatkan pengingat di malam hari sebelum kebiasaan penting terlewat dan streak terputus.
           </p>
         </div>
       </div>

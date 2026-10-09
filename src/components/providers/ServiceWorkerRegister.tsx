@@ -6,8 +6,7 @@ import { useEffect } from 'react';
 export function ServiceWorkerRegister() {
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      // Register service worker as soon as page loads
-      window.addEventListener('load', () => {
+      const registerSW = () => {
         navigator.serviceWorker
           .register('/sw.js', { scope: '/' })
           .then((registration) => {
@@ -16,7 +15,15 @@ export function ServiceWorkerRegister() {
           .catch((error) => {
             console.warn('HabitGrow ServiceWorker registration error:', error);
           });
-      });
+      };
+
+      // If document is already loaded/hydrated, register immediately without waiting
+      if (document.readyState === 'complete') {
+        registerSW();
+      } else {
+        window.addEventListener('load', registerSW);
+        return () => window.removeEventListener('load', registerSW);
+      }
     }
   }, []);
 
