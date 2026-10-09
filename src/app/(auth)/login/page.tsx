@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, LoginInput } from '@/lib/validators/auth.schema';
 import { LogIn, ArrowLeft } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -56,10 +57,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col bg-[var(--background)] text-[var(--foreground)]">
       {/* Top bar with theme toggle */}
       <div className="flex items-center justify-between px-6 py-4">
-        <span className="flex items-center gap-2 font-extrabold text-slate-900 dark:text-white text-sm tracking-tight">
-          <span className="text-lg">🌱</span>
-          HabitGrow
-        </span>
+        <Link href="/" title="HabitGrow">
+          <BrandLogo className="h-7 sm:h-8 w-auto" />
+        </Link>
         <ThemeToggle />
       </div>
 
@@ -74,9 +74,11 @@ export default function LoginPage() {
         </Link>
 
         <div className="text-center mb-6">
-          <span className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 inline-flex items-center justify-center text-2xl shadow-sm mb-3">
-            🌱
-          </span>
+          <img
+            src="/icons/icon-192x192.png"
+            alt="HabitGrow Logo"
+            className="w-14 h-14 rounded-2xl shadow-md mx-auto mb-3 object-contain"
+          />
           <h2 className="text-2xl font-black text-slate-900 dark:text-white">
             Selamat Datang Kembali
           </h2>

@@ -305,20 +305,24 @@ sequenceDiagram
 3. **Penyimpanan Subscription Fleksibel (Supabase):**
    * Langganan push disimpan pada tabel relasional `public.notifications` dengan `type = 'PUSH_SUBSCRIPTION'` dan `message = JSON.stringify(subscription)`. Jika pengguna mencabut izin atau token kedaluwarsa (HTTP 410 Gone), server secara otomatis membersihkan rekaman tersebut untuk menjaga kebersihan basis data.
 4. **Trigger Otomatis SPK SAW & Pengingat Streak (`/api/cron/reminders`):**
-   * Sistem evaluasi dapat dijalankan secara berkala (misal: pukul 19:00 atau 21:00) menggunakan cron scheduler. Endpoint ini mengevaluasi apakah ada kebiasaan yang berisiko terlewat ($V_i \ge 0.50$) atau sisa kebiasaan yang mengancam pemutusan streak aktif pengguna, kemudian langsung memicu push notifikasi darurat ke perangkat pengguna.
+   * **Mekanisme Otomatis (`vercel.json`):** Dikonfigurasi menggunakan Vercel Cron Jobs pada berkas `vercel.json` dengan jadwal `0 13 * * *` (pukul 13:00 UTC = 20:00 WIB / 21:00 WITA setiap malam). Saat cron berjalan, server mengevaluasi seluruh pengguna terdaftar yang memiliki langganan Web Push aktif.
+   * **Logika Penerima Push (Siapa yang Menerima Push):**
+     1. **Kondisi 1 — Peringatan Dini SPK (`SPK_SAW_EARLY_WARNING`):** Jika ditemukan minimal satu kebiasaan dengan skor risiko $V_i \ge 0.50$ (50%) yang belum selesai hari ini, server langsung mengirim push notifikasi peringatan SPK untuk kebiasaan dengan risiko tertinggi:  
+        `"⚠️ Peringatan SPK: [Nama Kebiasaan] - Risiko terlewat [X]%. [Tips Mitigasi]"`
+     2. **Kondisi 2 — Penyelamatan Streak (`STREAK_DEFENSE`):** Jika TIDAK ADA kebiasaan berisiko tinggi ($V_i < 0.50$), namun pengguna memiliki *streak* aktif ($> 0$) dan masih ada kebiasaan terjadwal hari ini yang belum selesai, server mengirim push pengingat pertahanan streak:  
+        `"🔥 Pertahankan Streak [X] Hari! Tersisa [N] kebiasaan hari ini..."`
+     3. **Kondisi 3 — Aman / Selesai Semua:** Jika seluruh kebiasaan hari ini sudah dicentang selesai, server tidak mengirim notifikasi apapun (*silent*).
 
 #### 3.7.1 Fungsi & Peran Tombol "Evaluasi SPK SAW Sekarang" (On-Demand Trigger vs Automated Cron):
 Di halaman profil pengguna (`/app/profile`), terdapat tombol interaktif **"Evaluasi SPK SAW Sekarang"**. Tombol ini memiliki peran penting:
 1. **Pemicu Evaluasi Seketika (*On-Demand Execution*):**
-   * Secara normal, cron job berjalan otomatis pada waktu malam (misal pukul 20:00). Namun, untuk keperluan **pengujian pengguna (user testing), pengujian dosen penguji saat sidang skripsi, atau demonstrasi live**, sistem tidak mungkin menunggu jadwal malam tiba. Tombol ini memungkinkan pengguna atau penguji memicu komputasi SPK SAW secara *real-time* kapan saja.
+   * Vercel Cron berjalan otomatis 1 kali sehari di malam hari (pukul 20:00 WIB / 21:00 WITA). Namun, untuk keperluan **pengujian pengguna (user testing), pengujian dosen penguji saat sidang skripsi, atau demonstrasi live**, penguji tidak perlu menunggu jadwal malam tiba. Tombol ini memungkinkan pengguna atau penguji memicu komputasi SPK SAW secara *real-time* kapan saja.
 2. **Alur Komputasi yang Dijalankan:**
    * Begitu tombol ditekan, frontend mengirim permintaan `POST /api/cron/reminders` dengan sesi pengguna aktif.
-   * Server mengeksekusi `PredictionService.getAtRiskHabitsToday()`:
+   * Server mengeksekusi `PredictionService.getAtRiskHabitsToday()` khusus untuk akun pengguna tersebut:
      1. Menarik seluruh jadwal kebiasaan hari ini yang belum selesai.
      2. Menghitung 5 kriteria SAW ($C_1$ s/d $C_5$) dan nilai preferensi $V_i$.
-     3. Jika ditemukan kebiasaan berisiko ($V_i \ge 0.50$), server langsung meracik pesan rekomendasi preskriptif dan mengirimkan notifikasi Web Push ke ponsel pengguna:  
-        `"⚠️ Peringatan SPK: [Nama Kebiasaan] - Risiko terlewat [X]%. [Tips Mitigasi]"`
-     4. Jika tidak ada kebiasaan berisiko tinggi tetapi pengguna memiliki streak aktif yang belum terlindungi, server mengirimkan notifikasi penyelamatan streak (*Streak Defense Reminder*).
+     3. Mengirimkan push notifikasi (`SPK_SAW_EARLY_WARNING` jika ada kebiasaan $V_i \ge 0.50$, atau `STREAK_DEFENSE` jika ada streak aktif yang belum terlindungi).
 3. **Umpan Balik Transparan:**
    * Antarmuka menampilkan status langsung: `"✅ Evaluasi SPK selesai. Mengirim [X] notifikasi push."` sehingga pengguna dan evaluator skripsi dapat memvalidasi bahwa mesin SPK SAW berfungsi secara aktif dan nyata.
 
@@ -585,7 +589,15 @@ Dalam aplikasi pelacak kebiasaan, jeda jaringan sebesar $200 - 500\text{ ms}$ sa
 Sistem secara proaktif mengevaluasi kebiasaan terjadwal yang memiliki tingkat kerentanan kegagalan/terlewat pada hari ini menggunakan metode Multi-Criteria Decision Making (MCDM) **Simple Additive Weighting (SAW)**. Ketika skor preferensi risiko mencapai ambang batas $V_i \ge 0.50$ (atau $50\%$) setelah masa adaptasi 14 hari, sistem menyajikan rekomendasi adaptif (*Smart Decision Support Nudge*) seperti penurunan target kuantitas sementara untuk mencegah pemutusan *streak*.
 
 #### Kriteria Keputusan ($C_1 \dots C_5$) dan Pembobotan ($W$):
-Seluruh kriteria bertipe **Benefit** (semakin tinggi nilainya, semakin besar risiko kebiasaan tersebut berpotensi terlewat/gagal hari ini). Total bobot $\sum_{j=1}^{5} W_j = 1.00$ (100%):
+Seluruh kriteria bertipe **Benefit** (semakin tinggi nilainya, semakin besar risiko kebiasaan tersebut berpotensi terlewat/gagal hari ini). Total bobot memenuhi aksioma normalisasi MCDM: $\sum_{j=1}^{5} W_j = 1.00$ (100%).
+
+> **Metodologi Penentuan Bobot (Direct Rating / Subjective Weighting oleh Peneliti):**  
+> Pembobotan ditentukan secara langsung (*Direct Assignment*) oleh perancang sistem berdasarkan pertimbangan rasionalitas tingkatan pengaruh (*Behavioral Priority Tier*):
+> 1. **Tier 1 — Bukti Perilaku Riwayat Langsung (Total 55%):** Diberikan bobot terbesar karena rekam jejak penyelesaian nyata merupakan prediktor paling akurat dari kedisiplinan pengguna ($C_1 = 30\%$, $C_2 = 25\%$).
+> 2. **Tier 2 — Beban Kognitif & Kerentanan Usia (Total 30%):** Mempertimbangkan faktor psikologis kelelahan mental harian ($C_3 = 15\%$) dan fase pembentukan kebiasaan ($C_4 = 15\%$).
+> 3. **Tier 3 — Faktor Penundaan Waktu (Total 15%):** Mempertimbangkan risiko ketiduran akibat penundaan ke larut malam ($C_5 = 15\%$).
+> 
+> *Catatan Akademik:* Literatur psikologi perilaku (seperti riset kebiasaan Dr. Phillippa Lally, teori beban kognitif, dan konsep *Atomic Habits*) dijadikan sebagai **landasan konseptual dalam pemilihan variabel kriteria**, bukan sebagai sumber yang mengeluarkan angka persentase eksak tersebut. Angka bobot ditentukan oleh peneliti untuk pemodelan SPK pada sistem ini.
 
 1. **$C_1$ — Recent Miss Rate 14 Hari Terakhir (Bobot $W_1 = 0.30$ / 30%):**
    Rasio hari terjadwal yang terlewat dalam 2 minggu terakhir:

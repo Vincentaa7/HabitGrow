@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { TreeVisualization } from '@/components/tree/TreeVisualization';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 import {
   Sparkles,
   CheckCircle2,
@@ -20,14 +21,9 @@ export default function LandingPage() {
       {/* Top Bar */}
       <header className="w-full border-b border-slate-200/80 dark:border-slate-800/80 backdrop-blur-md sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white font-black text-lg shadow-sm">
-              🌱
-            </span>
-            <span className="font-extrabold text-xl tracking-tight">
-              Habit<span className="text-emerald-600 dark:text-emerald-400">Grow</span>
-            </span>
-          </div>
+          <Link href="/" className="flex items-center group transition-opacity hover:opacity-95" title="HabitGrow">
+            <BrandLogo className="h-8 sm:h-9 w-auto" />
+          </Link>
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -250,12 +246,16 @@ export default function LandingPage() {
       <footer className="mt-auto border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
-            <span className="text-base">🌱</span>
+            <img
+              src="/icons/icon-192x192.png"
+              alt="HabitGrow Logo"
+              className="w-5 h-5 rounded-md object-contain"
+            />
             <span className="font-bold text-slate-800 dark:text-slate-200">HabitGrow</span>
             <span>— Gamified Habit Tracker</span>
           </div>
           <div>
-            Dikembangkan dengan Next.js 15, TypeScript, Tailwind CSS, & Supabase.
+            Dikembangkan dengan Next.js 16, TypeScript, Tailwind CSS, & Supabase.
           </div>
         </div>
       </footer>

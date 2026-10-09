@@ -12,7 +12,7 @@ import { toDateString } from '@/lib/algorithms/schedule';
 export class PredictionService {
   /**
    * Evaluates churn and failure risk for all uncompleted habits scheduled today.
-   * Returns list of at-risk habits (failure_probability >= 60%) sorted by risk descending.
+   * Returns list of at-risk habits (failure_probability >= 50%, Vi >= 0.50) sorted by risk descending.
    */
   static async getAtRiskHabitsToday(
     supabase: SupabaseClient,
@@ -132,8 +132,8 @@ export class PredictionService {
         totalDifficultyPointsToday,
       });
 
-      // Filter: only include if failure risk is at least 60%
-      if (prediction.failure_probability >= 60) {
+      // Filter: only include if failure risk is at least 50% (Vi >= 0.50)
+      if (prediction.failure_probability >= 50) {
         atRiskHabits.push(prediction);
       }
     }
