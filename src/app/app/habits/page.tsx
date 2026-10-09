@@ -34,6 +34,28 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   zap: Zap,
 };
 
+const CATEGORY_NAMES_ID: Record<string, string> = {
+  Health: 'Kesehatan',
+  'Personal Growth': 'Pengembangan Diri',
+  Learning: 'Pengembangan Diri',
+  Study: 'Belajar',
+  Fitness: 'Kebugaran',
+  Productivity: 'Produktivitas',
+  Cleaning: 'Kebersihan',
+  Other: 'Lainnya',
+  Finance: 'Keuangan',
+  Mindfulness: 'Ketenangan Diri',
+  Education: 'Edukasi',
+  Mental: 'Kesehatan Mental',
+  General: 'Umum',
+};
+
+const DIFFICULTY_LABELS: Record<string, string> = {
+  EASY: 'Mudah',
+  MEDIUM: 'Sedang',
+  HARD: 'Sulit',
+};
+
 export default function HabitsPage() {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<'active' | 'archived'>('active');
@@ -173,7 +195,7 @@ export default function HabitsPage() {
                   : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
               )}
             >
-              {c.name}
+              {CATEGORY_NAMES_ID[c.name] || c.name}
             </button>
           ))}
         </div>
@@ -198,6 +220,9 @@ export default function HabitsPage() {
           {habits.map((habit) => {
             const IconComp = ICON_MAP[habit.icon] || Sparkles;
             const streakCount = habit.streak?.current_streak ?? 0;
+            const catName = habit.category?.name
+              ? (CATEGORY_NAMES_ID[habit.category.name] || habit.category.name)
+              : 'Umum';
 
             return (
               <div
@@ -221,7 +246,7 @@ export default function HabitsPage() {
                           {habit.name}
                         </h3>
                         <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
-                          {habit.category?.name || 'Umum'}
+                          {catName}
                         </span>
                       </div>
                     </div>
@@ -251,7 +276,7 @@ export default function HabitsPage() {
                     </span>
                     <span>•</span>
                     <span>
-                      Kesulitan: <strong>{habit.difficulty}</strong>
+                      Kesulitan: <strong>{DIFFICULTY_LABELS[habit.difficulty] || habit.difficulty}</strong>
                     </span>
                   </div>
                 </div>

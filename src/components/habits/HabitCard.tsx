@@ -25,11 +25,17 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 const CATEGORY_NAMES_ID: Record<string, string> = {
   Health: 'Kesehatan',
   'Personal Growth': 'Pengembangan Diri',
+  Learning: 'Pengembangan Diri',
+  Study: 'Belajar',
   Fitness: 'Kebugaran',
   Productivity: 'Produktivitas',
+  Cleaning: 'Kebersihan',
+  Other: 'Lainnya',
   Finance: 'Keuangan',
   Mindfulness: 'Ketenangan Diri',
   Education: 'Edukasi',
+  Mental: 'Kesehatan Mental',
+  General: 'Umum',
 };
 
 export function HabitCard({ habit, onComplete }: HabitCardProps) {

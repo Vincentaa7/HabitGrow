@@ -18,6 +18,22 @@ interface HabitFormModalProps {
   initialHabit?: Habit | null;
 }
 
+const CATEGORY_NAMES_ID: Record<string, string> = {
+  Health: 'Kesehatan',
+  'Personal Growth': 'Pengembangan Diri',
+  Learning: 'Pengembangan Diri',
+  Study: 'Belajar',
+  Fitness: 'Kebugaran',
+  Productivity: 'Produktivitas',
+  Cleaning: 'Kebersihan',
+  Other: 'Lainnya',
+  Finance: 'Keuangan',
+  Mindfulness: 'Ketenangan Diri',
+  Education: 'Edukasi',
+  Mental: 'Kesehatan Mental',
+  General: 'Umum',
+};
+
 const ICONS = [
   { id: 'sparkles', icon: Sparkles, label: 'Umum' },
   { id: 'book-open', icon: BookOpen, label: 'Belajar' },
@@ -276,7 +292,7 @@ export function HabitFormModal({
                   )}
                 >
                   {selectedCategoryId === c.id && <Check className="w-3 h-3" />}
-                  {c.name}
+                  {CATEGORY_NAMES_ID[c.name] || c.name}
                 </button>
               ))}
             </div>

@@ -19,6 +19,16 @@ interface AchievementItem {
   unlocked_at: string | null;
 }
 
+const ACHIEVEMENT_TRANSLATIONS: Record<string, string> = {
+  '7 Day Streak': 'Streak 7 Hari',
+  '3 Day Streak': 'Streak 3 Hari',
+  '30 Day Streak': 'Streak 30 Hari',
+  'Mature Tree': 'Pohon Dewasa',
+  'Healthy Tree': 'Pohon Sehat',
+  'First Habit': 'Kebiasaan Pertama',
+  'Seedling Master': 'Master Tunas',
+};
+
 export default function AchievementsPage() {
   const { data: achievements = [], isLoading } = useQuery<AchievementItem[]>({
     queryKey: ['achievements'],
@@ -112,7 +122,7 @@ export default function AchievementsPage() {
               </div>
 
               <h4 className="font-bold text-base text-slate-900 dark:text-white">
-                {ach.name}
+                {ACHIEVEMENT_TRANSLATIONS[ach.name] || ach.name}
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 {ach.description}

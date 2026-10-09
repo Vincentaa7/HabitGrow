@@ -53,7 +53,7 @@ export default function TreePage() {
         {/* Tree Stage Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-700 dark:text-emerald-300 shadow-sm mb-6">
           <Sparkles className="w-4 h-4 text-emerald-500" />
-          Tahap Saat Ini: {tree.stage}
+          Tahap Saat Ini: {currentStageInfo.displayName}
         </div>
 
         {/* Large Tree Illustration */}
@@ -75,7 +75,7 @@ export default function TreePage() {
 
           <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
             <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">
-              Consistency Score
+              Skor Konsistensi
             </span>
             <div className="flex items-center justify-center gap-2">
               <ShieldCheck className="w-5 h-5 text-emerald-500" />

@@ -59,7 +59,11 @@ export default function CalendarPage() {
   const handleCompleteHabit = async (habitId: string) => {
     try {
       setCompletingId(habitId);
-      const res = await fetch(`/api/habits/${habitId}/complete`, { method: 'POST' });
+      const res = await fetch(`/api/habits/${habitId}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: selectedDate }),
+      });
       if (res.ok) {
         queryClient.invalidateQueries({ queryKey: ['calendar-day-detail'] });
         queryClient.invalidateQueries({ queryKey: ['calendar-activity'] });
