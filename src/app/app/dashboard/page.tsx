@@ -244,44 +244,10 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Center Stage: The Living Virtual Tree with Integrated Metrics */}
-        <div className="pt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-          {/* Left Metrics Pillar */}
-          <div className="lg:col-span-3 space-y-3 order-2 lg:order-1">
-            {/* Streak Metric */}
-            <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40">
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
-                <Flame className="w-4 h-4 text-amber-500 fill-amber-500" />
-                <span>Konsistensi Beruntun</span>
-              </div>
-              <div className="text-lg font-extrabold text-slate-900 dark:text-white">
-                {streak.current_streak} Hari Streak
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                Rekor terbaik: {streak.longest_streak} hari
-              </p>
-            </div>
-
-            {/* Level & XP Metric */}
-            <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40">
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
-                <Zap className="w-4 h-4 text-emerald-500" />
-                <span>Level &amp; Pengalaman</span>
-              </div>
-              <div className="text-lg font-extrabold text-slate-900 dark:text-white">
-                Level {user_level.level}
-              </div>
-              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                <span>Total XP</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                  {user_level.total_xp} XP
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Central Tree Terrarium Showcase */}
-          <div className="lg:col-span-6 flex flex-col items-center justify-center text-center order-1 lg:order-2 py-2">
+        {/* Center Stage: The Living Virtual Tree with Today's Progress */}
+        <div className="pt-6 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Virtual Tree Terrarium Showcase */}
+          <div className="lg:col-span-7 flex flex-col items-center justify-center text-center py-2">
             <div className="relative">
               <TreeVisualization
                 stage={tree.stage}
@@ -291,18 +257,18 @@ export default function DashboardPage() {
               />
             </div>
 
-            <div className="mt-3 space-y-1">
+            <div className="mt-3 space-y-1 w-full max-w-sm mx-auto">
               <div className="inline-flex items-center gap-2">
                 <span className="text-base font-extrabold text-slate-900 dark:text-white">
                   {currentStageIndonesian}
                 </span>
-                <span className="text-xs px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-semibold">
+                <span className="text-xs px-2.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-semibold">
                   Kesehatan: {Math.round(tree.health)}%
                 </span>
               </div>
 
               {/* Evolution milestone bar */}
-              <div className="w-full max-w-xs mx-auto pt-2 space-y-1.5">
+              <div className="w-full pt-2 space-y-1.5">
                 <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                   <span>Skor Konsistensi: {Math.round(tree.consistency_score)}%</span>
                   <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
@@ -337,18 +303,23 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Right Metrics Pillar */}
-          <div className="lg:col-span-3 space-y-3 order-3">
+          {/* Right Metrics: Today's Completion & Tree Condition */}
+          <div className="lg:col-span-5 space-y-3.5">
             {/* Today's Completion Metric */}
-            <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40">
-              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>Penyelesaian Hari Ini</span>
+            <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40 space-y-2">
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span className="font-semibold">Penyelesaian Hari Ini</span>
+                </div>
+                <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
+                  {completion_percentage}%
+                </span>
               </div>
-              <div className="text-lg font-extrabold text-slate-900 dark:text-white">
+              <div className="text-xl font-extrabold text-slate-900 dark:text-white">
                 {completed_count} dari {total_scheduled_today} Selesai
               </div>
-              <div className="w-full bg-slate-200 dark:bg-slate-800 h-2 rounded-full overflow-hidden mt-2">
+              <div className="w-full bg-slate-200 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
                 <div
                   className="bg-emerald-600 h-full rounded-full transition-all duration-300"
                   style={{ width: `${completion_percentage}%` }}
@@ -357,15 +328,15 @@ export default function DashboardPage() {
             </div>
 
             {/* Quick Status Pill */}
-            <div className="p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40">
-              <div className="text-xs text-slate-500 dark:text-slate-400 mb-0.5">
+            <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40">
+              <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">
                 Kondisi Pohon
               </div>
-              <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                 {isAllCompleted
                   ? 'Pohon mendapat nutrisi penuh hari ini ✨'
                   : pendingCount > 0
-                  ? `${pendingCount} kebiasaan menanti untuk disiram`
+                  ? `${pendingCount} kebiasaan menanti untuk disiram 🌱`
                   : 'Belum ada jadwal aktif hari ini'}
               </div>
             </div>

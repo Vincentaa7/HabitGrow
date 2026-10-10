@@ -4,7 +4,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { DashboardSummary } from '@/types';
+import { toDateString } from '@/lib/algorithms/schedule';
 import {
   LayoutDashboard,
   CheckSquare,
@@ -18,9 +20,10 @@ import {
   X,
   ChevronRight,
   Download,
+  Flame,
+  Gem,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 import { usePwaInstall } from '@/hooks/use-pwa-install';
 
@@ -30,6 +33,22 @@ export function Navbar() {
   const queryClient = useQueryClient();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isInstallable, isInstalled, promptInstall } = usePwaInstall();
+
+  // Fetch summary for Duolingo-style Streak & Level header stats
+  const { data: summary } = useQuery<DashboardSummary>({
+    queryKey: ['dashboard-summary'],
+    queryFn: async () => {
+      const localDate = toDateString(new Date());
+      const res = await fetch(`/api/dashboard/summary?date=${localDate}`);
+      const json = await res.json();
+      return json.data;
+    },
+    staleTime: 1000 * 30,
+  });
+
+  const currentStreak = summary?.streak?.current_streak ?? 0;
+  const userLevel = summary?.user_level?.level ?? 1;
+  const userXp = summary?.user_level?.total_xp ?? 0;
 
   // Close mobile drawer on route change
   useEffect(() => {
@@ -120,12 +139,37 @@ export function Navbar() {
               })}
             </nav>
 
-            {/* Right Controls */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <ThemeToggle />
+            {/* Right Controls: Duolingo-style Streak & Level Crystal + Profile */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* 1. Streak Badge (Duolingo Flame style) */}
+              <Link
+                href="/app/calendar"
+                prefetch={true}
+                className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200/80 dark:border-orange-900/60 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/60 transition active:scale-95 group shadow-xs"
+                title={`Streak: ${currentStreak} Hari Beruntun (Lihat Kalender)`}
+              >
+                <Flame className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-orange-500 fill-orange-500 group-hover:scale-110 transition-transform" />
+                <span className="font-black text-xs sm:text-sm tracking-tight">
+                  {currentStreak}
+                </span>
+              </Link>
+
+              {/* 2. Level Crystal Badge (Duolingo Crystal style) */}
+              <Link
+                href="/app/tree"
+                prefetch={true}
+                className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200/80 dark:border-sky-900/60 text-sky-600 dark:text-sky-400 hover:bg-sky-100 dark:hover:bg-sky-900/60 transition active:scale-95 group shadow-xs"
+                title={`Level ${userLevel} · Total ${userXp} XP (Lihat Pohon)`}
+              >
+                <Gem className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-sky-500 fill-sky-400/40 dark:fill-sky-400/50 group-hover:scale-110 transition-transform stroke-[2]" />
+                <span className="font-black text-xs sm:text-sm tracking-tight flex items-center gap-0.5">
+                  <span className="hidden sm:inline text-[11px] font-bold text-sky-500/80">Lvl</span>
+                  <span>{userLevel}</span>
+                </span>
+              </Link>
 
               {/* Desktop Profile & Logout */}
-              <div className="hidden md:flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-2 ml-1">
                 <Link
                   href="/app/profile"
                   className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
