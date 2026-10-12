@@ -1,7 +1,7 @@
 # 🌿 HabitGrow — Dokumen Arsitektur Proyek & Panduan Skripsi Lengkap
 
-> **Versi Dokumen:** 1.2.0  
-> **Terakhir Diperbarui:** 24 September 2026  
+> **Versi Dokumen:** 1.3.0  
+> **Terakhir Diperbarui:** 12 Oktober 2026  
 > **Target Pengguna:** Pengembang, Agen AI (*Context File*), dan Penulisan Laporan Tugas Akhir / Skripsi (Program Studi Sistem Komputer / Teknik Informatika / Sistem Informasi).
 
 ---
@@ -17,7 +17,13 @@
    * 3.5 Arsitektur Distribusi & Generasi File Instalasi Mobile (Android APK)
    * 3.6 Arsitektur Antarmuka Responsif Mobile (Android/iOS), Drawer Hamburger & Eliminasi Containing-Block Bug
    * 3.7 Arsitektur Web Push Latar Belakang (Service Worker, VAPID, FCM & PWA Notifikasi Layar Terkunci)
+   * 3.8 Pemodelan Diagram Alir Data (Data Flow Diagram - DFD)
+   * 3.9 Standarisasi Simbol Flowchart ANSI/ISO & Pemetaan Sistem
+   * 3.10 Pemodelan Diagram Alir Sistem (Flowchart Detail Alur Bisnis & Algoritma)
 4. [Perancangan Basis Data & Skema ERD](#4-perancangan-basis-data--skema-erd)
+   * 4.1 Diagram Hubungan Entitas (ERD 13 Tabel)
+   * 4.2 Kamus Data & Spesifikasi Tabel (13 Tabel Relasional)
+   * 4.3 Matriks Relasi & Kardinalitas Antar Entitas
 5. [Formulasi Algoritma & Logika Matematika Inti](#5-formulasi-algoritma--logika-matematika)
    * 5.1 Logika Non-Zero Day Global Daily Streak
    * 5.2 Logika Deteksi & Pemulihan Streak Putus (*Broken Streak*)
@@ -34,6 +40,9 @@
    * 8.1 Identitas Visual, Filosofi Logo & Lokasi Aset Gambar
 9. [Cetak Biru Integrasi IoT untuk Skripsi Sistem Komputer](#9-cetak-biru-integrasi-iot-untuk-skripsi-sistem-komputer)
 10. [Panduan Penulisan Proposal & Bab Skripsi (Bab 1 s/d Bab 5)](#10-panduan-penulisan-proposal--bab-skripsi)
+    * 10.1 Pilihan Judul Skripsi yang Layak Diajukan
+    * 10.2 Kerangka Bab Skripsi (Bab 1 s/d Bab 5)
+    * 10.3 Matriks Pemetaan Diagram Pemodelan untuk Bab 3 & Bab 4 Skripsi
 
 ---
 
@@ -328,6 +337,387 @@ Di halaman profil pengguna (`/app/profile`), terdapat tombol interaktif **"Evalu
 
 ---
 
+### 3.8 Pemodelan Diagram Alir Data (Data Flow Diagram - DFD)
+
+Diagram Alir Data (*Data Flow Diagram* / DFD) adalah teknik pemodelan terstruktur yang menggambarkan aliran data logis melalui sistem perangkat lunak, proses transformasi data, entitas eksternal yang menjadi sumber (*source*) atau tujuan (*sink*) data, serta repositori penyimpanan data (*data store*). Notasi yang digunakan merujuk pada standar **Gane & Sarson / Yourdon & DeMarco** yang diakui secara luas dalam bidang Rekayasa Perangkat Lunak akademik.
+
+#### 3.8.1 Diagram Konteks (DFD Level 0)
+
+Diagram Konteks memodelkan batas sistem HabitGrow secara makro (*high-level*). Seluruh fungsionalitas aplikasi direpresentasikan sebagai satu proses tunggal terpadu (**Proses 0.0: Sistem HabitGrow**), yang berinteraksi dengan tiga entitas eksternal (*External Entities*):
+
+1. **Entitas Eksternal 1: Pengguna / User (Peramban Web & Android PWA Client)**
+   * **Aliran Data Masuk (*Inflow*):**
+     * Kredensial Pendaftaran & Autentikasi (Email, Kata Sandi, Data Profil).
+     * Formulir Pembuatan/Pengubahan Kebiasaan (Nama, Kategori, Tingkat Kesulitan, Satuan Target, Pola Penjadwalan, Jam Pengingat).
+     * Aksi Interaksi Checklist Harian Taktil (*Checkbox Tap Event* berlatensi 0ms).
+     * Token Kunci Kriptografi Web Push Subscription (*Endpoint URL*, *p256dh*, *auth* via VAPID).
+     * Pemicu Evaluasi SPK SAW Seketika (*On-Demand Trigger* via Halaman Profil).
+   * **Aliran Data Keluar (*Outflow*):**
+     * Ringkasan Dasbor Real-time (Status Streak Global & Individual, Level XP, Bilah Konsistensi Bergulir 30 Hari).
+     * Visualisasi Metamorfosis Pohon Virtual (Tahap Pertumbuhan, Persentase Kesehatan Organik).
+     * Umpan Balik Taktil Antarmuka (Animasi Ceklis, Efek Letupan Konfeti Partikel Instan).
+     * Kartu Peringatan Dini SPK SAW & Rekomendasi Adaptif Tindakan Mitigasi (Aturan 2-Menit, Penyesuaian Beban).
+     * Lencana Pencapaian (*Achievement Badges*) & Log Riwayat Aktivitas Kalender.
+
+2. **Entitas Eksternal 2: Vercel Cron Trigger (Cloud Serverless Automated Scheduler)**
+   * **Aliran Data Masuk (*Inflow*):**
+     * Pemicu Eksekusi Otomatis Terjadwal via HTTP POST ke `/api/cron/reminders` setiap pukul 20:00 WIB (13:00 UTC) disertai token rahasia `CRON_SECRET`.
+   * **Aliran Data Keluar (*Outflow*):**
+     * Laporan Status Eksekusi Batch Serverless (Status HTTP 200 OK, Total Pengguna Terproses, Jumlah Push Terkirim, Waktu Eksekusi Komputasi).
+
+3. **Entitas Eksternal 3: Push Notification Gateway (Google FCM & Apple APNs)**
+   * **Aliran Data Masuk (*Inflow*):**
+     * Respons Status Pengiriman Jaringan (HTTP 201 Created jika paket push berhasil diterima gateway; HTTP 410 Gone / 404 Not Found jika token perangkat kedaluwarsa atau izin dicabut oleh pengguna).
+   * **Aliran Data Keluar (*Outflow*):**
+     * Muatan Data Push Terenkripsi (*Encrypted Push Payload* standar W3C RFC 8291/8292) bertanda tangan VAPID JWT untuk dikirimkan langsung ke layar ponsel pengguna (*Lock Screen*).
+
+```mermaid
+flowchart TD
+    classDef entity fill:#EFF6FF,stroke:#3B82F6,stroke-width:2px,color:#1E3A8A;
+    classDef process fill:#ECFDF5,stroke:#10B981,stroke-width:2px,color:#064E3B;
+
+    User["👤 Entitas Eksternal 1:<br/>Pengguna (Web & Android PWA)"]:::entity
+    Cron["⏱️ Entitas Eksternal 2:<br/>Vercel Cron Trigger (20:00 WIB)"]:::entity
+    Gateway["☁️ Entitas Eksternal 3:<br/>Push Gateway (Google FCM / APNs)"]:::entity
+
+    P0(("0.0<br/>SISTEM HABITGROW<br/>(Habit Tracker, Gamifikasi & SPK SAW)")):::process
+
+    User -->|1. Data Registrasi & Kredensial Login| P0
+    User -->|2. Form Kebiasaan, Kategori & Penjadwalan| P0
+    User -->|3. Aksi Checklist Taktil 0ms| P0
+    User -->|4. Token Registrasi Web Push VAPID| P0
+    User -->|5. Pemicu Evaluasi SPK On-Demand| P0
+
+    P0 -->|6. Dashboard Summary, Streak & Level XP| User
+    P0 -->|7. Rendering Tahap & Kesehatan Pohon Virtual| User
+    P0 -->|8. Umpan Balik Taktil & Letupan Konfeti| User
+    P0 -->|9. Peringatan Dini SPK SAW & Rekomendasi Adaptif| User
+    P0 -->|10. Katalog Lencana Pencapaian & Kalender| User
+
+    Cron -->|Pemicu Evaluasi Harian Otomatis + Bearer Secret| P0
+    P0 -->|Laporan Status Eksekusi Batch Cron Log| Cron
+
+    P0 -->|Kirim Muatan Push Terenkripsi VAPID RFC 8291/8292| Gateway
+    Gateway -->|Konfirmasi Status Pengiriman (201 OK / 410 Gone)| P0
+    Gateway -->|Penyampaian Sinyal Push ke Layar Terkunci Gawai| User
+```
+
+---
+
+#### 3.8.2 DFD Level 1 (Dekomposisi Fungsional Terstruktur)
+
+DFD Level 1 mendekomposisi Proses 0.0 menjadi **6 proses fungsional utama** yang saling berinteraksi secara dinamis dengan **6 Data Store relasional**:
+
+1. **Proses 1.0 — Autentikasi & Manajemen Profil Pengguna:**
+   * Menangani pendaftaran akun baru, login sesi aman berbasis *cookie*, pembaruan zona waktu lokal (*timezone*), serta sinkronisasi nama tampilan pengguna.
+   * *Akses Data Store:* Membaca dan menulis ke **D1: Profil & Akun Pengguna (`profiles` & `auth.users`)**.
+
+2. **Proses 2.0 — Manajemen Kebiasaan, Kategori & Penjadwalan:**
+   * Memvalidasi pembuatan kebiasaan baru, klasifikasi kategori botani, tingkat kesulitan (EASY, MEDIUM, HARD), target kuantitas harian, serta pengaturan hari berulang (*selected days*).
+   * *Akses Data Store:* Membaca dan menulis ke **D2: Kebiasaan & Jadwal (`habits`, `habit_categories`, `habit_schedules`)**.
+
+3. **Proses 3.0 — Pencatatan Checklist Harian Taktil & Histori Kalender:**
+   * Menangani interaksi centang tugas harian pengguna, memvalidasi aturan unik satu centang per tanggal kalender lokal (`UNIQUE(habit_id, date)`), dan memproses pembatalan centang (*uncheck*).
+   * *Akses Data Store:* Membaca dan menulis ke **D3: Riwayat Checklist Harian (`habit_completions`)**.
+
+4. **Proses 4.0 — Mesin Gamifikasi, XP, Streak & Metamorfosis Pohon Virtual:**
+   * Menerima sinyal penyelesaian dari Proses 3.0, menghitung akumulasi XP berdasarkan kesulitan tugas, memicu kenaikan level progresi, memperbarui *Non-Zero Day global streak*, menghitung konsistensi bergulir 30 hari (*rolling consistency*), serta menentukan tahap hidup pohon virtual (Benih s/d Pohon Rimbun).
+   * *Akses Data Store:* Membaca dari **D3**; menulis ke **D4: Pohon Virtual (`user_trees`)** dan **D5: Metrik Gamifikasi (`user_streaks`, `user_levels`, `xp_transactions`, `user_achievements`, `achievements`)**.
+
+5. **Proses 5.0 — Evaluasi SPK SAW Risiko Kegagalan (*Habit Churn Prediction Engine*):**
+   * Dipicu oleh Proses 6.0 (Cron harian pukul 20:00 WIB atau tombol *on-demand* di profil). Menarik seluruh kebiasaan terjadwal hari ini yang belum selesai, mengabaikan kebiasaan di bawah 14 hari (*Cold-Start Guard*), membentuk matriks keputusan dari 5 kriteria terbobot ($C_1..C_5$), melakukan normalisasi matriks $R$, menghitung nilai preferensi $V_i$, mengelompokkan risiko (HIGH, MODERATE, LOW), dan merumuskan saran adaptif (aturan 2-menit / *micro-habits*).
+   * *Akses Data Store:* Membaca dari **D2: Kebiasaan & Jadwal** dan **D3: Riwayat Checklist**.
+
+6. **Proses 6.0 — Layanan Komunikasi & Web Push Notifications:**
+   * Menerima hasil evaluasi dari Proses 5.0 atau pengingat penyelamatan *streak*, memverifikasi langganan push aktif, menandatangani paket data menggunakan VAPID Private Key, dan mengirimkannya ke Push Gateway (FCM/APNs) untuk membangunkan Service Worker di ponsel pengguna.
+   * *Akses Data Store:* Membaca dan membersihkan token dari **D6: Notifikasi & Audit Log (`notifications`, `activity_logs`)**.
+
+```mermaid
+flowchart TD
+    classDef entity fill:#EFF6FF,stroke:#3B82F6,stroke-width:2px,color:#1E3A8A;
+    classDef process fill:#ECFDF5,stroke:#10B981,stroke-width:2px,color:#064E3B;
+    classDef datastore fill:#FEF3C7,stroke:#D97706,stroke-width:2px,color:#78350F;
+
+    User["👤 Pengguna (Client)"]:::entity
+    Cron["⏱️ Vercel Cron"]:::entity
+    FCM["☁️ FCM / APNs"]:::entity
+
+    P1(("1.0<br/>Autentikasi &<br/>Profil")):::process
+    P2(("2.0<br/>Manajemen<br/>Kebiasaan & Jadwal")):::process
+    P3(("3.0<br/>Pencatatan<br/>Checklist Harian")):::process
+    P4(("4.0<br/>Gamifikasi, Streak<br/>& Pohon Virtual")):::process
+    P5(("5.0<br/>Evaluasi SPK SAW<br/>Risiko Kegagalan")):::process
+    P6(("6.0<br/>Layanan Web Push<br/>& Notifikasi")):::process
+
+    D1[("D1: profiles & auth_users")]:::datastore
+    D2[("D2: habits, categories, schedules")]:::datastore
+    D3[("D3: habit_completions")]:::datastore
+    D4[("D4: user_trees")]:::datastore
+    D5[("D5: streaks, levels, xp, achievements")]:::datastore
+    D6[("D6: notifications & activity_logs")]:::datastore
+
+    %% Aliran Proses 1.0
+    User -->|Kredensial & Profil| P1
+    P1 <-->|Read / Write Akun & Timezone| D1
+    P1 -->|Sesi Login & Data User| User
+
+    %% Aliran Proses 2.0
+    User -->|Input Form Kebiasaan & Pola Hari| P2
+    P2 <-->|CRUD Kebiasaan, Kategori & Jadwal| D2
+    P2 -->|Daftar Kebiasaan Terstruktur| User
+
+    %% Aliran Proses 3.0
+    User -->|Tap Checklist 0ms| P3
+    P3 <-->|Catat / Hapus Penyelesaian Harian| D3
+    P3 -->|Trigger Konfeti & Status Centang| User
+    P3 -->|Sinyal Event Penyelesaian Tugas| P4
+
+    %% Aliran Proses 4.0
+    P4 <-->|Hitung XP, Streak Global & Broken Streak| D5
+    P4 <-->|Kalkulasi Konsistensi 30 Hari & Tahap Pohon| D4
+    P4 -->|Update Dashboard XP/Level/Streak/Pohon| User
+
+    %% Aliran Proses 5.0
+    Cron -->|Pemicu Otomatis 20:00 WIB| P6
+    User -->|Pemicu On-Demand SPK| P6
+    P6 -->|Jalankan Komputasi SPK SAW| P5
+    P5 <--|Baca Kebiasaan Hari Ini| D2
+    P5 <--|Baca Riwayat Centang 30 Hari| D3
+    P5 -->|Hasil Evaluasi: Skor Vi & Rekomendasi 2-Menit| P6
+    P5 -->|Tampilkan Kartu Peringatan Dini di Dashboard| User
+
+    %% Aliran Proses 6.0
+    User -->|Token Push Subscription VAPID| P6
+    P6 <-->|Simpan / Hapus Langganan Push Token| D6
+    P6 -->|Kirim Encrypted Web Push via VAPID| FCM
+    FCM -->|Push Sinyal ke Lock Screen Ponsel| User
+    FCM -->|Status Delivery 201 OK / 410 Gone| P6
+```
+
+---
+
+### 3.9 Standarisasi Simbol Flowchart ANSI/ISO & Pemetaan Sistem
+
+Dalam penulisan laporan ilmiah (Skripsi/Tugas Akhir), standarisasi bagan alir (*flowchart*) wajib mematuhi standar internasional **ANSI X3.5 / ISO 5807**. Standar ini menjamin bahwa setiap simbol memiliki arti operasional yang baku dan tidak ambigu bagi penguji maupun pengembang perangkat lunak.
+
+Berikut adalah tabel rujukan lengkap simbol-simbol *flowchart* yang diimplementasikan dalam dokumentasi sistem HabitGrow:
+
+| No | Nama Simbol Standar | Bentuk Visual (*Geometry*) | Standar ANSI/ISO | Fungsi Formal dalam Pemodelan | Penerapan Konkret pada Sistem HabitGrow |
+|:---:|:---|:---:|:---:|:---|:---|
+| **1** | **Terminal / Terminator** | Oval / Stadion (*Stadium*) | ANSI X3.5 §4.1 | Menandai titik permulaan (*Start / Mulai*) atau titik akhir (*End / Selesai*) dari suatu bagan alir algoritma atau prosedur sistem. | Titik awal saat pengguna mengetuk tombol centang, awal pemanggilan cron job Vercel pukul 20:00 WIB, dan akhir alur pengembalian respon HTTP 200 OK. |
+| **2** | **Process / Pemrosesan** | Persegi Panjang (*Rectangle*) | ANSI X3.5 §4.2 | Menunjukkan operasi aritmatika, komputasi data, transformasi nilai, atau manipulasi logika internal oleh CPU/server. | Perhitungan normalisasi matriks $R_{ij} = x_{ij} / \max(x_j)$, penjumlahan terbobot $V_i = \sum W_j R_{ij}$, penambahan XP (`total_xp + 15`), dan pergeseran jendela konsistensi 30 hari. |
+| **3** | **Decision / Keputusan** | Belah Ketupat (*Diamond*) | ANSI X3.5 §4.3 | Menunjukkan percabangan bersyarat (*conditional branch*) dengan dua atau lebih jalur keluaran berbasis evaluasi logika boolean (Ya/Tidak, *True/False*). | Pengecekan umur kebiasaan: *Apakah usia $\ge 14$ hari?*; Evaluasi ambang batas: *Apakah $V_i \ge 0.50$?*; Pengecekan status: *Apakah kebiasaan sudah dicentang hari ini?*. |
+| **4** | **Input / Output (Data)** | Jajar Genjang (*Parallelogram*) | ANSI X3.5 §4.4 | Menunjukkan instruksi penerimaan masukan (*input*) data dari luar sistem atau penyajian keluaran (*output*) informasi ke antarmuka pengguna. | Penerimaan input formulir kebiasaan baru oleh pengguna, pembacaan parameter URL, penampilan dialog perayaan konfeti, dan pengiriman notifikasi visual ke layar gawai. |
+| **5** | **Predefined Process / Sub-proses** | Persegi Panjang Bergaris Ganda (*Striped Rectangle*) | ANSI X3.5 §4.5 | Menunjukkan pemanggilan sekumpulan prosedur, fungsi, modul, atau *service layer* eksternal yang definisinya dimodelkan secara terpisah. | Pemanggilan method `PredictionService.getAtRiskHabitsToday()`, `ConsistencyService.recalculateUserConsistencyAndTree()`, dan `webpush.sendNotification()`. |
+| **6** | **Database / On-line Storage** | Tabung Silinder (*Cylinder*) | ANSI X3.5 §4.8 | Menunjukkan operasi penyimpanan fisik atau pembacaan rekaman data ke media basis data terstruktur (*data persistence*). | Kueri `SELECT FROM habits`, penulisan log transaksi `INSERT INTO habit_completions`, mutasi rekaman `UPDATE user_trees`, dan pembersihan langganan `DELETE FROM notifications`. |
+| **7** | **Flowline / Garis Alir** | Garis Berpanah (*Arrowhead Line*) | ANSI X3.5 §4.6 | Menunjukkan arah urutan kendali eksekusi langkah operasional dari satu simbol ke simbol berikutnya. | Alur eksekusi berurutan dari langkah inisialisasi variabel, melewati percabangan keputusan, hingga terminasi proses. |
+| **8** | **Connector / Penghubung** | Lingkaran Kecil (*Small Circle*) | ANSI X3.5 §4.7 | Menghubungkan bagian-bagian bagan alir yang terputus pada halaman dokumen yang sama untuk menghindari garis yang saling bertabrakan (*cross-lines*). | Titik temu penggabungan jalur rollback kegagalan jaringan kembali ke siklus pemantauan antarmuka normal. |
+
+---
+
+### 3.10 Pemodelan Diagram Alir Sistem (Flowchart Detail Alur Bisnis & Algoritma)
+
+Bagian ini memodelkan seluruh logika inti sistem HabitGrow ke dalam **5 Diagram Alir Resmi** yang siap digunakan langsung pada **Bab 3 Laporan Skripsi**:
+
+#### 3.10.1 Flowchart 1: Metodologi Rekayasa Perangkat Lunak (SDLC Model Prototyping/Agile)
+
+Bagan alir ini menggambarkan siklus hidup metodologi pengembangan sistem yang diterapkan pada proyek HabitGrow:
+
+```mermaid
+flowchart TD
+    Start([Mulai: Identifikasi Kebutuhan & Masalah Riset]) --> LitReview[Studi Literatur: Teori Kebiasaan & SPK SAW]
+    LitReview --> SpecSRS[Penyusunan SRS: Kebutuhan Fungsional & Non-Fungsional]
+    SpecSRS --> ProtoDesign[Perancangan Prototipe: Wireframe UI & Skema Database 3NF]
+    ProtoDesign --> Coding[Pengkodean Sistem: Next.js 16, Supabase, Tailwind, Vitest]
+    Coding --> UnitTesting[Pengujian Unit Otomatis: 48 Test Cases Vitest]
+    
+    UnitTesting --> CheckUnit{Seluruh Unit Test Lulus 100%?}
+    CheckUnit -- Tidak --> FixCode[Perbaikan Bug & Refaktorisasi Logika]
+    FixCode --> Coding
+    CheckUnit -- Ya --> DeployStaging[Deployment Vercel & PWA Build Testing]
+    
+    DeployStaging --> E2ETesting[Pengujian End-to-End Otomatis & Uji Pengguna]
+    E2ETesting --> CheckE2E{Memenuhi Syarat Evaluasi Pengguna?}
+    CheckE2E -- Tidak --> ProtoDesign
+    CheckE2E -- Ya --> ProdRelease[Rilis Produksi Publik: habitsgrow.vercel.app]
+    ProdRelease --> End([Selesai: Sistem Siap Diuji Sidang Skripsi])
+```
+
+---
+
+#### 3.10.2 Flowchart 2: Alur Komputasi SPK SAW Prediksi Risiko Kegagalan (*Habit Churn Prediction Engine*)
+
+Bagan alir algoritma inti Sistem Pendukung Keputusan menggunakan metode *Simple Additive Weighting* (SAW) terintegrasi *Cold-Start Guard* dan sistem rekomendasi adaptif:
+
+```mermaid
+flowchart TD
+    Start([Mulai: Pemicu Evaluasi SPK SAW]) --> FetchPending[/Tarik Seluruh Kebiasaan Terjadwal Hari Ini yang Belum Selesai/]
+    FetchPending --> CheckList{Apakah Ada Kebiasaan Belum Tuntas?}
+    CheckList -- Tidak --> ReturnZero[/Kembalikan Hasil: Risiko Nihil - Seluruh Tugas Aman/]
+    ReturnZero --> End([Selesai])
+
+    CheckList -- Ya --> LoopHabit[Iterasi Setiap Kebiasaan Terjadwal]
+    LoopHabit --> CalcAge[Hitung Usia Kebiasaan: Tanggal Hari Ini - Tanggal Mulai]
+    CalcAge --> CheckColdStart{Usia Kebiasaan < 14 Hari?<br/>Cold-Start Guard}
+    
+    CheckColdStart -- Ya --> AssignColdStart[Tetapkan Status: COLD_START<br/>Skor Vi = 0.00, Beri Afirmasi Adaptasi Baru]
+    AssignColdStart --> NextHabit{Masih Ada Kebiasaan Lain?}
+
+    CheckColdStart -- Tidak --> ComputeC1[Hitung C1: Miss Rate 30 Hari Terakhir - Bobot 30%]
+    ComputeC1 --> ComputeC2[Hitung C2: Historic Miss Rate pada Hari Serupa - Bobot 25%]
+    ComputeC2 --> ComputeC3[Hitung C3: Daily Workload Ratio - Bobot 15%]
+    ComputeC3 --> ComputeC4[Hitung C4: Kebalikan Maturity Usia Kebiasaan - Bobot 15%]
+    ComputeC4 --> ComputeC5[Hitung C5: Faktor Keterlambatan Waktu Saat Ini - Bobot 15%]
+
+    ComputeC5 --> Normalize[Normalisasi Matriks Keputusan R: Rij = Xij / Max Xj]
+    Normalize --> SAWScore[Hitung Nilai Preferensi Vi = SUM Wj * Rij]
+
+    SAWScore --> CheckHigh{Apakah Vi >= 0.70?}
+    CheckHigh -- Ya --> SetHigh[Tetapkan Status: TINGGI / HIGH RISK<br/>Generate Rekomendasi Adaptif Aturan 2-Menit]
+    
+    CheckHigh -- Tidak --> CheckMod{Apakah Vi >= 0.50?}
+    CheckMod -- Ya --> SetMod[Tetapkan Status: SEDANG / MODERATE RISK<br/>Generate Rekomendasi Pengingat & Pemecahan Tugas]
+    CheckMod -- Tidak --> SetLow[Tetapkan Status: RENDAH / LOW RISK<br/>Status Terkendali]
+
+    SetHigh --> NextHabit
+    SetMod --> NextHabit
+    SetLow --> NextHabit
+
+    NextHabit -- Ya --> LoopHabit
+    NextHabit -- Tidak --> SortResult[Urutkan Kebiasaan Berdasarkan Skor Vi Tertinggi]
+    SortResult --> OutputResult[/Keluarkan Daftar Risiko & Rekomendasi Mitigasi/]
+    OutputResult --> End
+```
+
+---
+
+#### 3.10.3 Flowchart 3: Alur Mesin Pertumbuhan Pohon Virtual (*Tree Growth Engine & Rolling Consistency*)
+
+Bagan alir logika gamifikasi botanical pertumbuhan pohon virtual dengan batas jendela geser 30 hari (*rolling 30-day window*) dan perlindungan hari pertama (*graceful first day*):
+
+```mermaid
+flowchart TD
+    Start([Mulai: Mutasi Checklist atau Pembukaan Dashboard]) --> FetchWindow[/Ambil Riwayat Checklist Selama 30 Hari Terakhir/]
+    FetchWindow --> CheckNewUser{Pengguna Baru / Hari Pertama<br/>Tanpa Riwayat Bolong Lampau?}
+    
+    CheckNewUser -- Ya --> SetGraceful[Tetapkan Status Benih Sehat Awal:<br/>Tahap = Seed, Skor Konsistensi = 100%, Kesehatan = 100%]
+    SetGraceful --> PersistDB[(Update Tabel user_trees)]
+
+    CheckNewUser -- Tidak --> CalcTotalSched[Hitung Total Hari Terjadwal Seluruh Kebiasaan dalam Jendela 30 Hari]
+    CalcTotalSched --> CalcTotalDone[Hitung Total Hari Berhasil Dicentang Selesai]
+    CalcTotalDone --> CheckZeroSched{Total Terjadwal == 0?}
+    
+    CheckZeroSched -- Ya --> SetDefaultSeed[Konsistensi = 0%, Tahap = Seed]
+    CheckZeroSched -- Tidak --> CalcScore[Hitung Skor Konsistensi:<br/>CR = Total Selesai / Total Terjadwal * 100%]
+
+    CalcScore --> CheckMature{CR >= 80%?}
+    CheckMature -- Ya --> StageMature[Tahap: Mature Tree / Pohon Rimbun Dewasa]
+    
+    CheckMature -- Tidak --> CheckHealthy{CR >= 60%?}
+    CheckHealthy -- Ya --> StageHealthy[Tahap: Healthy Tree / Pohon Sehat Berbunga]
+    
+    CheckHealthy -- Tidak --> CheckYoung{CR >= 40%?}
+    CheckYoung -- Ya --> StageYoung[Tahap: Young Tree / Pohon Muda Berdaun]
+    
+    CheckYoung -- Tidak --> CheckSprout{CR >= 20%?}
+    CheckSprout -- Ya --> StageSprout[Tahap: Sprout / Tunas Kecil Bertumbuh]
+    
+    CheckSprout -- Tidak --> StageSeed[Tahap: Seed / Benih Baru Tertanam]
+
+    StageMature --> CalcHealth[Hitung Nilai Kesehatan Pohon: Min 100, Math.round CR]
+    StageHealthy --> CalcHealth
+    StageYoung --> CalcHealth
+    StageSprout --> CalcHealth
+    StageSeed --> CalcHealth
+
+    CalcHealth --> PersistDB
+    SetDefaultSeed --> PersistDB
+    PersistDB --> BroadcastUI[/Render Pohon Virtual Responsif & Progress Bar di Dashboard/]
+    BroadcastUI --> End([Selesai])
+```
+
+---
+
+#### 3.10.4 Flowchart 4: Alur Eksekusi Checklist Taktil (0ms Optimistic UI & Server Sync)
+
+Bagan alir mutasi instan checklist kartu kebiasaan dengan penanganan pemulihan kegagalan (*rollback*):
+
+```mermaid
+flowchart TD
+    Start([Mulai: Pengguna Mengetuk Tombol Centang Kartu]) --> OptimisticLocal[Perbarui State Klien Secara Seketika - Latensi 0ms:<br/>Tandai Tugas Selesai di Antarmuka]
+    OptimisticLocal --> TriggerConfetti[/Tembakkan Animasi Letupan Konfeti Partikel/]
+    OptimisticLocal --> OptimisticCounter[Tambah Angka Selesai & XP Sementara di Layar]
+    
+    OptimisticCounter --> AsyncCall[Kirim Permintaan Asinkron di Latar Belakang:<br/>POST /api/habits/:id/complete]
+    AsyncCall --> ValidateAuth{Autentikasi Sesi & CSRF Valid?}
+    
+    ValidateAuth -- Tidak --> TriggerRollback[Batalkan Perubahan Klien: Kembalikan State ke Semula]
+    ValidateAuth -- Ya --> CheckUniqueDate{Apakah Tugas Sudah Pernah Dicentang Hari Ini?<br/>Constraint Unik Tanggal}
+    
+    CheckUniqueDate -- Duplikat --> TriggerRollback
+    CheckUniqueDate -- Lolos --> CommitDB[(Simpan Rekaman ke habit_completions)]
+    
+    CommitDB --> RecordXP[(Catat Transaksi ke xp_transactions & user_levels)]
+    RecordXP --> UpdateStreakSub[Panggil Sub-proses: Mutasi user_streaks Global & Individual]
+    UpdateStreakSub --> UpdateTreeSub[Panggil Sub-proses: Mutasi user_trees Konsistensi 30 Hari]
+    
+    UpdateTreeSub --> ServerOK[/Server Merespon HTTP 200 OK dengan Payload Baru/]
+    ServerOK --> InvalidateQuery[TanStack Query Invalidate & Revalidate Silent]
+    InvalidateQuery --> End([Selesai: Sinkronisasi Sempurna])
+
+    TriggerRollback --> ShowToast[/Tampilkan Pesan Peringatan Toast Error ke Pengguna/]
+    ShowToast --> End
+```
+
+---
+
+#### 3.10.5 Flowchart 5: Alur Cron Job Serverless & Background Web Push Notification
+
+Bagan alir eksekusi otomatis latar belakang pengiriman notifikasi layar terkunci ponsel (*Lock Screen Web Push*):
+
+```mermaid
+flowchart TD
+    Start([Mulai: Vercel Cron Terjadwal Pukul 20:00 WIB / 13:00 UTC]) --> VerifySecret{Header Authorization == CRON_SECRET?}
+    VerifySecret -- Ditolak --> Return401[/Tolak Akses: HTTP 401 Unauthorized/]
+    Return401 --> End([Selesai])
+
+    VerifySecret -- Diterima --> QuerySubs[(Tarik Seluruh Pengguna dengan Push Subscription Aktif di Tabel notifications)]
+    QuerySubs --> CheckAnyUser{Apakah Ada Pengguna Berlangganan?}
+    CheckAnyUser -- Tidak --> Return200Silent[/Return HTTP 200: Tidak Ada Target Pengiriman/]
+    Return200Silent --> End
+
+    CheckAnyUser -- Ya --> LoopUsers[Iterasi Setiap Pengguna Terdaftar]
+    LoopUsers --> RunSPK[Eksekusi Evaluasi SPK SAW Hari Ini untuk Pengguna Tersebut]
+    RunSPK --> CheckHighRisk{Ada Kebiasaan Belum Tuntas dengan Skor Vi >= 0.50?}
+
+    CheckHighRisk -- Ya --> PrepareWarning[Bentuk Payload SPK_SAW_EARLY_WARNING:<br/>'⚠️ Peringatan SPK: [Nama Habit] - Risiko terlewat X%. Aturan 2 menit!']
+    CheckHighRisk -- Tidak --> CheckStreak{Streak Pengguna > 0 DAN Masih Ada Tugas Terjadwal Belum Tuntas?}
+    
+    CheckStreak -- Ya --> PrepareStreak[Bentuk Payload STREAK_DEFENSE:<br/>'🔥 Pertahankan Streak X Hari! Selesaikan 1 tugas sebelum tengah malam.']
+    CheckStreak -- Tidak --> SkipUser[Lewati Pengguna: Kondisi Aman / Tugas Sudah Selesai Semua]
+
+    PrepareWarning --> SignVAPID[Tandatangani Payload Kriptografis via VAPID Private Key RFC 8292]
+    PrepareStreak --> SignVAPID
+
+    SignVAPID --> SendGateway[Kirim Paket ke Push Gateway: Google FCM / Apple APNs]
+    SendGateway --> CheckDeliveryStatus{Status Respons Gateway?}
+
+    CheckDeliveryStatus -- 201 Created --> LogSuccess[(Catat Status Sukses di activity_logs)]
+    CheckDeliveryStatus -- 410 Gone / 404 --> CleanupToken[(Hapus Subscription Kadaluwarsa dari notifications)]
+    CheckDeliveryStatus -- Error Lain --> LogError[(Catat Kegagalan Jaringan)]
+
+    SkipUser --> NextUser{Masih Ada Pengguna Berikutnya?}
+    LogSuccess --> NextUser
+    CleanupToken --> NextUser
+    LogError --> NextUser
+
+    NextUser -- Ya --> LoopUsers
+    NextUser -- Tidak --> FinalReport[/Kembalikan Ringkasan Laporan Batch: HTTP 200 OK/]
+    FinalReport --> End
+```
+
+---
+
 ## 4. PERANCANGAN BASIS DATA & SKEMA ERD
 
 Basis data HabitGrow dirancang dalam bentuk relasional normalisasi ketiga (3NF) dengan total **13 tabel terstruktur**.
@@ -344,6 +734,8 @@ erDiagram
     auth_users ||--o{ user_streaks : "memiliki (1:N)"
     auth_users ||--o{ user_trees : "memiliki (1:1)"
     auth_users ||--o{ user_achievements : "mengoleksi (1:N)"
+    auth_users ||--o{ notifications : "menerima (1:N)"
+    auth_users ||--o{ activity_logs : "mencatat audit (1:N)"
 
     habit_categories ||--o{ habits : "mengelompokkan (1:N)"
     habits ||--o{ habit_schedules : "memiliki jadwal (1:N)"
@@ -440,11 +832,71 @@ Representasi virtual pohon tanaman pengguna.
 * `consistency_score` (NUMERIC 5,2, Nilai 0.00 sampai 100.00%)
 * `growth_points` (INTEGER)
 
-#### 10. Tabel `achievements` & `user_achievements`
-Katalog lencana dan tabel penghubung (*junction table*) pembukaan pencapaian.
-* `condition_type` ('first_step', 'streak_days', 'total_completions', 'consistency_rate', 'tree_stage')
-* `condition_value` (INTEGER, Batas ambang pembukaan)
-* `xp_reward` (INTEGER, Hadiah XP saat lencana terbuka)
+#### 10. Tabel `achievements`
+Katalog master lencana pencapaian yang dapat diraih pengguna melalui berbagai tonggak kedisiplinan.
+* `id` (UUID, Primary Key, Default: `gen_random_uuid()`)
+* `name` (VARCHAR 100, Nama lencana pencapaian)
+* `slug` (VARCHAR 100, Identifikasi unik slug)
+* `description` (TEXT, Uraian syarat membuka lencana)
+* `icon` (VARCHAR 50, Nama identifier ikon Lucide, Default: 'trophy')
+* `condition_type` (VARCHAR 50, Jenis kriteria: 'first_step', 'streak_days', 'total_completions', 'consistency_rate', 'tree_stage')
+* `condition_value` (INTEGER, Nilai ambang batas pembukaan)
+* `xp_reward` (INTEGER, Hadiah perolehan XP saat lencana terbuka, Default: 50)
+* `is_active` (BOOLEAN, Status lencana aktif/nonaktif, Default: true)
+* `created_at`, `updated_at` (TIMESTAMPTZ)
+
+#### 11. Tabel `user_achievements`
+Tabel relasi penghubung (*junction table*) pembukaan pencapaian per pengguna.
+* `id` (UUID, Primary Key, Default: `gen_random_uuid()`)
+* `user_id` (UUID, FK ke `auth.users.id` ON DELETE CASCADE)
+* `achievement_id` (UUID, FK ke `public.achievements.id` ON DELETE CASCADE)
+* `unlocked_at` (TIMESTAMPTZ, Waktu tepat pencapaian berhasil dibuka)
+* *Constraint Unik:* `UNIQUE(user_id, achievement_id)` menjamin pengguna tidak dapat mengklaim lencana yang sama lebih dari satu kali.
+
+#### 12. Tabel `notifications`
+Penyimpanan langganan Web Push latar belakang berbasis token VAPID serta log notifikasi yang telah/akan dikirimkan ke perangkat pengguna.
+* `id` (UUID, Primary Key, Default: `gen_random_uuid()`)
+* `user_id` (UUID, FK ke `auth.users.id` ON DELETE CASCADE)
+* `type` (VARCHAR 50, Jenis notifikasi: 'PUSH_SUBSCRIPTION', 'SPK_SAW_EARLY_WARNING', 'STREAK_DEFENSE', 'SYSTEM')
+* `title` (VARCHAR 150, Judul pesan notifikasi)
+* `message` (TEXT, Isi teks pesan notifikasi atau payload string JSON push subscription)
+* `scheduled_for` (TIMESTAMPTZ, Waktu notifikasi dijadwalkan)
+* `sent_at` (TIMESTAMPTZ, Waktu paket sinyal push dikirim ke FCM/APNs)
+* `read_at` (TIMESTAMPTZ, Waktu pengguna membuka/membaca notifikasi)
+* `status` (VARCHAR 30, Status pesan: 'PENDING', 'SENT', 'READ', 'FAILED', Default: 'PENDING')
+* `created_at` (TIMESTAMPTZ)
+
+#### 13. Tabel `activity_logs`
+Buku catatan rekam jejak audit (*audit trail log*) yang mencatat setiap peristiwa penting dalam ekosistem HabitGrow untuk keperluan keamanan, analitik, dan transparansi data.
+* `id` (UUID, Primary Key, Default: `gen_random_uuid()`)
+* `user_id` (UUID, FK ke `auth.users.id` ON DELETE CASCADE)
+* `activity_type` (VARCHAR 50, Enum kejadian: 'HABIT_CREATED', 'HABIT_COMPLETED', 'XP_EARNED', 'LEVEL_UP', 'STREAK_INCREASED', 'TREE_GREW', 'ACHIEVEMENT_UNLOCKED')
+* `entity_type` (VARCHAR 50, Entitas terdampak: 'habit', 'tree', 'level', 'achievement')
+* `entity_id` (UUID, Kunci ID spesifik dari entitas yang bersangkutan)
+* `metadata` (JSONB, Informasi atribut terperinci dalam format JSON terstruktur, Default: '{}')
+* `created_at` (TIMESTAMPTZ)
+
+---
+
+### 4.3 Matriks Relasi & Kardinalitas Antar Entitas
+
+Tabel matriks di bawah ini menyajikan seluruh relasi relasional, aturan integritas referensial (*referential integrity*), serta batasan penghapusan data berjenjang (*cascade rules*) untuk keperluan pelaporan **Bab 3 Skripsi**:
+
+| No | Entitas Asal (*Parent Table*) | Entitas Tujuan (*Child Table*) | Kardinalitas | Kunci Tamu (*Foreign Key*) | Aturan Integritas (*ON DELETE*) | Makna Bisnis & Aturan Data |
+|:---:|:---|:---|:---:|:---|:---|:---|
+| **1** | `auth.users` | `public.profiles` | **1 : 1** | `profiles.id` $\rightarrow$ `auth.users.id` | **CASCADE** | Setiap akun pengguna terdaftar wajib memiliki tepat satu profil personal. Jika akun dihapus, profil otomatis terhapus. |
+| **2** | `auth.users` | `public.user_levels` | **1 : 1** | `user_levels.user_id` $\rightarrow$ `auth.users.id` | **CASCADE** | Setiap pengguna memiliki tepat satu rekaman progres level dan akumulasi XP akun. |
+| **3** | `auth.users` | `public.user_trees` | **1 : 1** | `user_trees.user_id` $\rightarrow$ `auth.users.id` | **CASCADE** | Setiap pengguna memiliki tepat satu pohon virtual yang merefleksikan kedisiplinan 30 hari. |
+| **4** | `auth.users` | `public.habits` | **1 : N** | `habits.user_id` $\rightarrow$ `auth.users.id` | **CASCADE** | Satu pengguna dapat membuat banyak kartu kebiasaan (0 s/d tak terbatas). |
+| **5** | `habit_categories` | `public.habits` | **1 : N** | `habits.category_id` $\rightarrow$ `habit_categories.id` | **SET NULL** | Satu kategori dapat menaungi banyak kebiasaan. Jika kategori dihapus, kebiasaan tetap ada dengan kategori kosong. |
+| **6** | `habits` | `public.habit_schedules` | **1 : N** | `habit_schedules.habit_id` $\rightarrow$ `habits.id` | **CASCADE** | Satu kebiasaan dapat memiliki banyak hari penjadwalan berulang (0 = Minggu s/d 6 = Sabtu). |
+| **7** | `habits` | `public.habit_completions`| **1 : N** | `habit_completions.habit_id` $\rightarrow$ `habits.id`| **CASCADE** | Satu kebiasaan memiliki banyak riwayat centang checklist harian (*constraint unique per habit & date*). |
+| **8** | `habits` | `public.user_streaks` | **1 : 1** | `user_streaks.habit_id` $\rightarrow$ `habits.id` | **CASCADE** | Setiap kebiasaan memiliki tepat satu rekaman pelacak streak individual. |
+| **9** | `auth.users` | `public.xp_transactions` | **1 : N** | `xp_transactions.user_id` $\rightarrow$ `auth.users.id` | **CASCADE** | Satu pengguna memiliki banyak transaksi penerimaan XP dalam buku besar (*ledger*). |
+| **10**| `auth.users` | `public.user_achievements`| **1 : N** | `user_achievements.user_id` $\rightarrow$ `auth.users.id`| **CASCADE** | Satu pengguna dapat membuka banyak lencana pencapaian. |
+| **11**| `achievements` | `public.user_achievements`| **1 : N** | `user_achievements.achievement_id` $\rightarrow$ `achievements.id` | **CASCADE** | Satu jenis lencana dapat dibuka oleh banyak pengguna (*many-to-many junction* via `user_achievements`). |
+| **12**| `auth.users` | `public.notifications` | **1 : N** | `notifications.user_id` $\rightarrow$ `auth.users.id` | **CASCADE** | Satu pengguna dapat mendaftarkan beberapa token push subscription (misal di ponsel dan laptop) serta menerima log notifikasi. |
+| **13**| `auth.users` | `public.activity_logs` | **1 : N** | `activity_logs.user_id` $\rightarrow$ `auth.users.id` | **CASCADE** | Satu pengguna menghasilkan riwayat audit log aktivitas yang lengkap dari waktu ke waktu. |
 
 ---
 
@@ -1021,21 +1473,35 @@ Berdasarkan pedoman akademik ITB STIKOM Bali yang membatasi panjang judul Tugas 
 * *(Jika IoT)* Komunikasi Data IoT (HTTP REST Client pada ESP32, Protokol SPI/I2C, Modul RFID/NFC).
 
 #### BAB 3: METODOLOGI PENELITIAN & PERANCANGAN SISTEM
-* **Metode Pengembangan:** *Software Development Life Cycle* (SDLC) model Agile / Prototyping.
-* **Perancangan Basis Data:** ERD (13 tabel pada Bab 4 dokumen ini), relasi kardinalitas, dan kamus data lengkap.
-* **Formulasi Algoritma & Perhitungan SPK SAW:** Tuliskan seluruh rumus matematika dari Bab 5 dokumen ini (*Streak*, *Consistency Rate*, *Tree Lifecycle*, *Leveling Curve*, serta Matriks Normalisasi & Penjumlahan Terbobot Metode SAW).
+* **Metode Pengembangan:** *Software Development Life Cycle* (SDLC) model Agile / Prototyping (Rujuk Flowchart 1 pada Sub-bab 3.10.1).
+* **Pemodelan Aliran Data Terstruktur (DFD):**
+  * Diagram Konteks Level 0 (3 Entitas Eksternal: User, Vercel Cron, Push Gateway FCM/APNs $\leftrightarrow$ Sistem HabitGrow — Sub-bab 3.8.1).
+  * DFD Level 1 Dekomposisi Fungsional 6 Proses Utama (Autentikasi, Manajemen Habit, Checklist Harian, Gamifikasi/Pohon, SPK SAW, Layanan Web Push) dan 6 Data Store — Sub-bab 3.8.2.
+* **Perancangan Basis Data Relasional:**
+  * ERD Relasional 13 Tabel (Sub-bab 4.1).
+  * Kamus Data & Spesifikasi 13 Tabel (Sub-bab 4.2).
+  * Matriks Relasi & Kardinalitas Entitas (Sub-bab 4.3).
+* **Standarisasi Bagan Alir (Flowchart) ANSI/ISO:** Tabel rujukan 8 simbol standar ANSI X3.5 / ISO 5807 (Sub-bab 3.9).
+* **Pemodelan Bagan Alir Sistem & Algoritma Inti (Flowchart):**
+  * Flowchart Metodologi SDLC Prototyping (Sub-bab 3.10.1).
+  * Flowchart Algoritma SPK SAW Prediksi Risiko Kegagalan dengan Cold-Start Guard 14 Hari (Sub-bab 3.10.2).
+  * Flowchart Mesin Pertumbuhan Pohon Virtual & Rolling Consistency 30 Hari (Sub-bab 3.10.3).
+  * Flowchart Prosedur Checklist Taktil 0ms Optimistic UI & Sinkronisasi Server (Sub-bab 3.10.4).
+  * Flowchart Serverless Cron Job Pukul 20:00 WIB & Background Web Push Notification (Sub-bab 3.10.5).
+* **Formulasi Algoritma & Perhitungan Matematika Inti:** Tuliskan seluruh rumus matematika dari Bab 5 dokumen ini (*Streak*, *Consistency Rate*, *Tree Lifecycle*, *Leveling Curve*, serta Matriks Normalisasi & Penjumlahan Terbobot Metode SAW).
 * **Perancangan Antarmuka & REST API:** Diagram Sequence (Bab 7 dokumen ini) dan Tabel Endpoint API (Bab 6 dokumen ini).
 
 #### BAB 4: IMPLEMENTASI & PENGUJIAN SISTEM
 * **Lingkungan Implementasi:** Spesifikasi perangkat keras, perangkat lunak, dan konfigurasi server.
 * **Hasil Pengujian Algoritma (*Unit Testing* - Vitest):**
-  * Tampilkan tabel hasil pengujian **41 test cases** Vitest dengan tingkat keberhasilan 100%:
-    * `streak.test.ts` (12 skenario pengujian streak).
+  * Tampilkan tabel hasil pengujian **48 test cases** Vitest pada 7 berkas pengujian dengan tingkat kelulusan 100%:
+    * `streak.test.ts` (12 skenario pengujian streak global, per-habit streak, self-healing broken streak sync).
     * `prediction.test.ts` (10 skenario evaluasi Sistem Pendukung Keputusan metode Simple Additive Weighting [SAW], pembobotan 5 kriteria, cold-start guard 14 hari, aturan 2 menit biner, dan konversi cerdas kuantitatif jam ke menit serta liter ke ml).
-    * `tree.test.ts` (6 skenario transisi tahap pohon).
-    * `level.test.ts` (5 skenario formula kenaikan level).
-    * `xp.test.ts` (4 skenario perhitungan XP kesulitan tugas).
-    * `consistency.test.ts` (4 skenario windowing 30 hari).
+    * `web-push.test.ts` (7 skenario pengujian background web push notification, VAPID token signature RFC 8292, payload handler, dan penanganan auto-cleanup status HTTP 410 Gone).
+    * `tree.test.ts` (6 skenario transisi 5 tahap kehidupan pohon virtual dan kalkulasi persentase kesehatan organik).
+    * `level.test.ts` (5 skenario formula kurva kenaikan level bertingkat).
+    * `xp.test.ts` (4 skenario perhitungan perolehan XP berdasarkan tingkat kesulitan tugas EASY, MEDIUM, HARD).
+    * `consistency.test.ts` (4 skenario batas jendela geser 30 hari dan proteksi hari pertama pengguna baru).
 * **Hasil Pengujian Otomatis Antarmuka (*Automated E2E Testing* - TestSprite MCP):**
   * Pengujian otonom berbasis peramban virtual Playwright/Chromium terhadap 15 skenario antarmuka end-to-end dengan akun `gura3497@gmail.com`.
   * **Tingkat Kelulusan:** 80.00% (12 skenario Lulus, 2 Gagal pada edge case, 1 Terblokir karena ketiadaan data arsip awal).
@@ -1064,6 +1530,31 @@ Berdasarkan pedoman akademik ITB STIKOM Bali yang membatasi panjang judul Tugas 
 #### BAB 5: KESIMPULAN & SARAN
 * **Kesimpulan:** Keberhasilan penerapan prinsip *Non-Zero Day*, metafora pohon virtual, dan model prediksi risiko dalam menyediakan sistem pelacak kebiasaan yang adaptif dan terstruktur.
 * **Saran Pengembangan:** Pembuatan casing fisik cetak 3D untuk IoT ambient display dan integrasi bot notifikasi multi-platform.
+
+---
+
+### 10.3 Matriks Pemetaan Diagram Pemodelan untuk Bab 3 & Bab 4 Skripsi
+
+Gunakan tabel rujukan berikut saat menyusun bab perancangan dan implementasi dalam proposal maupun naskah skripsi:
+
+| No | Nama Diagram / Model | Tipe Notasi Standar | Bab Skripsi Tujuan | Sub-bab Dokumen Ini | Berkas Sumber / Implementasi Terkait | Peran & Justifikasi Ilmiah dalam Skripsi |
+|:---:|:---|:---|:---:|:---:|:---|:---|
+| **1** | **Diagram Konteks (DFD Level 0)** | Gane & Sarson / Yourdon | **Bab 3** | Sub-bab 3.8.1 | `src/app/api/*`, `public/sw.js`, `vercel.json` | Mendefinisikan batasan sistem makro dan interaksi sistem dengan 3 entitas luar (User, Cron Job, Push Gateway FCM). |
+| **2** | **DFD Level 1 (Dekomposisi)** | Gane & Sarson / Yourdon | **Bab 3** | Sub-bab 3.8.2 | Seluruh `src/lib/services/*` dan tabel database | Menjabarkan pembagian 6 modul fungsional sistem dan aliran akses data ke 6 data store relasional. |
+| **3** | **Tabel Standarisasi Simbol Flowchart** | ANSI X3.5 / ISO 5807 | **Bab 3** | Sub-bab 3.9 | Sub-bab 3.9 | Menjelaskan kaidah baku 8 simbol bagan alir yang dipakai agar naskah skripsi sesuai dengan pedoman karya ilmiah. |
+| **4** | **Flowchart SDLC Prototyping** | ANSI X3.5 | **Bab 3** | Sub-bab 3.10.1 | Git Repository & Release Cycle | Menggambarkan metodologi pengembangan perangkat lunak iteratif yang diterapkan dalam pengerjaan tugas akhir. |
+| **5** | **Flowchart Algoritma SPK SAW** | ANSI X3.5 | **Bab 3** | Sub-bab 3.10.2 | `src/lib/algorithms/prediction.ts` | Memodelkan langkah komputasi 5 kriteria terbobot, normalisasi matriks $R$, skor $V_i$, cold-start guard, dan rekomendasi 2-menit. |
+| **6** | **Flowchart Mesin Pohon Virtual** | ANSI X3.5 | **Bab 3** | Sub-bab 3.10.3 | `src/lib/algorithms/tree.ts`, `consistency.ts` | Menggambarkan kalkulasi konsistensi 30 hari bergulir dan transisi 5 tahap metamorfosis botani. |
+| **7** | **Flowchart Checklist 0ms Optimistic UI**| ANSI X3.5 | **Bab 3** | Sub-bab 3.10.4 | `src/app/app/dashboard/page.tsx`, `/api/habits/[id]/complete` | Memodelkan responsifitas sentuhan instan klien dan mekanisme penanganan rollback jika server offline. |
+| **8** | **Flowchart Serverless Web Push Cron** | ANSI X3.5 | **Bab 3** | Sub-bab 3.10.5 | `src/app/api/cron/reminders/route.ts`, `src/lib/services/web-push.service.ts` | Menggambarkan alur eksekusi otomatis pukul 20:00 WIB, deteksi kebiasaan terancam, dan pengiriman notifikasi lock-screen. |
+| **9** | **ERD Relasional (13 Tabel)** | Crow's Foot Chen / UML DB | **Bab 3** | Sub-bab 4.1 | `supabase/migrations/001_initial_schema.sql` | Memodelkan struktur relasi basis data normalisasi ketiga (3NF) antar entitas. |
+| **10**| **Kamus Data & Spesifikasi Tabel** | Relational Data Dictionary | **Bab 3** | Sub-bab 4.2 | `001_initial_schema.sql` | Menyajikan detail atribut, tipe data, dan konstrain pada 13 tabel basis data. |
+| **11**| **Matriks Kardinalitas & Cascade Rules**| Entity Cardinality Matrix | **Bab 3** | Sub-bab 4.3 | `001_initial_schema.sql` | Merinci relasi 1:1, 1:N, M:N dan aturan `ON DELETE CASCADE / SET NULL` demi integritas data referensial. |
+| **12**| **Sequence Diagram Checklist Taktil** | UML Sequence | **Bab 3** | Sub-bab 7.1 | `src/app/app/dashboard/page.tsx` $\leftrightarrow$ API | Menggambarkan urutan pesan kronologis antara Pengguna, Browser Klien, API Server, dan Database. |
+| **13**| **Sequence Diagram Web Push Latar Belakang**| UML Sequence | **Bab 3** | Sub-bab 3.7 | `public/sw.js` $\leftrightarrow$ FCM $\leftrightarrow$ Server | Menggambarkan interaksi kriptografi VAPID antara Service Worker ponsel, Google FCM/APNs, dan Vercel Cron. |
+| **14**| **State Machine Metamorfosis Pohon** | UML State Machine | **Bab 3** | Sub-bab 7.3 | `src/lib/algorithms/tree.ts` | Memodelkan status transisi keadaan pohon (*Seed* $\rightarrow$ *Sprout* $\rightarrow$ *Young* $\rightarrow$ *Healthy* $\rightarrow$ *Mature*). |
+| **15**| **Tabel Pengujian Unit Vitest (48 Kasus)**| White-box Unit Test Table | **Bab 4** | Sub-bab 10.2 | `src/lib/algorithms/__tests__/*`, `src/lib/services/__tests__/*` | Membuktikan kebenaran matematis dan fungsional seluruh modul algoritma dengan kelulusan 100%. |
+| **16**| **Tabel Pengujian E2E TestSprite (15 Kasus)**| Black-box E2E Test Table | **Bab 4** | Sub-bab 10.2 | TestSprite MCP Autonomous Browser Reports | Memvalidasi kehandalan antarmuka pengguna pada peramban Chromium secara otonom. |
 
 ---
 
