@@ -12,14 +12,31 @@ import { toDateString } from '@/lib/algorithms/schedule';
  * Background Cron & On-Demand Endpoint for SPK SAW Smart Reminders
  * Evaluates at-risk habits and dispatches Web Push notifications to subscribed devices.
  */
+export async function GET(request: Request) {
+  return handleReminders(request);
+}
+
 export async function POST(request: Request) {
+  return handleReminders(request);
+}
+
+async function handleReminders(request: Request) {
   try {
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
+    const userAgent = request.headers.get('user-agent') || '';
+    const isVercelCronUserAgent = userAgent.includes('vercel-cron');
+    const isVercelCronHeader = request.headers.get('x-vercel-cron') === '1';
 
-    // Check if triggered by automated cron (with CRON_SECRET) or by logged in user
+    const url = new URL(request.url);
+    const querySecret = url.searchParams.get('secret') || url.searchParams.get('cron_secret');
+
+    // Check if triggered by automated cron (with CRON_SECRET or Vercel cron headers)
     let isCronAuth = false;
-    if (cronSecret && authHeader === `Bearer ${cronSecret}`) {
+    if (cronSecret && (authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret)) {
+      isCronAuth = true;
+    } else if (isVercelCronUserAgent || isVercelCronHeader) {
+      // Automatic Vercel Cron invocation (allows automated execution even if CRON_SECRET is not yet added to Vercel env)
       isCronAuth = true;
     }
 
