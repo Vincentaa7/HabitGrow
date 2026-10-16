@@ -1,7 +1,7 @@
 // src/components/habits/PredictionAlertBanner.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HabitRiskPrediction } from '@/types';
 import { useQueryClient } from '@tanstack/react-query';
 import confetti from 'canvas-confetti';
@@ -14,6 +14,8 @@ import {
   Clock,
   Zap,
   Check,
+  HelpCircle,
+  Lightbulb,
 } from 'lucide-react';
 
 interface PredictionAlertBannerProps {
@@ -24,11 +26,11 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
   const queryClient = useQueryClient();
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
   const [isExiting, setIsExiting] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [showTwoMinInfo, setShowTwoMinInfo] = useState(false);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  if (!predictions || predictions.length === 0) return null;
 
   const isSnoozed = (habitId: string) => {
     if (typeof window === 'undefined') return false;
@@ -40,31 +42,36 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
   };
 
   // Filter out any dismissed or snoozed predictions
-  const activePredictions = predictions.filter(
+  const activePredictions = (predictions || []).filter(
     (p) => !dismissedIds.has(p.habit_id) && !isSnoozed(p.habit_id)
   );
-  if (activePredictions.length === 0) return null;
 
   const current = activePredictions[0];
 
-  // Explicit mount trigger so slide-down animation executes visibly after data loads
-  const [isVisible, setIsVisible] = useState(false);
-
-  React.useEffect(() => {
+  // Trigger smooth slide-down animation on mount or when habit changes
+  useEffect(() => {
+    if (!current) {
+      setIsVisible(false);
+      return;
+    }
     const timer = setTimeout(() => {
       setIsVisible(true);
     }, 80);
     return () => clearTimeout(timer);
-  }, [current.habit_id]);
+  }, [current?.habit_id]);
 
   const handleDismiss = (id: string) => {
     setIsExiting(true);
     setTimeout(() => {
       setDismissedIds((prev) => new Set([...prev, id]));
       setIsExiting(false);
-      setIsVisible(true);
-    }, 300);
+    }, 280);
   };
+
+  // Early return ONLY after all hooks are declared
+  if (!predictions || predictions.length === 0 || activePredictions.length === 0 || !current) {
+    return null;
+  }
 
   // Quantitative: Trim target value
   const handleApplyLowerTarget = async (prediction: HabitRiskPrediction) => {
@@ -88,7 +95,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
       if (!json.success) throw new Error(json.error?.message || 'Gagal mengubah target');
 
       setSuccessMessage(
-        `Target untuk "${prediction.habit_name}" disesuaikan jadi ${targetVal} ${targetUnit}. Semangat!`
+        `Target "${prediction.habit_name}" disesuaikan jadi ${targetVal} ${targetUnit}. Semangat!`
       );
 
       // Invalidate queries so dashboard refreshes with new target
@@ -131,7 +138,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
       if (!json.success) throw new Error(json.error?.message || 'Gagal menyelesaikan kebiasaan');
 
       setSuccessMessage(
-        `Bagus! "${prediction.habit_name}" tuntas dalam 2 menit. Streak & pohonmu aman!`
+        `Mantap! Langkah awal "${prediction.habit_name}" selesai. Streak & pohonmu aman!`
       );
 
       queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
@@ -168,15 +175,15 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
 
   return (
     <aside
-      aria-label="Pemberitahuan Pendamping Rutinitas"
+      aria-label="Pemberitahuan Rekomendasi Rutinitas"
       className="fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl sm:max-w-2xl px-3 sm:px-4 pointer-events-none transition-all duration-300"
     >
       <div
         className={cn(
-          "pointer-events-auto relative overflow-hidden rounded-2xl bg-amber-50/95 dark:bg-[#18150f]/95 backdrop-blur-md border border-amber-300/80 dark:border-amber-700/60 p-4 sm:p-5 shadow-2xl shadow-amber-950/20 dark:shadow-black/60 transition-all duration-500 ease-out transform",
+          "pointer-events-auto relative overflow-hidden rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 transition-all duration-300 ease-out transform",
           isVisible && !isExiting
             ? "opacity-100 translate-y-0 scale-100"
-            : "opacity-0 -translate-y-14 scale-95"
+            : "opacity-0 -translate-y-8 scale-95"
         )}
       >
         {successMessage ? (
@@ -185,31 +192,34 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
             <p className="text-xs sm:text-sm font-medium">{successMessage}</p>
           </div>
         ) : (
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3 flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3.5">
+            <div className="flex items-start gap-3.5 flex-1 min-w-0">
               {/* Botanical Accent Icon */}
-              <div className="w-8 h-8 rounded-xl bg-amber-100/90 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-200/60 dark:border-amber-800/50 mt-0.5">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/70 dark:border-emerald-800/50 mt-0.5">
                 <Leaf className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
 
-              {/* Content Details */}
+              {/* Main Content Details */}
               <div className="space-y-1.5 flex-1 min-w-0">
+                {/* Clean Pills: Status & Indeks Risiko */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[11px] font-semibold">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold border border-emerald-200/60 dark:border-emerald-800/60">
                     Pendamping Rutinitas
                   </span>
 
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                    Peluang terlewat: <strong className="text-amber-700 dark:text-amber-400 font-bold">{current.failure_probability}%</strong>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-medium border border-slate-200/70 dark:border-slate-700/70">
+                    Indeks Risiko: <strong className="text-amber-600 dark:text-amber-400 font-bold ml-1">{current.failure_probability}%</strong>
                   </span>
                 </div>
 
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Yuk selesaikan <span className="font-extrabold text-emerald-700 dark:text-emerald-400">&ldquo;{current.habit_name}&rdquo;</span> hari ini
+                {/* Habit Title */}
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">
+                  Yuk selesaikan <span className="font-extrabold text-emerald-600 dark:text-emerald-400">&ldquo;{current.habit_name}&rdquo;</span> hari ini
                 </h4>
 
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
-                  {current.primary_factor}. {current.suggested_action.message}
+                {/* Friendly Recommendation Message */}
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl font-normal">
+                  {current.suggested_action.message}
                 </p>
 
                 {/* Action Buttons */}
@@ -238,16 +248,16 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                         <button
                           type="button"
                           onClick={() => handleDismiss(current.habit_id)}
-                          className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900 text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                          className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
                         >
-                          Tetap Target Normal
+                          Tetap Target Penuh
                         </button>
                       </>
                     )}
 
                   {/* 2. Binary / Checklist Habit Action (2-Minute Rule) */}
                   {!isQuantitative && (
-                    <>
+                    <div className="flex items-center gap-2.5 flex-wrap">
                       <button
                         type="button"
                         disabled={completingId === current.habit_id}
@@ -259,20 +269,62 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                         ) : (
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
                         )}
-                        <span>✓ Tandai Selesai (2 Menit)</span>
+                        <span>Selesaikan Versi Ringan</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => handleSnooze1Hour(current)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900 text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
                       >
                         <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Ingatkan Nanti (1 Jam)</span>
+                        <span>Nanti Saja (1 Jam)</span>
                       </button>
-                    </>
+
+                      {/* Educational Interactive Button */}
+                      <button
+                        type="button"
+                        onClick={() => setShowTwoMinInfo((prev) => !prev)}
+                        className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-emerald-700 dark:text-slate-400 dark:hover:text-emerald-300 font-medium py-1.5 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 transition cursor-pointer"
+                        title="Pelajari Aturan 2 Menit"
+                      >
+                        <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="underline underline-offset-2">
+                          {showTwoMinInfo ? 'Sembunyikan info' : 'Apa itu versi ringan?'}
+                        </span>
+                      </button>
+                    </div>
                   )}
                 </div>
+
+                {/* Inline Explainer Callout (Clean & Non-Intrusive) */}
+                {!isQuantitative && showTwoMinInfo && (
+                  <div className="mt-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-xs text-slate-700 dark:text-slate-200 leading-relaxed animate-in fade-in slide-in-from-top-1 duration-200">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-5 h-5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                          <Lightbulb className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-xs text-slate-900 dark:text-white">
+                            Aturan 2 Menit (Metode Inisiasi Perilaku)
+                          </p>
+                          <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                            Bukan berarti tugas harus beres dalam 2 menit, melainkan <strong>mencicil langkah awal</strong> atau versi paling ringannya (misal: cukup siapkan peralatannya dulu) agar rantai kebiasaan dan pohonmu tidak terhenti.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowTwoMinInfo(false)}
+                        className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition cursor-pointer shrink-0"
+                        title="Tutup penjelasan"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -280,7 +332,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
             <button
               type="button"
               onClick={() => handleDismiss(current.habit_id)}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-amber-100/60 dark:hover:bg-amber-900/40 transition shrink-0 cursor-pointer"
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0 cursor-pointer mt-0.5"
               title="Tutup saran"
             >
               <X className="w-4 h-4" />

@@ -1,7 +1,7 @@
 # 🌿 HabitGrow — Dokumen Arsitektur Proyek & Panduan Skripsi Lengkap
 
-> **Versi Dokumen:** 1.3.0  
-> **Terakhir Diperbarui:** 12 Oktober 2026  
+> **Versi Dokumen:** 1.4.0  
+> **Terakhir Diperbarui:** 16 Oktober 2026  
 > **Target Pengguna:** Pengembang, Agen AI (*Context File*), dan Penulisan Laporan Tugas Akhir / Skripsi (Program Studi Sistem Komputer / Teknik Informatika / Sistem Informasi).
 
 ---
@@ -1138,20 +1138,25 @@ Penetapan jendela observasi dan ambang batas aktivasi model prediktif pada **14 
   * Kebiasaan baru dengan usia $< 14\text{ hari}$ berada dalam *initial onboarding baseline period*. Peringatan prediksi risiko dini otomatis **dinonaktifkan** selama 14 hari pertama untuk menangkap 2 siklus kalender utuh dan mencegah *false alarm* pada pengguna atau kebiasaan baru.
 * **Kriteria Evaluasi ($V_i \ge 0.50$ atau Skor Risiko $\ge 50\%$ setelah 14 hari):**
   * Diklasifikasikan sebagai `HIGH` ($V_i \ge 0.70$) atau `MODERATE` ($0.50 \le V_i < 0.70$).
+  * **Penyajian Metrik Tunggal (Indeks Risiko):**
+    * Kartu pop-up hanya menampilkan satu nilai persentase agregat: **`Indeks Risiko: XX%`** yang merefleksikan nilai preferensi SAW ($V_i \times 100\%$).
+    * Mencegah kebingungan kognitif pengguna (*cognitive dissonance*) daripada menampilkan multi-persentase kriteria per kriteria yang angkanya berbeda pada kartu intervensi singkat.
   * **Jalur 1 — Tipe Kuantitatif (`target_value > 1` atau Satuan Jam/Liter):**
-    * *Pesan Rekomendasi:* `"Beban hari ini terdeteksi tinggi. Amankan streak dengan memangkas target menjadi [X] [Satuan]."`
+    * *Pesan Rekomendasi (Empatis):* `"Hari ini terasa padat? Tidak apa-apa, kamu bisa pangkas target menjadi [X] [Satuan] dulu agar streak dan pohonmu tetap aman."`
     * *Formulasi Pangkas:* $\text{Target Baru} = \max\left(1, \left\lfloor \frac{\text{Target Lama}}{2} \right\rfloor\right)$.
     * *Konversi Cerdas Satuan:*
       * Jika `target_unit: 'jam'` dan target bernilai 1, sistem otomatis mengonversinya menjadi **30 menit**.
       * Jika `target_unit: 'liter'` (atau `'l'`) dan target bernilai 1, sistem otomatis mengonversinya menjadi **500 ml** (setara 2 gelas air).
-    * *Aksi Tombol Utama:* `[⚡ Pangkas Target Jadi [X] [Satuan]]` yang mengeksekusi `PATCH /api/habits/[id]` seketika.
-    * *Aksi Sekunder:* `[Saya Sanggup Target Normal]` yang menutup banner tanpa memodifikasi data kebiasaan.
+    * *Aksi Tombol Utama:* `[Pangkas Target Jadi [X] [Satuan]]` yang mengeksekusi `PATCH /api/habits/[id]` seketika.
+    * *Aksi Sekunder:* `[Tetap Target Penuh]` yang menutup pop-up tanpa memodifikasi target kebiasaan.
   * **Jalur 2 — Tipe Biner / Checklist (`target_value = 1` Non-Jam/Liter):**
-    * *Pesan Rekomendasi:* `"[Nama] biasanya rawan terlewat di hari [Hari]. Gunakan prinsip 2 menit: lakukan versi teringan sekarang agar pohon virtualmu tidak kekurangan nutrisi."`
-    * *Aksi Tombol Utama:* `[✓ Tandai Selesai Cepat (2 Menit)]` yang langsung mengeksekusi `POST /api/habits/[id]/complete` dengan ledakan konfeti dan pembaruan antarmuka instan (0ms).
-    * *Aksi Alternatif:* `[⏰ Ingatkan 1 Jam Lagi]` yang menunda (*snooze*) penayangan banner peringatan selama 60 menit via *client-side local storage*.
-* **Penyajian Antarmuka Antirumpang:**
-  * Komponen `PredictionAlertBanner` menyajikan kotak *callout* rekomendasi SPK secara visual dan eksplisit sehingga pengguna mendapatkan instruksi tindakan yang jelas sebelum memilih opsi.
+    * *Pesan Rekomendasi (Prinsip 2 Menit Humanis):* `"Kamu sedang lelah? Tidak perlu dipaksakan penuh. Cukup gunakan prinsip 2 menit: cicil langkah awalnya atau lakukan versi paling ringannya selama 2 menit (misal: siapkan alatnya saja atau lakukan sebisanya) agar konsistensimu tetap terjaga hari ini!"`
+    * *Aksi Tombol Utama:* `[✓ Selesaikan Versi Ringan]` (dengan satu ikon centang SVG proporsional) yang mengeksekusi `POST /api/habits/[id]/complete` dengan ledakan konfeti dan pembaruan antarmuka instan (0ms).
+    * *Aksi Alternatif:* `[Nanti Saja (1 Jam)]` yang menunda (*snooze*) penayangan pop-up selama 60 menit via *client-side local storage*.
+    * *Fitur Interaktif Edukatif:* Tombol `[ⓘ Apa itu versi ringan?]` yang membuka *inline accordion callout* berlatar netral dengan ikon lampu (`Lightbulb`) menjelaskan bahwa Aturan 2 Menit adalah metode inisiasi perilaku (*Gateway Habit*), bukan paksaan tuntas 2 menit.
+* **Arsitektur Antarmuka Pop-Up Melayang (*Floating Slide-Down Card*):**
+  * Komponen `PredictionAlertBanner` dirancang sebagai kartu melayang meluncur dari atas (*slide-down*) tepat di bawah bilah navigasi (`fixed top-16 sm:top-20 z-50`).
+  * Menerapkan estetika *Glassmorphic White & Slate* (`bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800`), ikon botani berbingkai (`Leaf`), dan kontainer `pointer-events-none` agar tidak memblokir interaksi dan gambar pohon di halaman dashboard.
 
 ---
 
@@ -1267,15 +1272,23 @@ sequenceDiagram
     
     opt Pengguna Memilih Aksi Adaptif
         alt Opsi LOWER_TARGET
-            User->>UI: Klik tombol "Ubah Target Jadi [X] (Mode Ringan)"
+            User->>UI: Klik tombol "Pangkas Target Jadi [X]"
             UI->>API: PATCH /api/habits/[id] (target_value baru)
             API->>DB: UPDATE habits SET target_value = new_target
             DB-->>API: Berhasil update
             API-->>UI: Response 200 OK
-            UI-->>User: Target baru aktif seketika, risiko gagal termitigasi & banner tertutup
-        else Opsi EARLY_NUDGE
-            User->>UI: Klik tombol "Siap, Kerjakan Lebih Awal"
-            UI-->>User: Komitmen dicatat, tampilkan pesan semangat & tutup banner
+            UI-->>User: Target baru aktif seketika, risiko gagal termitigasi & pop-up tertutup
+        else Opsi CHECKLIST_2MIN
+            User->>UI: Klik tombol "Selesaikan Versi Ringan"
+            UI->>API: POST /api/habits/[id]/complete (Inisiasi 2 Menit)
+            API->>DB: INSERT into habit_completions & UPDATE streaks/trees
+            DB-->>API: Berhasil simpan
+            API-->>UI: Response 200 OK
+            UI-->>User: Tuntas seketika (0ms confetti), streak & pohon aman, pop-up tertutup
+        else Opsi SNOOZE_1HOUR
+            User->>UI: Klik tombol "Nanti Saja (1 Jam)"
+            UI->>UI: Simpan timestamp tunda ke client localStorage
+            UI-->>User: Pop-up disembunyikan sementara selama 60 menit
         end
     end
 ```

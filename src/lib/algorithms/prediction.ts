@@ -64,7 +64,6 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
 
   const evalDate = new Date(evaluationDate);
   evalDate.setHours(0, 0, 0, 0);
-  const evalDateStr = toDateString(evalDate);
   const currentDayOfWeek = evalDate.getDay();
   const currentDayName = DAY_NAMES[currentDayOfWeek];
 
@@ -178,10 +177,10 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
 
   // Menentukan Faktor Kriteria Dominan Penyebab Risiko
   const weightedContributions = [
-    { factor: `Tingkat terlewat dalam 14 hari terakhir (${Math.round(c1_missRate * 100)}%)`, weight: SAW_WEIGHTS.MISS_RATE * c1_missRate },
-    { factor: `Pola historis sering terlewat setiap hari ${currentDayName}`, weight: SAW_WEIGHTS.WEEKDAY * c2_weekday },
-    { factor: 'Beban kebiasaan harian cukup padat hari ini', weight: SAW_WEIGHTS.WORKLOAD * c3_workload },
-    { factor: 'Kebiasaan baru masih dalam fase adaptasi rentan (< 14 hari)', weight: SAW_WEIGHTS.MATURITY * c4_maturity },
+    { factor: `Tingkat terlewat cukup tinggi dalam 14 hari terakhir (${Math.round(c1_missRate * 100)}%)`, weight: SAW_WEIGHTS.MISS_RATE * c1_missRate },
+    { factor: `Riwayat historis sering terlewat setiap hari ${currentDayName}`, weight: SAW_WEIGHTS.WEEKDAY * c2_weekday },
+    { factor: 'Jadwal kebiasaanmu cukup padat hari ini', weight: SAW_WEIGHTS.WORKLOAD * c3_workload },
+    { factor: 'Kebiasaan baru masih dalam fase adaptasi awal (< 14 hari)', weight: SAW_WEIGHTS.MATURITY * c4_maturity },
     { factor: 'Pola pengerjaan cenderung menumpuk larut malam', weight: SAW_WEIGHTS.LATE_HOUR * c5_lateHour },
   ];
 
@@ -220,14 +219,14 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
       type: 'LOWER_TARGET',
       suggested_target_value: suggestedTarget,
       suggested_target_unit: suggestedUnit,
-      message: `Beban hari ini terdeteksi tinggi. Amankan streak dengan memangkas target menjadi ${suggestedTarget} ${suggestedUnit}.`,
+      message: `Hari ini terasa padat? Tidak apa-apa, kamu bisa pangkas target menjadi ${suggestedTarget} ${suggestedUnit} dulu agar streak dan pohonmu tetap aman.`,
     };
   } else {
     // Case 2: Binary / Checklist habit (e.g. Siram Tanaman, Minum Vitamin)
     // Applies Atomic Habits 2-Minute Rule
     suggestedAction = {
       type: 'CHECKLIST_2MIN',
-      message: `${habit.name} biasanya rawan terlewat di hari ${currentDayName}. Gunakan prinsip 2 menit: lakukan versi teringan sekarang agar pohon virtualmu tidak kekurangan nutrisi.`,
+      message: 'Kamu sedang lelah? Tidak perlu dipaksakan penuh. Cukup gunakan prinsip 2 menit: cicil langkah awalnya atau lakukan versi paling ringannya selama 2 menit (misal: siapkan alatnya saja atau lakukan sebisanya) agar konsistensimu tetap terjaga hari ini!',
     };
   }
 
