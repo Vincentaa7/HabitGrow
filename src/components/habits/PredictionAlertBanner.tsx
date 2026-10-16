@@ -7,16 +7,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import confetti from 'canvas-confetti';
 import { toDateString } from '@/lib/algorithms/schedule';
 import {
-  Brain,
+  Leaf,
   X,
-  ShieldAlert,
-  Sparkles,
   CheckCircle2,
   Clock,
   Zap,
   Check,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface PredictionAlertBannerProps {
   predictions?: HabitRiskPrediction[];
@@ -75,7 +72,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
       if (!json.success) throw new Error(json.error?.message || 'Gagal mengubah target');
 
       setSuccessMessage(
-        `⚡ Target untuk "${prediction.habit_name}" berhasil disesuaikan menjadi ${targetVal} ${targetUnit}! Tetap semangat! ✨`
+        `Target untuk "${prediction.habit_name}" disesuaikan jadi ${targetVal} ${targetUnit}. Semangat!`
       );
 
       // Invalidate queries so dashboard refreshes with new target
@@ -85,7 +82,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
       setTimeout(() => {
         handleDismiss(prediction.habit_id);
         setSuccessMessage(null);
-      }, 3500);
+      }, 3000);
     } catch (err) {
       console.error('Error applying adaptive target:', err);
     } finally {
@@ -100,10 +97,10 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
 
       // Festive celebratory confetti
       confetti({
-        particleCount: 55,
-        spread: 65,
+        particleCount: 50,
+        spread: 60,
         origin: { y: 0.7 },
-        colors: ['#10b981', '#34d399', '#f59e0b', '#8b5cf6'],
+        colors: ['#10b981', '#34d399', '#f59e0b'],
       });
 
       const res = await fetch(`/api/habits/${prediction.habit_id}/complete`, {
@@ -118,7 +115,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
       if (!json.success) throw new Error(json.error?.message || 'Gagal menyelesaikan kebiasaan');
 
       setSuccessMessage(
-        `🌱 Luar biasa! "${prediction.habit_name}" diselesaikan dalam 2 menit. Streak aman & pohonmu tetap sehat! ✨`
+        `Bagus! "${prediction.habit_name}" tuntas dalam 2 menit. Streak & pohonmu aman!`
       );
 
       queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
@@ -128,7 +125,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
       setTimeout(() => {
         handleDismiss(prediction.habit_id);
         setSuccessMessage(null);
-      }, 3500);
+      }, 3000);
     } catch (err) {
       console.error('Error completing habit in 2 min:', err);
     } finally {
@@ -144,7 +141,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
         String(Date.now() + 3600 * 1000)
       );
     }
-    setSuccessMessage(`⏰ Pengingat untuk "${prediction.habit_name}" ditunda 1 jam lagi.`);
+    setSuccessMessage(`Pengingat untuk "${prediction.habit_name}" ditunda 1 jam.`);
     setTimeout(() => {
       handleDismiss(prediction.habit_id);
       setSuccessMessage(null);
@@ -154,68 +151,42 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
   const isQuantitative = current.suggested_action.type === 'LOWER_TARGET';
 
   return (
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-500/10 via-purple-500/5 to-amber-500/10 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-amber-950/20 border border-violet-200/80 dark:border-violet-900/50 p-5 sm:p-6 shadow-sm backdrop-blur-sm transition-all animate-in fade-in slide-in-from-top-2">
-      {/* Background ambient light */}
-      <div className="absolute top-0 right-1/4 -mt-10 w-48 h-48 bg-purple-400/10 dark:bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
-
+    <div className="relative overflow-hidden rounded-2xl bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 p-4 sm:p-5 shadow-xs transition-all animate-in fade-in slide-in-from-top-2">
       {successMessage ? (
-        <div className="flex items-center gap-3 py-1 text-emerald-700 dark:text-emerald-300">
-          <CheckCircle2 className="w-5 h-5 shrink-0" />
-          <p className="text-xs sm:text-sm font-semibold">{successMessage}</p>
+        <div className="flex items-center gap-2.5 py-1 text-emerald-800 dark:text-emerald-300">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <p className="text-xs sm:text-sm font-medium">{successMessage}</p>
         </div>
       ) : (
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div className="flex items-start gap-3.5 flex-1 min-w-0">
-            {/* AI Predictive Badge Icon */}
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-violet-600 to-purple-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-violet-500/20">
-              <Brain className="w-5 h-5" />
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            {/* Tasteful Botanical Accent Icon */}
+            <div className="w-8 h-8 rounded-xl bg-amber-100/90 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-200/60 dark:border-amber-800/50 mt-0.5">
+              <Leaf className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             </div>
 
             {/* Content Details */}
             <div className="space-y-1.5 flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 text-[10px] font-bold tracking-wider uppercase border border-amber-200/60 dark:border-amber-800/50">
-                  <ShieldAlert className="w-3 h-3" />
-                  Perhatian Rutinitas
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[11px] font-semibold">
+                  Pendamping Rutinitas
                 </span>
 
-                <span
-                  className={cn(
-                    'text-[10px] font-extrabold px-2 py-0.5 rounded-full border',
-                    current.risk_level === 'HIGH'
-                      ? 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200/60 dark:border-rose-900/40'
-                      : 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-900/40'
-                  )}
-                >
-                  Peluang Terlewat: {current.failure_probability}%
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                  Peluang terlewat: <strong className="text-amber-700 dark:text-amber-400 font-bold">{current.failure_probability}%</strong>
                 </span>
               </div>
 
               <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                Tugas <span className="font-extrabold">&ldquo;{current.habit_name}&rdquo;</span> Rawan Terlewat Hari Ini
+                Yuk selesaikan <span className="font-extrabold text-emerald-700 dark:text-emerald-400">&ldquo;{current.habit_name}&rdquo;</span> hari ini
               </h4>
 
-              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-2xl">
-                {current.primary_factor}. Agar ritme dan pohonmu tetap terjaga subur, pertimbangkan rekomendasi berikut:
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
+                {current.primary_factor}. {current.suggested_action.message}
               </p>
 
-              {/* Recommendation Callout Box */}
-              <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/70 border border-slate-200/90 dark:border-slate-800/60 flex items-start gap-2.5 shadow-xs max-w-2xl backdrop-blur-xs">
-                <div className="w-6 h-6 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
-                  <Sparkles className="w-3.5 h-3.5" />
-                </div>
-                <div className="text-xs leading-relaxed">
-                  <span className="font-bold text-slate-900 dark:text-white mr-1.5">
-                    Saran Praktis:
-                  </span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-200">
-                    {current.suggested_action.message}
-                  </span>
-                </div>
-              </div>
-
               {/* Action Buttons */}
-              <div className="pt-1.5 flex items-center gap-2.5 flex-wrap">
+              <div className="pt-2 flex items-center gap-2.5 flex-wrap">
                 {/* 1. Quantitative Habit Action */}
                 {isQuantitative &&
                   current.suggested_action.suggested_target_value && (
@@ -224,15 +195,15 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                         type="button"
                         disabled={applyingId === current.habit_id}
                         onClick={() => handleApplyLowerTarget(current)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-sm transition active:scale-95 disabled:opacity-50 cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-xs transition active:scale-95 disabled:opacity-50 cursor-pointer"
                       >
                         {applyingId === current.habit_id ? (
                           <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         ) : (
-                          <Zap className="w-4 h-4 fill-current" />
+                          <Zap className="w-3.5 h-3.5 fill-current" />
                         )}
                         <span>
-                          ⚡ Pangkas Target Jadi {current.suggested_action.suggested_target_value}{' '}
+                          Pangkas Target Jadi {current.suggested_action.suggested_target_value}{' '}
                           {current.suggested_action.suggested_target_unit || current.target_unit}
                         </span>
                       </button>
@@ -240,9 +211,9 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                       <button
                         type="button"
                         onClick={() => handleDismiss(current.habit_id)}
-                        className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                        className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900 text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
                       >
-                        Saya Sanggup Target Normal
+                        Tetap Target Normal
                       </button>
                     </>
                   )}
@@ -254,23 +225,23 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                       type="button"
                       disabled={completingId === current.habit_id}
                       onClick={() => handleComplete2Min(current)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm transition active:scale-95 disabled:opacity-50 cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-xs transition active:scale-95 disabled:opacity-50 cursor-pointer"
                     >
                       {completingId === current.habit_id ? (
                         <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       ) : (
-                        <Check className="w-4 h-4 stroke-[3]" />
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
                       )}
-                      <span>✓ Tandai Selesai Cepat (2 Menit)</span>
+                      <span>✓ Tandai Selesai (2 Menit)</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => handleSnooze1Hour(current)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900 text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
                     >
-                      <Clock className="w-3.5 h-3.5" />
-                      <span>⏰ Ingatkan 1 Jam Lagi</span>
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Ingatkan Nanti (1 Jam)</span>
                     </button>
                   </>
                 )}
@@ -282,7 +253,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
           <button
             type="button"
             onClick={() => handleDismiss(current.habit_id)}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0 cursor-pointer"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-amber-100/60 dark:hover:bg-amber-900/40 transition shrink-0 cursor-pointer"
             title="Tutup saran"
           >
             <X className="w-4 h-4" />
@@ -292,4 +263,3 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
     </div>
   );
 }
-
