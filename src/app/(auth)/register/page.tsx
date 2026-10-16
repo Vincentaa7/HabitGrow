@@ -5,30 +5,73 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { registerSchema, RegisterInput } from '@/lib/validators/auth.schema';
-import { UserPlus, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, AlertCircle, UserPlus, CheckCircle2, Loader2 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { BrandLogo } from '@/components/ui/BrandLogo';
+import { createClient } from '@/lib/supabase/client';
 
 export default function RegisterPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isSuccessVerificationSent, setIsSuccessVerificationSent] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterInput>({
-    resolver: zodResolver(registerSchema),
+  const [formData, setFormData] = useState({
+    display_name: '',
+    email: '',
+    password: '',
+    agreeTerms: true,
   });
 
-  const onSubmit = async (data: RegisterInput) => {
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsGoogleLoading(true);
+      setErrorMsg(null);
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/app/dashboard`,
+        },
+      });
+
+      if (error) {
+        setErrorMsg(error.message);
+        setIsGoogleLoading(false);
+      }
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Gagal menghubungkan ke layanan autentikasi Google.');
+      setIsGoogleLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.display_name.trim()) {
+      setErrorMsg('Nama lengkap atau panggilan wajib diisi.');
+      return;
+    }
+    if (!formData.email.trim()) {
+      setErrorMsg('Alamat email wajib diisi.');
+      return;
+    }
+    if (formData.password.length < 6) {
+      setErrorMsg('Password minimal harus 6 karakter.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setErrorMsg(null);
@@ -36,7 +79,11 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          display_name: formData.display_name.trim(),
+          email: formData.email.trim(),
+          password: formData.password,
+        }),
       });
 
       const json = await res.json();
@@ -46,7 +93,7 @@ export default function RegisterPage() {
 
       // If email confirmation is required by Supabase, session will be null
       if (!json.data?.session) {
-        setIsSuccessVerificationSent(data.email);
+        setIsSuccessVerificationSent(formData.email.trim());
         return;
       }
 
@@ -55,143 +102,221 @@ export default function RegisterPage() {
       router.push('/app/dashboard');
       router.refresh();
     } catch (err: unknown) {
-      setErrorMsg(err instanceof Error ? err.message : 'Terjadi kesalahan sistem');
+      setErrorMsg(err instanceof Error ? err.message : 'Terjadi kesalahan sistem saat mendaftar.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--background)] text-[var(--foreground)]">
-      {/* Top bar with theme toggle */}
-      <div className="flex items-center justify-between px-6 py-4">
-        <Link href="/" title="HabitGrow">
-          <BrandLogo className="h-7 sm:h-8 w-auto" />
-        </Link>
-        <ThemeToggle />
-      </div>
-
-      <div className="flex-1 flex flex-col justify-center items-center px-4 py-8">
-      <div className="w-full max-w-md p-8 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-xl">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-600 dark:hover:text-[#aff33e] mb-6 transition"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Kembali ke Beranda
-        </Link>
-
-        <div className="text-center mb-6">
-          <img
-            src="/icons/icon-192x192.png"
-            alt="HabitGrow Logo"
-            className="w-14 h-14 rounded-2xl shadow-md mx-auto mb-3 object-contain"
-          />
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white">
-            Buat Akun HabitGrow
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Mulai petualangan kebiasaan dan rawat pohon virtualmu hari ini
-          </p>
+    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-white dark:bg-[#020617] text-slate-900 dark:text-[#f8fafc]">
+      {/* Left Panel - Image Section with Sunlit Tree Meadow Landscape (50% split) */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-slate-950 select-none">
+        {/* Floating Back Button */}
+        <div className="absolute top-6 left-6 z-20">
+          <Link
+            href="/"
+            className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-black/60 transition-all border border-white/15 text-white shadow-lg group"
+            title="Kembali ke Beranda"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+          </Link>
         </div>
 
-        {isSuccessVerificationSent ? (
-          <div className="text-center py-4 space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-3xl bg-emerald-100 dark:bg-[#aff33e]/10 border border-emerald-300 dark:border-[#aff33e]/30 flex items-center justify-center text-3xl">
-              ✉️
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                Periksa Email Anda
-              </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
-                Tautan verifikasi telah dikirim ke <span className="font-bold text-emerald-600 dark:text-[#aff33e]">{isSuccessVerificationSent}</span>.
-                Silakan buka kotak masuk atau folder spam email Anda dan klik tombol verifikasi untuk mengaktifkan akun.
-              </p>
-            </div>
+        {/* Brand Asset Image */}
+        <div className="absolute inset-0">
+          <img
+            src="/image/Sunlit Tree Meadow Landscape.png"
+            alt="HabitGrow Sunlit Tree Meadow Landscape"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      </div>
+
+      {/* Right Panel - Form Section (50% split) */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-16 min-h-screen bg-white dark:bg-[#020617]">
+        {/* Top Header Bar with Mobile Back & Theme Toggle */}
+        <div className="w-full flex items-center justify-between pb-6">
+          <div className="flex items-center gap-2">
             <Link
-              href="/login"
-              className="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#aff33e] dark:hover:bg-[#9de62e] text-white dark:text-[#0f172a] font-bold text-xs transition shadow-sm cursor-pointer"
+              href="/"
+              className="lg:hidden p-2 -ml-2 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#0f172a] transition"
+              title="Kembali"
             >
-              Kembali ke Halaman Login
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <Link href="/" title="HabitGrow">
+              <BrandLogo className="h-7 w-auto" />
             </Link>
           </div>
-        ) : (
-          <>
-            {errorMsg && (
-              <div className="mb-4 p-3 text-xs text-red-700 bg-red-50 dark:bg-red-950/50 dark:text-red-300 rounded-xl border border-red-200 dark:border-[#ef4444]/40">
-                {errorMsg}
+          <ThemeToggle />
+        </div>
+
+        {/* Center Form Container */}
+        <div className="w-full max-w-md mx-auto my-auto py-4">
+          {isSuccessVerificationSent ? (
+            /* Email Verification Sent View */
+            <div className="text-center py-6 space-y-5 animate-fadeIn">
+              <div className="w-16 h-16 mx-auto rounded-3xl bg-emerald-100 dark:bg-[#aff33e]/10 border border-emerald-300 dark:border-[#aff33e]/30 flex items-center justify-center text-3xl shadow-sm">
+                ✉️
               </div>
-            )}
+              <div>
+                <h2 className="text-2xl font-black text-slate-900 dark:text-[#f8fafc]">
+                  Periksa Email Anda
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-[#94a3b8] mt-2 leading-relaxed">
+                  Tautan verifikasi telah dikirimkan ke <span className="font-bold text-emerald-600 dark:text-[#aff33e]">{isSuccessVerificationSent}</span>.
+                  Silakan buka email Anda dan klik tombol verifikasi untuk mengaktifkan akun HabitGrow.
+                </p>
+              </div>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-[#aff33e] dark:hover:bg-[#9de62e] text-white dark:text-[#020617] font-bold text-sm transition shadow-sm"
+              >
+                Kembali ke Halaman Masuk
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="mb-8">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#f8fafc] tracking-tight mb-2">
+                  Buat Akun HabitGrow
+                </h1>
+                <p className="text-sm text-slate-600 dark:text-[#94a3b8]">
+                  Sudah memiliki akun?{' '}
+                  <Link
+                    href="/login"
+                    className="text-emerald-600 hover:text-emerald-500 dark:text-[#aff33e] dark:hover:text-[#9de62e] font-semibold transition"
+                  >
+                    Masuk di sini
+                  </Link>
+                </p>
+              </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-              Nama Lengkap / Panggilan
-            </label>
-            <input
-              type="text"
-              placeholder="Masukkan nama lengkap atau panggilan"
-              {...register('display_name')}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] bg-slate-50/50 dark:bg-[#1e293b] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-[#aff33e]"
-            />
-            {errors.display_name && (
-              <p className="text-xs text-red-500 mt-1">{errors.display_name.message}</p>
-            )}
-          </div>
+              {/* Error Message */}
+              {errorMsg && (
+                <div className="mb-5 p-3.5 text-xs text-red-600 bg-red-50 dark:bg-red-950/40 dark:text-red-300 rounded-xl border border-red-200 dark:border-red-900/50 flex items-center gap-2.5 animate-fadeIn">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              placeholder="nama@email.com"
-              {...register('email')}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] bg-slate-50/50 dark:bg-[#1e293b] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-[#aff33e]"
-            />
-            {errors.email && (
-              <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
-            )}
-          </div>
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Full Name */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Nama Lengkap / Panggilan
+                  </label>
+                  <input
+                    type="text"
+                    name="display_name"
+                    value={formData.display_name}
+                    onChange={handleInputChange}
+                    placeholder="Masukkan nama Anda"
+                    className="w-full px-4 py-3 border border-slate-300 dark:border-[#1e293b] rounded-xl bg-slate-50/50 dark:bg-[#0f172a] text-slate-900 dark:text-[#f8fafc] placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/60 dark:focus:ring-[#aff33e]/60 focus:border-transparent outline-none transition text-sm"
+                    required
+                  />
+                </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-              Password (min. 6 karakter)
-            </label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              {...register('password')}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] bg-slate-50/50 dark:bg-[#1e293b] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-[#aff33e]"
-            />
-            {errors.password && (
-              <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
-            )}
-          </div>
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Alamat Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="nama@email.com"
+                    className="w-full px-4 py-3 border border-slate-300 dark:border-[#1e293b] rounded-xl bg-slate-50/50 dark:bg-[#0f172a] text-slate-900 dark:text-[#f8fafc] placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/60 dark:focus:ring-[#aff33e]/60 focus:border-transparent outline-none transition text-sm"
+                    required
+                  />
+                </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#aff33e] dark:hover:bg-[#9de62e] text-white dark:text-[#0f172a] font-bold text-sm shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-          >
-            {isSubmitting ? 'Mendaftarkan...' : 'Daftar Sekarang'}
-            <UserPlus className="w-4 h-4" />
-          </button>
-        </form>
+                {/* Password with Eye Toggle */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Kata Sandi (min. 6 karakter)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="••••••••"
+                      className="w-full px-4 py-3 pr-12 border border-slate-300 dark:border-[#1e293b] rounded-xl bg-slate-50/50 dark:bg-[#0f172a] text-slate-900 dark:text-[#f8fafc] placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-emerald-500/60 dark:focus:ring-[#aff33e]/60 focus:border-transparent outline-none transition text-sm"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 hover:bg-slate-100 dark:hover:bg-[#1e293b] rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition cursor-pointer"
+                      aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
 
-        <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
-          Sudah memiliki akun?{' '}
-          <Link
-            href="/login"
-            className="font-bold text-emerald-600 dark:text-[#aff33e] hover:underline"
-          >
-            Masuk di sini
-          </Link>
-        </p>
-        </>
-        )}
-      </div>
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-slate-900 hover:bg-slate-800 dark:bg-[#aff33e] dark:hover:bg-[#9de62e] text-white dark:text-[#020617] py-3.5 px-4 rounded-xl font-bold transition shadow-sm hover:shadow active:scale-[0.99] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 text-sm mt-2"
+                >
+                  {isSubmitting ? 'Mendaftarkan...' : 'Daftar Sekarang'}
+                </button>
+
+                {/* Divider */}
+                <div className="relative my-5">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200 dark:border-[#1e293b]"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="px-3 bg-white dark:bg-[#020617] text-slate-400 dark:text-[#94a3b8] font-semibold tracking-wider">
+                      atau daftar dengan
+                    </span>
+                  </div>
+                </div>
+
+                {/* Social Button - Google Only */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={isSubmitting || isGoogleLoading}
+                    className="w-full flex items-center justify-center px-4 py-3 border border-slate-200 dark:border-[#1e293b] rounded-xl hover:bg-slate-50 dark:hover:bg-[#0f172a] text-slate-700 dark:text-slate-200 font-semibold text-sm transition shadow-xs cursor-pointer disabled:opacity-50 gap-2.5"
+                  >
+                    {isGoogleLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-[#aff33e]" />
+                    ) : (
+                      /* Google SVG */
+                      <svg className="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                      </svg>
+                    )}
+                    <span>Daftar dengan Google</span>
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+        </div>
+
+        {/* Footer info */}
+        <div className="w-full text-center pt-6 text-[11px] text-slate-400 dark:text-slate-500">
+          &copy; {new Date().getFullYear()} HabitGrow. Platform pelacak kebiasaan &amp; gamifikasi pohon virtual.
+        </div>
       </div>
     </div>
   );
