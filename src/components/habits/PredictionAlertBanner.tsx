@@ -45,15 +45,25 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
   );
   if (activePredictions.length === 0) return null;
 
-  // Show top highest risk prediction first
   const current = activePredictions[0];
+
+  // Explicit mount trigger so slide-down animation executes visibly after data loads
+  const [isVisible, setIsVisible] = useState(false);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 80);
+    return () => clearTimeout(timer);
+  }, [current.habit_id]);
 
   const handleDismiss = (id: string) => {
     setIsExiting(true);
     setTimeout(() => {
       setDismissedIds((prev) => new Set([...prev, id]));
       setIsExiting(false);
-    }, 280);
+      setIsVisible(true);
+    }, 300);
   };
 
   // Quantitative: Trim target value
@@ -163,10 +173,10 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
     >
       <div
         className={cn(
-          "pointer-events-auto relative overflow-hidden rounded-2xl bg-amber-50/95 dark:bg-[#18150f]/95 backdrop-blur-md border border-amber-300/80 dark:border-amber-700/60 p-4 sm:p-5 shadow-2xl shadow-amber-950/20 dark:shadow-black/60 transition-all duration-300 ease-out",
-          isExiting
-            ? "opacity-0 -translate-y-8 scale-95"
-            : "opacity-100 translate-y-0 scale-100 animate-in fade-in slide-in-from-top-6 duration-300"
+          "pointer-events-auto relative overflow-hidden rounded-2xl bg-amber-50/95 dark:bg-[#18150f]/95 backdrop-blur-md border border-amber-300/80 dark:border-amber-700/60 p-4 sm:p-5 shadow-2xl shadow-amber-950/20 dark:shadow-black/60 transition-all duration-500 ease-out transform",
+          isVisible && !isExiting
+            ? "opacity-100 translate-y-0 scale-100"
+            : "opacity-0 -translate-y-14 scale-95"
         )}
       >
         {successMessage ? (

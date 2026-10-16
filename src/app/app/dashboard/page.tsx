@@ -68,6 +68,8 @@ export default function DashboardPage() {
       if (!json.success) throw new Error(json.error?.message || 'Gagal memuat dashboard');
       return json.data;
     },
+    staleTime: 1000 * 30, // 30 seconds cache (avoids repeated re-fetching)
+    refetchOnWindowFocus: false, // Prevents aggressive re-fetching on alt-tab
   });
 
   // 2. Fetch Categories for Modal
@@ -78,6 +80,8 @@ export default function DashboardPage() {
       const json = await res.json();
       return json.data || [];
     },
+    staleTime: 1000 * 60 * 5, // Categories rarely change (5 mins cache)
+    refetchOnWindowFocus: false,
   });
 
   // 3. Complete Habit Mutation with Optimistic UI updates
