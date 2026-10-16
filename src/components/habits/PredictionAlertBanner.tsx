@@ -6,6 +6,7 @@ import { HabitRiskPrediction } from '@/types';
 import { useQueryClient } from '@tanstack/react-query';
 import confetti from 'canvas-confetti';
 import { toDateString } from '@/lib/algorithms/schedule';
+import { cn } from '@/lib/utils';
 import {
   Leaf,
   X,
@@ -22,6 +23,7 @@ interface PredictionAlertBannerProps {
 export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProps) {
   const queryClient = useQueryClient();
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const [isExiting, setIsExiting] = useState(false);
   const [applyingId, setApplyingId] = useState<string | null>(null);
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -47,7 +49,11 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
   const current = activePredictions[0];
 
   const handleDismiss = (id: string) => {
-    setDismissedIds((prev) => new Set([...prev, id]));
+    setIsExiting(true);
+    setTimeout(() => {
+      setDismissedIds((prev) => new Set([...prev, id]));
+      setIsExiting(false);
+    }, 280);
   };
 
   // Quantitative: Trim target value
@@ -82,7 +88,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
       setTimeout(() => {
         handleDismiss(prediction.habit_id);
         setSuccessMessage(null);
-      }, 3000);
+      }, 2500);
     } catch (err) {
       console.error('Error applying adaptive target:', err);
     } finally {
@@ -99,7 +105,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
       confetti({
         particleCount: 50,
         spread: 60,
-        origin: { y: 0.7 },
+        origin: { y: 0.3 },
         colors: ['#10b981', '#34d399', '#f59e0b'],
       });
 
@@ -125,7 +131,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
       setTimeout(() => {
         handleDismiss(prediction.habit_id);
         setSuccessMessage(null);
-      }, 3000);
+      }, 2500);
     } catch (err) {
       console.error('Error completing habit in 2 min:', err);
     } finally {
@@ -145,121 +151,133 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
     setTimeout(() => {
       handleDismiss(prediction.habit_id);
       setSuccessMessage(null);
-    }, 2000);
+    }, 1800);
   };
 
   const isQuantitative = current.suggested_action.type === 'LOWER_TARGET';
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 p-4 sm:p-5 shadow-xs transition-all animate-in fade-in slide-in-from-top-2">
-      {successMessage ? (
-        <div className="flex items-center gap-2.5 py-1 text-emerald-800 dark:text-emerald-300">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-          <p className="text-xs sm:text-sm font-medium">{successMessage}</p>
-        </div>
-      ) : (
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-3 flex-1 min-w-0">
-            {/* Tasteful Botanical Accent Icon */}
-            <div className="w-8 h-8 rounded-xl bg-amber-100/90 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-200/60 dark:border-amber-800/50 mt-0.5">
-              <Leaf className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            </div>
-
-            {/* Content Details */}
-            <div className="space-y-1.5 flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[11px] font-semibold">
-                  Pendamping Rutinitas
-                </span>
-
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-                  Peluang terlewat: <strong className="text-amber-700 dark:text-amber-400 font-bold">{current.failure_probability}%</strong>
-                </span>
+    <aside
+      aria-label="Pemberitahuan Pendamping Rutinitas"
+      className="fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 w-full max-w-xl sm:max-w-2xl px-3 sm:px-4 pointer-events-none transition-all duration-300"
+    >
+      <div
+        className={cn(
+          "pointer-events-auto relative overflow-hidden rounded-2xl bg-amber-50/95 dark:bg-[#18150f]/95 backdrop-blur-md border border-amber-300/80 dark:border-amber-700/60 p-4 sm:p-5 shadow-2xl shadow-amber-950/20 dark:shadow-black/60 transition-all duration-300 ease-out",
+          isExiting
+            ? "opacity-0 -translate-y-8 scale-95"
+            : "opacity-100 translate-y-0 scale-100 animate-in fade-in slide-in-from-top-6 duration-300"
+        )}
+      >
+        {successMessage ? (
+          <div className="flex items-center gap-2.5 py-1 text-emerald-800 dark:text-emerald-300">
+            <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <p className="text-xs sm:text-sm font-medium">{successMessage}</p>
+          </div>
+        ) : (
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3 flex-1 min-w-0">
+              {/* Botanical Accent Icon */}
+              <div className="w-8 h-8 rounded-xl bg-amber-100/90 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 border border-amber-200/60 dark:border-amber-800/50 mt-0.5">
+                <Leaf className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
 
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                Yuk selesaikan <span className="font-extrabold text-emerald-700 dark:text-emerald-400">&ldquo;{current.habit_name}&rdquo;</span> hari ini
-              </h4>
+              {/* Content Details */}
+              <div className="space-y-1.5 flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-[11px] font-semibold">
+                    Pendamping Rutinitas
+                  </span>
 
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
-                {current.primary_factor}. {current.suggested_action.message}
-              </p>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                    Peluang terlewat: <strong className="text-amber-700 dark:text-amber-400 font-bold">{current.failure_probability}%</strong>
+                  </span>
+                </div>
 
-              {/* Action Buttons */}
-              <div className="pt-2 flex items-center gap-2.5 flex-wrap">
-                {/* 1. Quantitative Habit Action */}
-                {isQuantitative &&
-                  current.suggested_action.suggested_target_value && (
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Yuk selesaikan <span className="font-extrabold text-emerald-700 dark:text-emerald-400">&ldquo;{current.habit_name}&rdquo;</span> hari ini
+                </h4>
+
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
+                  {current.primary_factor}. {current.suggested_action.message}
+                </p>
+
+                {/* Action Buttons */}
+                <div className="pt-2 flex items-center gap-2.5 flex-wrap">
+                  {/* 1. Quantitative Habit Action */}
+                  {isQuantitative &&
+                    current.suggested_action.suggested_target_value && (
+                      <>
+                        <button
+                          type="button"
+                          disabled={applyingId === current.habit_id}
+                          onClick={() => handleApplyLowerTarget(current)}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-xs transition active:scale-95 disabled:opacity-50 cursor-pointer"
+                        >
+                          {applyingId === current.habit_id ? (
+                            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Zap className="w-3.5 h-3.5 fill-current" />
+                          )}
+                          <span>
+                            Pangkas Target Jadi {current.suggested_action.suggested_target_value}{' '}
+                            {current.suggested_action.suggested_target_unit || current.target_unit}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDismiss(current.habit_id)}
+                          className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900 text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                        >
+                          Tetap Target Normal
+                        </button>
+                      </>
+                    )}
+
+                  {/* 2. Binary / Checklist Habit Action (2-Minute Rule) */}
+                  {!isQuantitative && (
                     <>
                       <button
                         type="button"
-                        disabled={applyingId === current.habit_id}
-                        onClick={() => handleApplyLowerTarget(current)}
+                        disabled={completingId === current.habit_id}
+                        onClick={() => handleComplete2Min(current)}
                         className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-xs transition active:scale-95 disabled:opacity-50 cursor-pointer"
                       >
-                        {applyingId === current.habit_id ? (
+                        {completingId === current.habit_id ? (
                           <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         ) : (
-                          <Zap className="w-3.5 h-3.5 fill-current" />
+                          <Check className="w-3.5 h-3.5 stroke-[3]" />
                         )}
-                        <span>
-                          Pangkas Target Jadi {current.suggested_action.suggested_target_value}{' '}
-                          {current.suggested_action.suggested_target_unit || current.target_unit}
-                        </span>
+                        <span>✓ Tandai Selesai (2 Menit)</span>
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => handleDismiss(current.habit_id)}
-                        className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900 text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                        onClick={() => handleSnooze1Hour(current)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900 text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
                       >
-                        Tetap Target Normal
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Ingatkan Nanti (1 Jam)</span>
                       </button>
                     </>
                   )}
-
-                {/* 2. Binary / Checklist Habit Action (2-Minute Rule) */}
-                {!isQuantitative && (
-                  <>
-                    <button
-                      type="button"
-                      disabled={completingId === current.habit_id}
-                      onClick={() => handleComplete2Min(current)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-xs transition active:scale-95 disabled:opacity-50 cursor-pointer"
-                    >
-                      {completingId === current.habit_id ? (
-                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      )}
-                      <span>✓ Tandai Selesai (2 Menit)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleSnooze1Hour(current)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900 text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
-                    >
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Ingatkan Nanti (1 Jam)</span>
-                    </button>
-                  </>
-                )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Dismiss Icon */}
-          <button
-            type="button"
-            onClick={() => handleDismiss(current.habit_id)}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-amber-100/60 dark:hover:bg-amber-900/40 transition shrink-0 cursor-pointer"
-            title="Tutup saran"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-    </div>
+            {/* Dismiss Icon */}
+            <button
+              type="button"
+              onClick={() => handleDismiss(current.habit_id)}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-amber-100/60 dark:hover:bg-amber-900/40 transition shrink-0 cursor-pointer"
+              title="Tutup saran"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+      </div>
+    </aside>
   );
 }
