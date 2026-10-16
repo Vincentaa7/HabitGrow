@@ -58,7 +58,7 @@ export default function StatisticsPage() {
   });
 
   if (isChartLoading || isPerfLoading) {
-    return <div className="h-96 rounded-3xl bg-slate-200 dark:bg-slate-800 animate-pulse" />;
+    return <div className="h-96 rounded-3xl bg-slate-200 dark:bg-[#1e293b] animate-pulse" />;
   }
 
   const { items = [], bestHabit, needsAttentionHabit } = performanceData || {};
@@ -102,7 +102,7 @@ export default function StatisticsPage() {
       const data = payload[0].payload;
       const isMissed = data.isMissed;
       return (
-        <div className="p-3.5 rounded-2xl bg-slate-900/95 dark:bg-[#0f1713]/95 backdrop-blur-md border border-slate-700/80 dark:border-emerald-500/20 shadow-2xl text-white text-xs space-y-2 min-w-[190px]">
+        <div className="p-3.5 rounded-2xl bg-slate-900/95 dark:bg-[#0f172a]/95 backdrop-blur-md border border-slate-700/80 dark:border-[#1e293b] shadow-2xl text-white text-xs space-y-2 min-w-[190px]">
           <div className="flex items-center justify-between border-b border-slate-700/60 pb-1.5">
             <span className="font-bold text-slate-200">
               {data.day} <span className="text-slate-400 font-normal">({data.date})</span>
@@ -161,7 +161,7 @@ export default function StatisticsPage() {
       {/* Best vs Needs Attention Highlights (PRD Section 35) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Best Habit */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-500 flex items-center justify-center shrink-0">
             <Trophy className="w-6 h-6" />
           </div>
@@ -179,12 +179,12 @@ export default function StatisticsPage() {
         </div>
 
         {/* Needs Attention Habit */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 text-rose-500 flex items-center justify-center shrink-0">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-[#ef4444]/10 text-rose-500 dark:text-[#ef4444] flex items-center justify-center shrink-0 border border-transparent dark:border-[#ef4444]/30">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div className="flex-1 min-w-0">
-            <span className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
+            <span className="text-xs font-bold text-rose-600 dark:text-[#ef4444] uppercase tracking-wider">
               Perlu Perhatian
             </span>
             <h3 className="text-base font-bold text-slate-900 dark:text-white truncate mt-0.5">
@@ -200,15 +200,15 @@ export default function StatisticsPage() {
       </div>
 
       {/* Main Interactive Chart Card */}
-      <div className="p-5 sm:p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+      <div className="p-5 sm:p-7 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm space-y-5">
         {/* Chart Header with Interactive Selectors */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800/80 pb-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 dark:border-[#1e293b] pb-4">
           <div>
             <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               {chartModel === 'bar' ? (
-                <BarChart2 className="w-5 h-5 text-emerald-500" />
+                <BarChart2 className="w-5 h-5 text-emerald-500 dark:text-[#aff33e]" />
               ) : (
-                <TrendingUp className="w-5 h-5 text-emerald-500" />
+                <TrendingUp className="w-5 h-5 text-emerald-500 dark:text-[#aff33e]" />
               )}
               {chartModel === 'bar' ? 'Penyelesaian Kebiasaan (Diagram Batang)' : 'Fluktuasi Tren Kebiasaan (Diagram Garis)'}
             </h3>
@@ -222,14 +222,14 @@ export default function StatisticsPage() {
           {/* Interactive Controls (Pilihan Model Statistik & Rentang Waktu) */}
           <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
             {/* 1. Selector Model Statistik (Batang vs Garis) */}
-            <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 shadow-xs">
+            <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-[#1e293b] border border-slate-200/80 dark:border-[#1e293b] shadow-xs">
               <button
                 type="button"
                 onClick={() => setChartModel('bar')}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer',
                   chartModel === 'bar'
-                    ? 'bg-white dark:bg-emerald-600 text-emerald-700 dark:text-white shadow-xs'
+                    ? 'bg-white dark:bg-[#1e293b] text-emerald-700 dark:text-[#aff33e] shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 )}
                 title="Model Diagram Batang (Gambar 1)"
@@ -243,7 +243,7 @@ export default function StatisticsPage() {
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer',
                   chartModel === 'line'
-                    ? 'bg-white dark:bg-emerald-600 text-emerald-700 dark:text-white shadow-xs'
+                    ? 'bg-white dark:bg-[#1e293b] text-emerald-700 dark:text-[#aff33e] shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 )}
                 title="Model Diagram Garis Tren (Gambar 2)"
@@ -254,14 +254,14 @@ export default function StatisticsPage() {
             </div>
 
             {/* 2. Selector Rentang Waktu (7 Hari vs 30 Hari) */}
-            <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 shadow-xs">
+            <div className="flex items-center p-1 rounded-2xl bg-slate-100 dark:bg-[#1e293b] border border-slate-200/80 dark:border-[#1e293b] shadow-xs">
               <button
                 type="button"
                 onClick={() => setTimeRange('7')}
                 className={cn(
                   'px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer',
                   timeRange === '7'
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
+                    ? 'bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 )}
               >
@@ -273,7 +273,7 @@ export default function StatisticsPage() {
                 className={cn(
                   'px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer',
                   timeRange === '30'
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
+                    ? 'bg-white dark:bg-[#1e293b] text-slate-900 dark:text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 )}
               >
@@ -289,8 +289,8 @@ export default function StatisticsPage() {
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all duration-200 cursor-pointer',
                   showPercentages
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700/60 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                    ? 'bg-emerald-50 dark:bg-[#aff33e]/15 border-emerald-300 dark:border-[#aff33e]/40 text-emerald-700 dark:text-[#aff33e]'
+                    : 'bg-slate-100 dark:bg-[#1e293b] border-slate-200 dark:border-[#1e293b] text-slate-600 dark:text-slate-400'
                 )}
                 title="Tampilkan nilai persentase di atas titik kurva (seperti pada sketsa Gambar 2)"
               >
@@ -302,16 +302,16 @@ export default function StatisticsPage() {
         </div>
 
         {/* Quick Summary Metrics Row */}
-        <div className="grid grid-cols-3 gap-2.5 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-slate-50 dark:bg-[#1e293b]/40 border border-slate-100 dark:border-[#1e293b]">
           <div className="text-center sm:text-left">
             <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Total Selesai
             </span>
-            <span className="text-base sm:text-xl font-black text-emerald-600 dark:text-emerald-400">
+            <span className="text-base sm:text-xl font-black text-emerald-600 dark:text-[#aff33e]">
               {totalCompleted}
             </span>
           </div>
-          <div className="text-center sm:text-left border-x border-slate-200 dark:border-slate-700/60 px-2 sm:px-4">
+          <div className="text-center sm:text-left border-x border-slate-200 dark:border-[#1e293b] px-2 sm:px-4">
             <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Total Terjadwal
             </span>
@@ -403,19 +403,19 @@ export default function StatisticsPage() {
         </div>
 
         {/* Legend & Hint */}
-        <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+        <div className="flex flex-wrap items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-[#1e293b]">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm bg-emerald-500 inline-block" />
+              <span className="w-3 h-3 rounded-sm bg-emerald-500 dark:bg-[#aff33e] inline-block" />
               <span>Selesai</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm bg-slate-300 dark:bg-slate-600 inline-block" />
+              <span className="w-3 h-3 rounded-sm bg-slate-300 dark:bg-[#1e293b] inline-block" />
               <span>Terjadwal</span>
             </div>
             {chartModel === 'line' && (
               <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-rose-500 inline-flex items-center justify-center text-white text-[9px] font-bold">
+                <span className="w-3 h-3 rounded-full bg-rose-500 dark:bg-[#ef4444] inline-flex items-center justify-center text-white text-[9px] font-bold">
                   ✕
                 </span>
                 <span>Hari Terlewat (Missed)</span>
@@ -431,7 +431,7 @@ export default function StatisticsPage() {
       </div>
 
       {/* Habit Breakdown List */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm space-y-4">
         <h3 className="text-base font-bold text-slate-900 dark:text-white">
           Rincian Performa per Kebiasaan
         </h3>
@@ -443,7 +443,7 @@ export default function StatisticsPage() {
             {items.map((item: any) => (
               <div
                 key={item.habitId}
-                className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                className="p-4 rounded-2xl bg-slate-50 dark:bg-[#1e293b]/50 border border-slate-100 dark:border-[#1e293b] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -463,13 +463,13 @@ export default function StatisticsPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-32 bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden hidden sm:block">
+                  <div className="w-32 bg-slate-200 dark:bg-[#1e293b] h-2 rounded-full overflow-hidden hidden sm:block">
                     <div
-                      className="bg-emerald-500 h-full rounded-full"
+                      className="bg-emerald-500 dark:bg-[#aff33e] h-full rounded-full"
                       style={{ width: `${item.consistencyPercentage}%` }}
                     />
                   </div>
-                  <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 min-w-[45px] text-right">
+                  <span className="text-sm font-black text-emerald-600 dark:text-[#aff33e] min-w-[45px] text-right">
                     {item.consistencyPercentage}%
                   </span>
                 </div>

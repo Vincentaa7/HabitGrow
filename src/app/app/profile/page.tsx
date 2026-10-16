@@ -141,7 +141,7 @@ export default function ProfilePage() {
   };
 
   if (isLoading || !summary) {
-    return <div className="h-96 rounded-3xl bg-slate-200 dark:bg-slate-800 animate-pulse" />;
+    return <div className="h-96 rounded-3xl bg-slate-200 dark:bg-[#1e293b] animate-pulse" />;
   }
 
   const { profile, user_level, streak, tree } = summary;
@@ -149,7 +149,7 @@ export default function ProfilePage() {
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       {/* Profile Header */}
-      <div className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+      <div className="p-8 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
         <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-400 text-white flex items-center justify-center text-3xl font-black shadow-lg shadow-emerald-500/20">
           {profile.display_name?.charAt(0).toUpperCase() || 'H'}
         </div>
@@ -162,15 +162,15 @@ export default function ProfilePage() {
           </p>
 
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-4">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
-              <Zap className="w-3.5 h-3.5 fill-emerald-500" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 dark:bg-[#1e293b] text-emerald-700 dark:text-[#aff33e] border border-transparent dark:border-[#aff33e]/30 text-xs font-bold">
+              <Zap className="w-3.5 h-3.5 fill-emerald-500 dark:fill-[#aff33e]" />
               Level {user_level.level} ({user_level.total_xp} XP)
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-xs font-bold">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100 dark:bg-[#1e293b] text-amber-700 dark:text-amber-400 border border-transparent dark:border-amber-500/30 text-xs font-bold">
               <Flame className="w-3.5 h-3.5 fill-amber-500" />
               {streak.current_streak} Hari Streak
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 text-xs font-bold">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-teal-100 dark:bg-[#1e293b] text-teal-700 dark:text-teal-300 border border-transparent dark:border-teal-500/30 text-xs font-bold">
               <Trees className="w-3.5 h-3.5" />
               {tree.stage}
             </span>
@@ -179,7 +179,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Preferences & Theme Switcher (PRD Section 39 & 40) */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm space-y-6">
         <div>
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
             Preferensi Tampilan
@@ -204,8 +204,8 @@ export default function ProfilePage() {
                 className={cn(
                   'p-4 rounded-2xl border flex flex-col items-center gap-2 font-bold text-xs transition-all cursor-pointer',
                   isSelected
-                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 shadow-sm'
-                    : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    ? 'border-emerald-500 dark:border-[#aff33e] bg-emerald-50 dark:bg-[#aff33e]/10 text-emerald-700 dark:text-[#aff33e] shadow-sm'
+                    : 'border-slate-200 dark:border-[#1e293b] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#1e293b]'
                 )}
               >
                 <Icon className="w-5 h-5" />
@@ -217,11 +217,11 @@ export default function ProfilePage() {
       </div>
 
       {/* Real Background Web Push Notifications (Service Worker + VAPID + FCM) */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <BellRing className="w-5 h-5 text-emerald-500" />
+              <BellRing className="w-5 h-5 text-emerald-500 dark:text-[#aff33e]" />
               Notifikasi Web Push Latar Belakang (HP & Desktop)
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 max-w-lg">
@@ -232,26 +232,26 @@ export default function ProfilePage() {
           {/* Status Badges */}
           <div className="flex flex-wrap items-center gap-2">
             {isPushSubscribed ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 dark:bg-[#1e293b] text-emerald-700 dark:text-[#aff33e] border border-transparent dark:border-[#aff33e]/30 text-xs font-bold">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 dark:text-[#aff33e]" />
                 Web Push Aktif
               </span>
             ) : permission === 'granted' ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-teal-100 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 text-xs font-bold">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-teal-100 dark:bg-[#1e293b] text-teal-700 dark:text-teal-300 border border-transparent dark:border-teal-500/30 text-xs font-bold">
                 <CheckCircle2 className="w-3.5 h-3.5 text-teal-500" />
                 Izin Diberikan
               </span>
             ) : permission === 'denied' ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-xs font-bold">
-                <AlertCircle className="w-3.5 h-3.5 text-rose-500" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-100 dark:bg-[#1e293b] text-rose-700 dark:text-[#ef4444] border border-transparent dark:border-[#ef4444]/30 text-xs font-bold">
+                <AlertCircle className="w-3.5 h-3.5 text-rose-500 dark:text-[#ef4444]" />
                 Diblokir di Peramban
               </span>
             ) : !isSupported ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 dark:bg-[#1e293b] text-slate-600 dark:text-slate-400 text-xs font-bold">
                 Tidak Didukung
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-xs font-bold">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100 dark:bg-[#1e293b] text-amber-700 dark:text-amber-300 border border-transparent dark:border-amber-500/30 text-xs font-bold">
                 Belum Terhubung
               </span>
             )}
@@ -271,7 +271,7 @@ export default function ProfilePage() {
                     await sendServerTestPush(0);
                   }
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm shadow-emerald-600/20 transition cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#aff33e] dark:hover:bg-[#aff33e]/90 text-white dark:text-[#0f172a] font-bold text-xs shadow-sm shadow-emerald-600/20 dark:shadow-[#aff33e]/20 transition cursor-pointer disabled:opacity-50"
               >
                 <Bell className="w-4 h-4" />
                 <span>{isRequesting ? 'Mendaftarkan Service Worker...' : 'Hubungkan & Aktifkan Web Push'}</span>
@@ -292,10 +292,10 @@ export default function ProfilePage() {
                     setPushStatusMessage(`⚠️ ${res.error || 'Gagal menyinkronkan notifikasi'}`);
                   }
                 }}
-                className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] hover:bg-slate-100 dark:hover:bg-[#1e293b] text-slate-700 dark:text-slate-300 font-bold text-xs transition cursor-pointer disabled:opacity-50"
                 title="Sinkronkan ulang kunci notifikasi jika VAPID baru saja diperbarui di server"
               >
-                <RefreshCw className={cn('w-3.5 h-3.5 text-emerald-500', isRequesting && 'animate-spin')} />
+                <RefreshCw className={cn('w-3.5 h-3.5 text-emerald-500 dark:text-[#aff33e]', isRequesting && 'animate-spin')} />
                 <span>Sinkronkan Ulang Notifikasi</span>
               </button>
             )}
@@ -303,18 +303,18 @@ export default function ProfilePage() {
           </div>
 
           {/* Mode Demo Penguji & Pengembang (Tersembunyi) */}
-          <details className="group border border-slate-200/80 dark:border-slate-800 rounded-xl p-3.5 bg-slate-50/50 dark:bg-slate-900/40 text-xs">
+          <details className="group border border-slate-200/80 dark:border-[#1e293b] rounded-xl p-3.5 bg-slate-50/50 dark:bg-[#0f172a]/50 text-xs">
             <summary className="font-semibold text-slate-600 dark:text-slate-400 cursor-pointer list-none flex items-center justify-between select-none">
               <span className="flex items-center gap-2">
                 <span>🛠️</span>
                 <span>Mode Demo &amp; Pengujian Sistem (Khusus Penguji)</span>
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-slate-200/60 dark:bg-slate-800 text-slate-500 group-open:rotate-180 transition-transform">
+              <span className="text-[10px] px-2 py-0.5 rounded bg-slate-200/60 dark:bg-[#1e293b] text-slate-500 group-open:rotate-180 transition-transform">
                 ▼
               </span>
             </summary>
 
-            <div className="pt-3.5 mt-2 border-t border-slate-200/60 dark:border-slate-800/60 space-y-3">
+            <div className="pt-3.5 mt-2 border-t border-slate-200/60 dark:border-[#1e293b] space-y-3">
               <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 Gunakan tombol di bawah ini untuk menguji simulasi pengiriman notifikasi dan kalkulasi risiko tanpa harus menunggu jadwal cron malam.
               </p>
@@ -325,9 +325,9 @@ export default function ProfilePage() {
                   type="button"
                   disabled={isSendingPush}
                   onClick={() => handleTestLockScreenPush(5)}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white font-medium text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-[#1e293b] dark:hover:bg-[#1e293b] text-white font-medium text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
                 >
-                  <Smartphone className="w-3.5 h-3.5 text-emerald-400" />
+                  <Smartphone className="w-3.5 h-3.5 text-emerald-400 dark:text-[#aff33e]" />
                   <span>
                     {pushCountdown > 0
                       ? `Mengirim dalam ${pushCountdown}s...`
@@ -340,9 +340,9 @@ export default function ProfilePage() {
                   type="button"
                   disabled={isSendingPush}
                   onClick={() => handleTestLockScreenPush(0)}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 transition shadow-xs cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-[#1e293b] hover:bg-slate-100 dark:hover:bg-[#1e293b] text-xs font-medium text-slate-700 dark:text-slate-200 transition shadow-xs cursor-pointer disabled:opacity-50"
                 >
-                  <Send className="w-3.5 h-3.5 text-emerald-500" />
+                  <Send className="w-3.5 h-3.5 text-emerald-500 dark:text-[#aff33e]" />
                   <span>Simulasi Push Langsung</span>
                 </button>
 
@@ -351,7 +351,7 @@ export default function ProfilePage() {
                   type="button"
                   disabled={isEvaluatingSaw}
                   onClick={handleTriggerSawEvaluation}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-emerald-300 dark:border-emerald-700/60 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 text-xs font-medium text-emerald-700 dark:text-emerald-300 transition shadow-xs cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-emerald-300 dark:border-[#aff33e]/40 hover:bg-emerald-50 dark:hover:bg-[#aff33e]/10 text-xs font-medium text-emerald-700 dark:text-[#aff33e] transition shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   <RefreshCw className={cn('w-3.5 h-3.5', isEvaluatingSaw && 'animate-spin')} />
                   <span>Uji Evaluasi Prediksi Sekarang</span>
@@ -362,22 +362,22 @@ export default function ProfilePage() {
 
           {/* Real-time status / countdown feedback banner */}
           {pushStatusMessage && (
-            <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/80 text-xs text-emerald-800 dark:text-emerald-200 flex items-center gap-2.5 animate-fadeIn">
-              <Clock className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-[#0f172a] border border-emerald-200 dark:border-[#aff33e]/30 text-xs text-emerald-800 dark:text-[#aff33e] flex items-center gap-2.5 animate-fadeIn">
+              <Clock className="w-4 h-4 text-emerald-600 dark:text-[#aff33e] shrink-0" />
               <p className="font-medium">{pushStatusMessage}</p>
             </div>
           )}
 
           {permission === 'denied' && (
-            <p className="text-[11px] text-rose-500 dark:text-rose-400 italic">
+            <p className="text-[11px] text-rose-500 dark:text-[#ef4444] italic">
               * Izin notifikasi sebelumnya diblokir di peramban ini. Untuk mengaktifkannya kembali, klik ikon gembok / izin situs pada bilah alamat URL peramban Anda, lalu ubah status notifikasi menjadi "Izinkan".
             </p>
           )}
 
           {/* Educational Note about Web Push vs Locked Phone */}
-          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-300 space-y-2">
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-[#1e293b]/50 border border-slate-100 dark:border-[#1e293b] text-xs text-slate-600 dark:text-slate-300 space-y-2">
             <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100">
-              <Sparkles className="w-4 h-4 text-emerald-500" />
+              <Sparkles className="w-4 h-4 text-emerald-500 dark:text-[#aff33e]" />
               <span>Bagaimana Notifikasi Masuk Saat HP Mati / Chrome Ditutup?</span>
             </div>
             <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
@@ -388,11 +388,11 @@ export default function ProfilePage() {
       </div>
 
       {/* PWA Mobile Installation Section */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Smartphone className="w-5 h-5 text-emerald-500" />
+              <Smartphone className="w-5 h-5 text-emerald-500 dark:text-[#aff33e]" />
               Instal Aplikasi ke Layar Utama HP (PWA)
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 max-w-lg">
@@ -402,12 +402,12 @@ export default function ProfilePage() {
 
           <div>
             {isInstalled ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 dark:bg-[#1e293b] text-emerald-700 dark:text-[#aff33e] border border-transparent dark:border-[#aff33e]/30 text-xs font-bold">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 dark:text-[#aff33e]" />
                 Aplikasi Terinstal
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-50 dark:bg-[#1e293b] text-emerald-700 dark:text-[#aff33e] text-xs font-bold border border-emerald-200 dark:border-[#1e293b]">
                 Siap Diinstal
               </span>
             )}
@@ -434,7 +434,7 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-500 dark:text-slate-400 space-y-1">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#1e293b]/50 border border-slate-100 dark:border-[#1e293b] text-[11px] text-slate-500 dark:text-slate-400 space-y-1">
             <p className="font-semibold text-slate-700 dark:text-slate-300">
               💡 Cara Memasang Secara Manual di Ponsel:
             </p>
@@ -449,11 +449,11 @@ export default function ProfilePage() {
       </div>
 
       {/* Thesis Compliance & Data Export (PRD Section 112 & 113) */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Shield className="w-4 h-4 text-emerald-500" />
+              <Shield className="w-4 h-4 text-emerald-500 dark:text-[#aff33e]" />
               Ekspor Data Penelitian / Evaluasi
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 max-w-lg">
@@ -464,9 +464,9 @@ export default function ProfilePage() {
 
         <button
           onClick={exportData}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-sm cursor-pointer"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] hover:bg-slate-50 dark:hover:bg-[#1e293b] text-xs font-bold text-slate-700 dark:text-slate-200 transition shadow-sm cursor-pointer"
         >
-          <Download className="w-4 h-4 text-emerald-500" />
+          <Download className="w-4 h-4 text-emerald-500 dark:text-[#aff33e]" />
           Unduh Data Saya (.JSON)
         </button>
       </div>

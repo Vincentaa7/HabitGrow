@@ -98,7 +98,7 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-[#1e293b] bg-white/85 dark:bg-[#020617]/85 backdrop-blur-md">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo */}
@@ -123,14 +123,14 @@ export function Navbar() {
                     className={cn(
                       'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all',
                       isActive
-                        ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                        ? 'bg-emerald-50 dark:bg-[#1e293b] text-emerald-700 dark:text-[#aff33e] font-bold border border-transparent dark:border-[#aff33e]/30'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1e293b]'
                     )}
                   >
                     <Icon
                       className={cn(
                         'w-4 h-4',
-                        isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'
+                        isActive ? 'text-emerald-600 dark:text-[#aff33e]' : 'text-slate-400'
                       )}
                     />
                     {item.label}
@@ -172,7 +172,7 @@ export function Navbar() {
               <div className="hidden md:flex items-center gap-2 ml-1">
                 <Link
                   href="/app/profile"
-                  className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                  className="p-2 rounded-xl border border-slate-200 dark:border-[#1e293b] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e293b] transition"
                   title="Profil Pengguna"
                 >
                   <User className="w-4 h-4" />
@@ -180,7 +180,7 @@ export function Navbar() {
 
                 <button
                   onClick={handleLogout}
-                  className="p-2 rounded-xl border border-red-200/60 dark:border-red-900/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer"
+                  className="p-2 rounded-xl border border-red-200/60 dark:border-[#ef4444]/30 text-red-600 dark:text-[#ef4444] hover:bg-red-50 dark:hover:bg-[#ef4444]/10 transition cursor-pointer"
                   title="Keluar"
                 >
                   <LogOut className="w-4 h-4" />
@@ -201,15 +201,15 @@ export function Navbar() {
           />
 
           {/* Drawer Sheet */}
-          <div className="relative ml-auto w-[85%] max-w-xs h-full bg-white dark:bg-[#0c1511] border-l border-slate-200/80 dark:border-emerald-950/80 shadow-2xl p-5 flex flex-col justify-between z-10 animate-in slide-in-from-right duration-250">
+          <div className="relative ml-auto w-[85%] max-w-xs h-full bg-white dark:bg-[#0f172a] border-l border-slate-200/80 dark:border-[#1e293b] shadow-2xl p-5 flex flex-col justify-between z-10 animate-in slide-in-from-right duration-250">
             {/* Drawer Top */}
             <div className="space-y-5">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#1e293b]">
                 <BrandLogo className="h-8 w-auto" />
                 <button
                   type="button"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1e293b] transition cursor-pointer"
                   aria-label="Tutup Menu"
                 >
                   <X className="w-5 h-5" />
@@ -233,8 +233,8 @@ export function Navbar() {
                       className={cn(
                         'flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all',
                         isActive
-                          ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200/50 dark:border-emerald-800/50'
-                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                          ? 'bg-emerald-50 dark:bg-[#1e293b] text-emerald-700 dark:text-[#aff33e] font-bold border border-emerald-200/50 dark:border-[#aff33e]/40'
+                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e293b]'
                       )}
                     >
                       <div className="flex items-center gap-3">
@@ -242,8 +242,8 @@ export function Navbar() {
                           className={cn(
                             'w-7 h-7 rounded-lg flex items-center justify-center',
                             isActive
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                              ? 'bg-emerald-600 dark:bg-[#aff33e] text-white dark:text-[#0f172a]'
+                              : 'bg-slate-100 dark:bg-[#1e293b] text-slate-500 dark:text-slate-400'
                           )}
                         >
                           <Icon className="w-4 h-4" />
@@ -258,7 +258,7 @@ export function Navbar() {
             </div>
 
             {/* Drawer Bottom Actions */}
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
+            <div className="pt-4 border-t border-slate-100 dark:border-[#1e293b] space-y-2">
               {!isInstalled && (
                 <button
                   type="button"
@@ -286,9 +286,9 @@ export function Navbar() {
                 href="/app/profile"
                 prefetch={true}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition"
+                className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e293b] transition"
               >
-                <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400">
+                <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-[#1e293b] flex items-center justify-center text-slate-500 dark:text-slate-400">
                   <User className="w-4 h-4" />
                 </div>
                 <span>Pengaturan Profil</span>
@@ -297,9 +297,9 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition cursor-pointer"
+                className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-red-600 dark:text-[#ef4444] hover:bg-red-50 dark:hover:bg-[#ef4444]/10 transition cursor-pointer"
               >
-                <div className="w-7 h-7 rounded-lg bg-red-100 dark:bg-red-950/60 flex items-center justify-center text-red-600 dark:text-red-400">
+                <div className="w-7 h-7 rounded-lg bg-red-100 dark:bg-[#ef4444]/20 flex items-center justify-center text-red-600 dark:text-[#ef4444]">
                   <LogOut className="w-4 h-4" />
                 </div>
                 <span>Keluar dari Akun</span>
@@ -312,7 +312,7 @@ export function Navbar() {
       {/* Mobile Bottom Navigation */}
       <nav
         aria-label="Navigasi Bawah Seluler"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#0c1511]/95 backdrop-blur-lg border-t border-slate-200/90 dark:border-slate-800 px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] flex items-center justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-lg border-t border-slate-200/90 dark:border-[#1e293b] px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] flex items-center justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.5)]"
       >
         {bottomBarLinks.map((item) => {
           const Icon = item.icon;
@@ -325,7 +325,7 @@ export function Navbar() {
               className={cn(
                 'flex flex-col items-center justify-center gap-1 py-1 px-2.5 rounded-xl text-[10px] font-medium transition active:scale-90',
                 isActive
-                  ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                  ? 'text-emerald-600 dark:text-[#aff33e] font-bold'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               )}
             >
@@ -333,7 +333,7 @@ export function Navbar() {
                 className={cn(
                   'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
                   isActive
-                    ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400'
+                    ? 'bg-emerald-100 dark:bg-[#1e293b] text-emerald-600 dark:text-[#aff33e] border border-transparent dark:border-[#aff33e]/30'
                     : 'text-slate-500 dark:text-slate-400'
                 )}
               >

@@ -25,7 +25,7 @@ export default function TreePage() {
 
   if (isLoading || !summary) {
     return (
-      <div className="h-96 rounded-3xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
+      <div className="h-96 rounded-3xl bg-slate-200 dark:bg-[#1e293b] animate-pulse" />
     );
   }
 
@@ -46,13 +46,13 @@ export default function TreePage() {
       </div>
 
       {/* Main Tree Card */}
-      <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-white via-emerald-50/30 to-emerald-100/40 dark:from-slate-900 dark:via-emerald-950/20 dark:to-emerald-950/40 border border-emerald-200/80 dark:border-emerald-900/60 shadow-lg text-center flex flex-col items-center relative overflow-hidden">
+      <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-b from-white via-emerald-50/30 to-emerald-100/40 dark:from-[#0f172a] dark:via-[#020617] dark:to-[#0f172a] border border-emerald-200/80 dark:border-[#1e293b] shadow-lg text-center flex flex-col items-center relative overflow-hidden">
         {/* Glow effect */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-400/10 dark:bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-400/10 dark:bg-[#aff33e]/5 rounded-full blur-3xl pointer-events-none" />
 
         {/* Tree Stage Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-800 text-xs font-bold text-emerald-700 dark:text-emerald-300 shadow-sm mb-6">
-          <Sparkles className="w-4 h-4 text-emerald-500" />
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-[#1e293b] border border-emerald-200 dark:border-[#1e293b] text-xs font-bold text-emerald-700 dark:text-[#aff33e] shadow-sm mb-6">
+          <Sparkles className="w-4 h-4 text-emerald-500 dark:text-[#aff33e]" />
           Tahap Saat Ini: {currentStageInfo.displayName}
         </div>
 
@@ -61,24 +61,24 @@ export default function TreePage() {
 
         {/* Health & Consistency Stats Bar */}
         <div className="mt-8 grid grid-cols-2 gap-4 w-full max-w-md">
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div className="p-4 rounded-2xl bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-[#1e293b] shadow-sm">
             <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">
               Kesehatan Pohon
             </span>
             <div className="flex items-center justify-center gap-2">
-              <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+              <Heart className="w-5 h-5 text-red-500 dark:text-[#ef4444] fill-red-500 dark:fill-[#ef4444]" />
               <span className="text-xl font-black text-slate-900 dark:text-white">
                 {tree.health}%
               </span>
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div className="p-4 rounded-2xl bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-[#1e293b] shadow-sm">
             <span className="text-xs font-medium text-slate-500 dark:text-slate-400 block mb-1">
               Skor Konsistensi
             </span>
             <div className="flex items-center justify-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-emerald-500" />
+              <ShieldCheck className="w-5 h-5 text-emerald-500 dark:text-[#aff33e]" />
               <span className="text-xl font-black text-slate-900 dark:text-white">
                 {Math.round(tree.consistency_score)}%
               </span>
@@ -92,7 +92,7 @@ export default function TreePage() {
       </div>
 
       {/* Evolution Roadmap */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm space-y-6">
         <div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">
             Peta Tahap Pertumbuhan
@@ -113,10 +113,10 @@ export default function TreePage() {
                 className={cn(
                   'flex items-center justify-between p-4 rounded-2xl border transition-all',
                   isCurrent
-                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 shadow-sm'
+                    ? 'bg-emerald-50 dark:bg-[#aff33e]/15 border-emerald-500 dark:border-[#aff33e] shadow-sm'
                     : isUnlocked
-                    ? 'bg-slate-50/80 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800'
-                    : 'bg-slate-50/40 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 opacity-60'
+                    ? 'bg-slate-50/80 dark:bg-[#1e293b]/40 border-slate-200 dark:border-[#1e293b]'
+                    : 'bg-slate-50/40 dark:bg-[#020617]/40 border-slate-200 dark:border-[#1e293b]/60 opacity-60'
                 )}
               >
                 <div className="flex items-center gap-4">
@@ -129,7 +129,7 @@ export default function TreePage() {
                         {stageItem.displayName}
                       </h4>
                       {isCurrent && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 text-white">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-600 dark:bg-[#aff33e] text-white dark:text-[#0f172a]">
                           Tahap Aktif
                         </span>
                       )}
@@ -142,7 +142,7 @@ export default function TreePage() {
 
                 <div>
                   {isUnlocked ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 dark:text-[#aff33e]" />
                   ) : (
                     <span className="text-xs font-semibold text-slate-400">Terkunci</span>
                   )}

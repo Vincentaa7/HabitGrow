@@ -146,14 +146,14 @@ export default function HabitsPage() {
       </div>
 
       {/* Filter Tabs & Category Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-2 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/60">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-[#1e293b]">
+        <div className="flex items-center gap-2 p-1 rounded-xl bg-slate-100 dark:bg-[#1e293b]">
           <button
             onClick={() => setTab('active')}
             className={cn(
               'px-4 py-1.5 rounded-lg text-xs font-bold transition',
               tab === 'active'
-                ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                ? 'bg-white dark:bg-[#1e293b] text-emerald-600 dark:text-[#aff33e] shadow-sm'
                 : 'text-slate-600 dark:text-slate-400'
             )}
           >
@@ -164,7 +164,7 @@ export default function HabitsPage() {
             className={cn(
               'px-4 py-1.5 rounded-lg text-xs font-bold transition',
               tab === 'archived'
-                ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                ? 'bg-white dark:bg-[#1e293b] text-emerald-600 dark:text-[#aff33e] shadow-sm'
                 : 'text-slate-600 dark:text-slate-400'
             )}
           >
@@ -178,8 +178,8 @@ export default function HabitsPage() {
             className={cn(
               'px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition border',
               selectedCategory === 'all'
-                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold'
-                : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+                ? 'border-emerald-500 bg-emerald-50 dark:bg-[#aff33e]/10 text-emerald-700 dark:text-[#aff33e] font-bold'
+                : 'border-slate-200 dark:border-[#1e293b] text-slate-500 hover:bg-slate-50 dark:hover:bg-[#1e293b]'
             )}
           >
             Semua Kategori
@@ -191,8 +191,8 @@ export default function HabitsPage() {
               className={cn(
                 'px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition border',
                 selectedCategory === c.id
-                  ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold'
-                  : 'border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  ? 'border-emerald-500 bg-emerald-50 dark:bg-[#aff33e]/10 text-emerald-700 dark:text-[#aff33e] font-bold'
+                  : 'border-slate-200 dark:border-[#1e293b] text-slate-500 hover:bg-slate-50 dark:hover:bg-[#1e293b]'
               )}
             >
               {CATEGORY_NAMES_ID[c.name] || c.name}
@@ -204,11 +204,11 @@ export default function HabitsPage() {
       {/* Habits List */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
-          <div className="h-32 rounded-2xl bg-slate-200 dark:bg-slate-800" />
-          <div className="h-32 rounded-2xl bg-slate-200 dark:bg-slate-800" />
+          <div className="h-32 rounded-2xl bg-slate-200 dark:bg-[#1e293b]" />
+          <div className="h-32 rounded-2xl bg-slate-200 dark:bg-[#1e293b]" />
         </div>
       ) : habits.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <div className="p-12 text-center rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b]">
           <p className="text-sm text-slate-500">
             {tab === 'active'
               ? 'Tidak ada kebiasaan aktif. Klik "Tambah Kebiasaan" untuk memulai.'
@@ -227,7 +227,7 @@ export default function HabitsPage() {
             return (
               <div
                 key={habit.id}
-                className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between hover:shadow-md transition"
+                className="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm flex flex-col justify-between hover:shadow-md transition"
               >
                 <div>
                   <div className="flex items-start justify-between gap-3">
@@ -245,7 +245,7 @@ export default function HabitsPage() {
                         <h3 className="font-bold text-base text-slate-900 dark:text-white">
                           {habit.name}
                         </h3>
-                        <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-[#1e293b] text-slate-500">
                           {catName}
                         </span>
                       </div>
@@ -282,12 +282,12 @@ export default function HabitsPage() {
                 </div>
 
                 {/* Actions Footer */}
-                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-end gap-2">
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-[#1e293b] flex items-center justify-end gap-2">
                   {tab === 'active' ? (
                     <>
                       <button
                         onClick={() => setEditingHabit(habit)}
-                        className="p-2 text-xs font-semibold text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition cursor-pointer"
+                        className="p-2 text-xs font-semibold text-slate-500 hover:text-emerald-600 dark:hover:text-[#aff33e] hover:bg-slate-100 dark:hover:bg-[#1e293b] rounded-lg transition cursor-pointer"
                         title="Edit Kebiasaan"
                       >
                         <Pencil className="w-4 h-4" />
@@ -296,7 +296,7 @@ export default function HabitsPage() {
                       <button
                         onClick={() => archiveMutation.mutate(habit.id)}
                         disabled={archiveMutation.isPending}
-                        className="p-2 text-xs font-semibold text-slate-500 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition cursor-pointer"
+                        className="p-2 text-xs font-semibold text-slate-500 hover:text-amber-600 hover:bg-slate-100 dark:hover:bg-[#1e293b] rounded-lg transition cursor-pointer"
                         title="Arsipkan"
                       >
                         <Archive className="w-4 h-4" />
@@ -306,7 +306,7 @@ export default function HabitsPage() {
                     <button
                       onClick={() => restoreMutation.mutate(habit.id)}
                       disabled={restoreMutation.isPending}
-                      className="p-2 text-xs font-semibold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-lg transition cursor-pointer"
+                      className="p-2 text-xs font-semibold text-emerald-600 dark:text-[#aff33e] hover:bg-emerald-50 dark:hover:bg-[#aff33e]/10 rounded-lg transition cursor-pointer"
                       title="Pulihkan"
                     >
                       <RotateCcw className="w-4 h-4" />
@@ -316,7 +316,7 @@ export default function HabitsPage() {
                   <button
                     onClick={() => setDeletingHabit(habit)}
                     disabled={deleteMutation.isPending}
-                    className="p-2 text-xs font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition cursor-pointer"
+                    className="p-2 text-xs font-semibold text-rose-500 dark:text-[#ef4444] hover:bg-rose-50 dark:hover:bg-[#ef4444]/10 rounded-lg transition cursor-pointer"
                     title="Hapus Permanen"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -346,7 +346,7 @@ export default function HabitsPage() {
       {/* Custom Professional Delete Confirmation Modal */}
       {deletingHabit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md rounded-2xl sm:rounded-3xl bg-white dark:bg-[#111a16] border border-rose-100 dark:border-rose-950/60 p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-md rounded-2xl sm:rounded-3xl bg-white dark:bg-[#0f172a] border border-rose-100 dark:border-[#1e293b] p-6 shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
             {/* Close Button */}
             <button
               onClick={() => setDeletingHabit(null)}
@@ -357,7 +357,7 @@ export default function HabitsPage() {
             </button>
 
             {/* Warning Icon Badge */}
-            <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-200/60 dark:border-rose-900/50 shadow-inner">
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-[#ef4444]/10 text-rose-600 dark:text-[#ef4444] flex items-center justify-center border border-rose-200/60 dark:border-[#ef4444]/30 shadow-inner">
               <AlertTriangle className="w-6 h-6" />
             </div>
 
@@ -376,7 +376,7 @@ export default function HabitsPage() {
             </div>
 
             {/* Callout Notice */}
-            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/40 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
+            <div className="p-3 rounded-xl bg-amber-50 dark:bg-[#1e293b] border border-amber-200/60 dark:border-[#1e293b] text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-2">
               <span className="shrink-0 text-base leading-none">⚠️</span>
               <span>
                 Tindakan ini tidak dapat dibatalkan. Jika hanya ingin rehat sementara, kamu bisa memilih opsi <strong>Arsipkan</strong>.
@@ -389,7 +389,7 @@ export default function HabitsPage() {
                 type="button"
                 onClick={() => setDeletingHabit(null)}
                 disabled={deleteMutation.isPending}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 transition cursor-pointer disabled:opacity-50"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] hover:bg-slate-100 dark:hover:bg-[#1e293b] text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 transition cursor-pointer disabled:opacity-50"
               >
                 Batal
               </button>
@@ -397,7 +397,7 @@ export default function HabitsPage() {
                 type="button"
                 onClick={() => deleteMutation.mutate(deletingHabit.id)}
                 disabled={deleteMutation.isPending}
-                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 dark:bg-[#ef4444] dark:hover:bg-[#e04702] text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
               >
                 {deleteMutation.isPending ? (
                   <>

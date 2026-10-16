@@ -44,7 +44,7 @@ export default function AchievementsPage() {
   const progressPercent = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0;
 
   if (isLoading) {
-    return <div className="h-96 rounded-3xl bg-slate-200 dark:bg-slate-800 animate-pulse" />;
+    return <div className="h-96 rounded-3xl bg-slate-200 dark:bg-[#1e293b] animate-pulse" />;
   }
 
   return (
@@ -61,7 +61,7 @@ export default function AchievementsPage() {
       </div>
 
       {/* Overview Progress Card */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 border border-amber-200/60 dark:border-amber-900/60 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 border border-amber-200/60 dark:border-amber-500/20 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shadow-lg shadow-amber-500/30">
             🏆
@@ -76,9 +76,9 @@ export default function AchievementsPage() {
           </div>
         </div>
 
-        <div className="w-full sm:w-48 bg-white dark:bg-slate-800 h-3 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700">
+        <div className="w-full sm:w-48 bg-white dark:bg-[#1e293b] h-3 rounded-full overflow-hidden border border-slate-200 dark:border-[#1e293b]">
           <div
-            className="bg-gradient-to-r from-amber-500 to-emerald-500 h-full rounded-full transition-all duration-500"
+            className="bg-gradient-to-r from-amber-500 to-emerald-500 dark:to-[#aff33e] h-full rounded-full transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -92,8 +92,8 @@ export default function AchievementsPage() {
             className={cn(
               'p-5 rounded-2xl border transition-all duration-200 shadow-sm flex flex-col justify-between',
               ach.is_unlocked
-                ? 'bg-white dark:bg-slate-900 border-amber-200/80 dark:border-amber-900/50 hover:shadow-md'
-                : 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800/80 opacity-70'
+                ? 'bg-white dark:bg-[#0f172a] border-amber-200/80 dark:border-amber-500/30 hover:shadow-md'
+                : 'bg-slate-50/60 dark:bg-[#0f172a]/40 border-slate-200 dark:border-[#1e293b]/80 opacity-70'
             )}
           >
             <div>
@@ -103,7 +103,7 @@ export default function AchievementsPage() {
                     'w-11 h-11 rounded-2xl flex items-center justify-center text-xl shadow-inner',
                     ach.is_unlocked
                       ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-500'
-                      : 'bg-slate-200 dark:bg-slate-800 text-slate-400'
+                      : 'bg-slate-200 dark:bg-[#1e293b] text-slate-400'
                   )}
                 >
                   {ach.is_unlocked ? '🏆' : <Lock className="w-5 h-5 text-slate-400" />}
@@ -114,7 +114,7 @@ export default function AchievementsPage() {
                     'text-xs font-bold px-2.5 py-1 rounded-full',
                     ach.is_unlocked
                       ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400'
-                      : 'bg-slate-200 dark:bg-slate-800 text-slate-400'
+                      : 'bg-slate-200 dark:bg-[#1e293b] text-slate-400'
                   )}
                 >
                   +{ach.xp_reward} XP
@@ -129,9 +129,9 @@ export default function AchievementsPage() {
               </p>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
+            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-[#1e293b]/80 flex items-center justify-between text-[11px]">
               {ach.is_unlocked ? (
-                <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-[#aff33e]">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Terbuka
                 </span>

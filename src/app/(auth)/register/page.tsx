@@ -72,10 +72,10 @@ export default function RegisterPage() {
       </div>
 
       <div className="flex-1 flex flex-col justify-center items-center px-4 py-8">
-      <div className="w-full max-w-md p-8 rounded-3xl bg-white dark:bg-[#111a16] border border-slate-200 dark:border-[#1e2e26] shadow-xl">
+      <div className="w-full max-w-md p-8 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-xl">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-600 dark:hover:text-emerald-400 mb-6 transition"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-emerald-600 dark:hover:text-[#aff33e] mb-6 transition"
         >
           <ArrowLeft className="w-4 h-4" />
           Kembali ke Beranda
@@ -97,7 +97,7 @@ export default function RegisterPage() {
 
         {isSuccessVerificationSent ? (
           <div className="text-center py-4 space-y-4">
-            <div className="w-16 h-16 mx-auto rounded-3xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 flex items-center justify-center text-3xl">
+            <div className="w-16 h-16 mx-auto rounded-3xl bg-emerald-100 dark:bg-[#aff33e]/10 border border-emerald-300 dark:border-[#aff33e]/30 flex items-center justify-center text-3xl">
               ✉️
             </div>
             <div>
@@ -105,13 +105,13 @@ export default function RegisterPage() {
                 Periksa Email Anda
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
-                Tautan verifikasi telah dikirim ke <span className="font-bold text-emerald-600 dark:text-emerald-400">{isSuccessVerificationSent}</span>.
+                Tautan verifikasi telah dikirim ke <span className="font-bold text-emerald-600 dark:text-[#aff33e]">{isSuccessVerificationSent}</span>.
                 Silakan buka kotak masuk atau folder spam email Anda dan klik tombol verifikasi untuk mengaktifkan akun.
               </p>
             </div>
             <Link
               href="/login"
-              className="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-sm"
+              className="inline-flex items-center justify-center w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#aff33e] dark:hover:bg-[#9de62e] text-white dark:text-[#0f172a] font-bold text-xs transition shadow-sm cursor-pointer"
             >
               Kembali ke Halaman Login
             </Link>
@@ -119,7 +119,7 @@ export default function RegisterPage() {
         ) : (
           <>
             {errorMsg && (
-              <div className="mb-4 p-3 text-xs text-red-700 bg-red-50 dark:bg-red-950/50 dark:text-red-300 rounded-xl border border-red-200 dark:border-red-900">
+              <div className="mb-4 p-3 text-xs text-red-700 bg-red-50 dark:bg-red-950/50 dark:text-red-300 rounded-xl border border-red-200 dark:border-[#ef4444]/40">
                 {errorMsg}
               </div>
             )}
@@ -133,7 +133,7 @@ export default function RegisterPage() {
               type="text"
               placeholder="Masukkan nama lengkap atau panggilan"
               {...register('display_name')}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] bg-slate-50/50 dark:bg-[#1e293b] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-[#aff33e]"
             />
             {errors.display_name && (
               <p className="text-xs text-red-500 mt-1">{errors.display_name.message}</p>
@@ -148,7 +148,7 @@ export default function RegisterPage() {
               type="email"
               placeholder="nama@email.com"
               {...register('email')}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] bg-slate-50/50 dark:bg-[#1e293b] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-[#aff33e]"
             />
             {errors.email && (
               <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
@@ -163,7 +163,7 @@ export default function RegisterPage() {
               type="password"
               placeholder="••••••••"
               {...register('password')}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/60 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] bg-slate-50/50 dark:bg-[#1e293b] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-[#aff33e]"
             />
             {errors.password && (
               <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
@@ -173,7 +173,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#aff33e] dark:hover:bg-[#9de62e] text-white dark:text-[#0f172a] font-bold text-sm shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
           >
             {isSubmitting ? 'Mendaftarkan...' : 'Daftar Sekarang'}
             <UserPlus className="w-4 h-4" />
@@ -184,7 +184,7 @@ export default function RegisterPage() {
           Sudah memiliki akun?{' '}
           <Link
             href="/login"
-            className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline"
+            className="font-bold text-emerald-600 dark:text-[#aff33e] hover:underline"
           >
             Masuk di sini
           </Link>

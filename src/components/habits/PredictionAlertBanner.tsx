@@ -180,41 +180,41 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
     >
       <div
         className={cn(
-          "pointer-events-auto relative overflow-hidden rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-800 p-4 sm:p-5 shadow-2xl shadow-slate-900/10 dark:shadow-black/60 transition-all duration-300 ease-out transform",
+          "pointer-events-auto relative overflow-hidden rounded-2xl bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-xl border border-slate-200/90 dark:border-[#1e293b] p-4 sm:p-5 shadow-2xl shadow-slate-900/10 dark:shadow-black/80 transition-all duration-300 ease-out transform",
           isVisible && !isExiting
             ? "opacity-100 translate-y-0 scale-100"
             : "opacity-0 -translate-y-8 scale-95"
         )}
       >
         {successMessage ? (
-          <div className="flex items-center gap-2.5 py-1 text-emerald-800 dark:text-emerald-300">
-            <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+          <div className="flex items-center gap-2.5 py-1 text-emerald-800 dark:text-[#aff33e]">
+            <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600 dark:text-[#aff33e]" />
             <p className="text-xs sm:text-sm font-medium">{successMessage}</p>
           </div>
         ) : (
           <div className="flex items-start justify-between gap-3.5">
             <div className="flex items-start gap-3.5 flex-1 min-w-0">
               {/* Botanical Accent Icon */}
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200/70 dark:border-emerald-800/50 mt-0.5">
-                <Leaf className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-[#1e293b] text-emerald-600 dark:text-[#aff33e] flex items-center justify-center shrink-0 border border-emerald-200/70 dark:border-[#1e293b] mt-0.5">
+                <Leaf className="w-4 h-4 text-emerald-600 dark:text-[#aff33e]" />
               </div>
 
               {/* Main Content Details */}
               <div className="space-y-1.5 flex-1 min-w-0">
                 {/* Clean Pills: Status & Indeks Risiko */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold border border-emerald-200/60 dark:border-emerald-800/60">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-[#aff33e]/10 text-emerald-700 dark:text-[#aff33e] text-[11px] font-semibold border border-emerald-200/60 dark:border-[#aff33e]/30">
                     Pendamping Rutinitas
                   </span>
 
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-medium border border-slate-200/70 dark:border-slate-700/70">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-[#1e293b] text-slate-700 dark:text-slate-300 text-[11px] font-medium border border-slate-200/70 dark:border-[#1e293b]">
                     Indeks Risiko: <strong className="text-amber-600 dark:text-amber-400 font-bold ml-1">{current.failure_probability}%</strong>
                   </span>
                 </div>
 
                 {/* Habit Title */}
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">
-                  Yuk selesaikan <span className="font-extrabold text-emerald-600 dark:text-emerald-400">&ldquo;{current.habit_name}&rdquo;</span> hari ini
+                  Yuk selesaikan <span className="font-extrabold text-emerald-600 dark:text-[#aff33e]">&ldquo;{current.habit_name}&rdquo;</span> hari ini
                 </h4>
 
                 {/* Friendly Recommendation Message */}
@@ -232,10 +232,10 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                           type="button"
                           disabled={applyingId === current.habit_id}
                           onClick={() => handleApplyLowerTarget(current)}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-xs transition active:scale-95 disabled:opacity-50 cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#aff33e] dark:hover:bg-[#9de62e] text-white dark:text-[#0f172a] font-semibold text-xs shadow-xs transition active:scale-95 disabled:opacity-50 cursor-pointer"
                         >
                           {applyingId === current.habit_id ? (
-                            <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <div className="w-3.5 h-3.5 border-2 border-white dark:border-[#0f172a] border-t-transparent rounded-full animate-spin" />
                           ) : (
                             <Zap className="w-3.5 h-3.5 fill-current" />
                           )}
@@ -248,7 +248,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                         <button
                           type="button"
                           onClick={() => handleDismiss(current.habit_id)}
-                          className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                          className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-[#1e293b] hover:bg-slate-100 dark:hover:bg-[#1e293b] text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
                         >
                           Tetap Target Penuh
                         </button>
@@ -262,10 +262,10 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                         type="button"
                         disabled={completingId === current.habit_id}
                         onClick={() => handleComplete2Min(current)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-xs transition active:scale-95 disabled:opacity-50 cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#aff33e] dark:hover:bg-[#9de62e] text-white dark:text-[#0f172a] font-semibold text-xs shadow-xs transition active:scale-95 disabled:opacity-50 cursor-pointer"
                       >
                         {completingId === current.habit_id ? (
-                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <div className="w-3.5 h-3.5 border-2 border-white dark:border-[#0f172a] border-t-transparent rounded-full animate-spin" />
                         ) : (
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
                         )}
@@ -275,7 +275,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                       <button
                         type="button"
                         onClick={() => handleSnooze1Hour(current)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-[#1e293b] hover:bg-slate-100 dark:hover:bg-[#1e293b] text-xs font-medium text-slate-600 dark:text-slate-300 transition cursor-pointer"
                       >
                         <Clock className="w-3.5 h-3.5 text-slate-400" />
                         <span>Nanti Saja (1 Jam)</span>
@@ -285,7 +285,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                       <button
                         type="button"
                         onClick={() => setShowTwoMinInfo((prev) => !prev)}
-                        className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-emerald-700 dark:text-slate-400 dark:hover:text-emerald-300 font-medium py-1.5 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 transition cursor-pointer"
+                        className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-emerald-700 dark:text-slate-400 dark:hover:text-[#aff33e] font-medium py-1.5 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1e293b] transition cursor-pointer"
                         title="Pelajari Aturan 2 Menit"
                       >
                         <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
@@ -299,10 +299,10 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
 
                 {/* Inline Explainer Callout (Clean & Non-Intrusive) */}
                 {!isQuantitative && showTwoMinInfo && (
-                  <div className="mt-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 text-xs text-slate-700 dark:text-slate-200 leading-relaxed animate-in fade-in slide-in-from-top-1 duration-200">
+                  <div className="mt-2.5 p-3 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-slate-200/80 dark:border-[#1e293b] text-xs text-slate-700 dark:text-slate-200 leading-relaxed animate-in fade-in slide-in-from-top-1 duration-200">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-start gap-2.5">
-                        <div className="w-5 h-5 rounded-md bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                        <div className="w-5 h-5 rounded-md bg-emerald-100 dark:bg-[#aff33e]/10 text-emerald-600 dark:text-[#aff33e] flex items-center justify-center shrink-0 mt-0.5">
                           <Lightbulb className="w-3.5 h-3.5" />
                         </div>
                         <div>
@@ -317,7 +317,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
                       <button
                         type="button"
                         onClick={() => setShowTwoMinInfo(false)}
-                        className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition cursor-pointer shrink-0"
+                        className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-[#1e293b] transition cursor-pointer shrink-0"
                         title="Tutup penjelasan"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -332,7 +332,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
             <button
               type="button"
               onClick={() => handleDismiss(current.habit_id)}
-              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0 cursor-pointer mt-0.5"
+              className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#1e293b] transition shrink-0 cursor-pointer mt-0.5"
               title="Tutup saran"
             >
               <X className="w-4 h-4" />

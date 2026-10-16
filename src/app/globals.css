@@ -3,41 +3,87 @@
 /* Tailwind v4: Use .dark class selector for dark mode (instead of default prefers-color-scheme) */
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
 @layer base {
   :root {
-    --background: #f8faf9;
+    --background: #fbfcf8;
     --foreground: #0f172a;
     --card: #ffffff;
     --card-foreground: #0f172a;
+    --popover: #ffffff;
+    --popover-foreground: #0f172a;
     --border: #e2e8f0;
-    --primary: #059669; /* Emerald 600 */
+    --primary: #059669; /* Emerald 600 for light mode brand */
     --primary-foreground: #ffffff;
     --secondary: #ecfdf5; /* Emerald 50 */
     --secondary-foreground: #065f46;
     --muted: #f1f5f9;
     --muted-foreground: #64748b;
-    --accent: #fef3c7; /* Warm Amber */
-    --accent-foreground: #92400e;
+    --accent: #f0fdf4;
+    --accent-foreground: #166534;
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
+    --input: #e2e8f0;
+    --ring: #aff33e;
+    --radius: 1rem;
   }
 
+  /* Lime Frost Theme by Serafim from 21st.dev (https://21st.dev/@serafimcloud/themes/lime-frost) */
   .dark {
-    --background: #090e0c; /* Deep obsidian forest */
-    --foreground: #f1f5f9;
-    --card: #111a16;
+    --background: #020617; /* Deep Obsidian Slate */
+    --foreground: #f8fafc; /* Crisp Slate 50 */
+    --card: #0f172a; /* Slate 900 Card Surface */
     --card-foreground: #f8fafc;
-    --border: #1e2e26;
-    --primary: #10b981; /* Emerald 500 */
-    --primary-foreground: #022c22;
-    --secondary: #13271f;
-    --secondary-foreground: #6ee7b7;
-    --muted: #16221c;
-    --muted-foreground: #94a3b8;
-    --accent: #451a03;
-    --accent-foreground: #fcd34d;
-    --destructive: #dc2626;
+    --popover: #0f172a;
+    --popover-foreground: #f8fafc;
+    --primary: #aff33e; /* Electric Lime Frost */
+    --primary-foreground: #020617;
+    --secondary: #1e293b; /* Slate 800 */
+    --secondary-foreground: #f8fafc;
+    --muted: #1e293b; /* Slate 800 */
+    --muted-foreground: #94a3b8; /* Slate 400 */
+    --accent: #14532d;
+    --accent-foreground: #aff33e;
+    --destructive: #ef4444; /* Crimson Red */
     --destructive-foreground: #ffffff;
+    --border: #1e293b; /* Slate 800 */
+    --input: #1e293b;
+    --ring: #aff33e;
+    --sidebar: #020617;
+    --sidebar-foreground: #f8fafc;
+    --sidebar-primary: #aff33e;
+    --sidebar-primary-foreground: #020617;
+    --sidebar-accent: #1e293b;
+    --sidebar-accent-foreground: #f8fafc;
+    --sidebar-border: #1e293b;
+    --sidebar-ring: #aff33e;
+    --chart-1: #aff33e;
+    --chart-2: #3b82f6;
+    --chart-3: #22c55e;
+    --chart-4: #a855f7;
+    --chart-5: #f59e0b;
+    --radius: 1rem;
   }
 }
 
@@ -85,7 +131,7 @@ body {
 }
 
 .dark .glass-card {
-  background: rgba(17, 26, 22, 0.7);
+  background: rgba(15, 23, 42, 0.85);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border);
 }

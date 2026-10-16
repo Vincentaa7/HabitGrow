@@ -65,7 +65,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="HabitGrow" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
-      <body className="min-h-full flex flex-col bg-[#f8faf9] text-slate-900 dark:bg-[#090e0c] dark:text-slate-100 font-sans transition-colors duration-200">
+      <body className="min-h-full flex flex-col bg-[#fbfcf8] text-slate-900 dark:bg-[#020617] dark:text-[#f8fafc] font-sans transition-colors duration-200">
         {/* Inline script executed before paint to prevent FOUC */}
         <Script id="theme-init" strategy="beforeInteractive">{`
 (function() {

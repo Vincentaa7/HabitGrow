@@ -213,10 +213,10 @@ export function HabitFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#111a16] border border-slate-100 dark:border-[#1e2e26] shadow-2xl">
+      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-100 dark:border-[#1e293b] shadow-2xl">
 
         {/* Sticky Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-[#1e2e26] bg-white/95 dark:bg-[#111a16]/95 backdrop-blur-sm rounded-t-2xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-[#1e293b] bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-sm rounded-t-2xl">
           <div className="flex items-center gap-3">
             <span className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-400 text-lg shadow-sm">
               {initialHabit ? '✏️' : '🌱'}
@@ -257,7 +257,7 @@ export function HabitFormModal({
               type="text"
               placeholder="Misal: Belajar Coding, Minum Air 2L, Baca Buku"
               {...register('name')}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e2e26] bg-slate-50 dark:bg-[#0d1612] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/60 transition"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#1e293b] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/60 dark:focus:ring-[#aff33e]/60 transition"
             />
             {errors.name && (
               <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>
@@ -271,7 +271,7 @@ export function HabitFormModal({
               rows={2}
               placeholder="Kenapa kebiasaan ini berharga bagimu?"
               {...register('description')}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e2e26] bg-slate-50 dark:bg-[#0d1612] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/60 transition resize-none"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#1e293b] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/60 dark:focus:ring-[#aff33e]/60 transition resize-none"
             />
           </div>
 
@@ -287,8 +287,8 @@ export function HabitFormModal({
                   className={cn(
                     'flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all',
                     selectedCategoryId === c.id
-                      ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm'
-                      : 'border-slate-200 dark:border-[#1e2e26] text-slate-600 dark:text-slate-400 hover:border-emerald-400 dark:hover:border-emerald-700 hover:text-emerald-600 dark:hover:text-emerald-400 bg-slate-50 dark:bg-[#0d1612]'
+                      ? 'bg-emerald-600 dark:bg-[#aff33e] border-emerald-600 dark:border-[#aff33e] text-white dark:text-[#0f172a] shadow-sm'
+                      : 'border-slate-200 dark:border-[#1e293b] text-slate-600 dark:text-slate-400 hover:border-emerald-400 dark:hover:border-[#aff33e] hover:text-emerald-600 dark:hover:text-[#aff33e] bg-slate-50 dark:bg-[#1e293b]'
                   )}
                 >
                   {selectedCategoryId === c.id && <Check className="w-3 h-3" />}
@@ -311,7 +311,7 @@ export function HabitFormModal({
                     'flex flex-col items-center gap-0.5 py-2.5 px-3 rounded-xl border text-center transition-all',
                     selectedDifficulty === d.id
                       ? `${d.activeBg} shadow-sm`
-                      : 'border-slate-200 dark:border-[#1e2e26] bg-slate-50 dark:bg-[#0d1612] hover:border-slate-300 dark:hover:border-slate-600'
+                      : 'border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#1e293b] hover:border-slate-300 dark:hover:border-slate-600'
                   )}
                 >
                   <span className={cn('text-xs font-bold', selectedDifficulty === d.id ? d.color : 'text-slate-600 dark:text-slate-400')}>
@@ -337,12 +337,12 @@ export function HabitFormModal({
                   className={cn(
                     'flex flex-col items-center gap-1 py-2.5 px-2 rounded-xl border text-center transition-all',
                     frequencyType === f.id
-                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/70 shadow-sm'
-                      : 'border-slate-200 dark:border-[#1e2e26] bg-slate-50 dark:bg-[#0d1612] hover:border-slate-300 dark:hover:border-slate-600'
+                      ? 'border-emerald-500 bg-emerald-50 dark:bg-[#aff33e]/15 shadow-sm'
+                      : 'border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#1e293b] hover:border-slate-300 dark:hover:border-slate-600'
                   )}
                 >
                   <span className="text-base leading-none">{f.icon}</span>
-                  <span className={cn('text-[11px] font-semibold leading-tight', frequencyType === f.id ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-600 dark:text-slate-400')}>
+                  <span className={cn('text-[11px] font-semibold leading-tight', frequencyType === f.id ? 'text-emerald-700 dark:text-[#aff33e]' : 'text-slate-600 dark:text-slate-400')}>
                     {f.label}
                   </span>
                 </button>
@@ -352,7 +352,7 @@ export function HabitFormModal({
 
           {/* If SELECTED_DAYS: Day Buttons */}
           {frequencyType === 'SELECTED_DAYS' && (
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0d1612] border border-slate-200 dark:border-[#1e2e26]">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-slate-200 dark:border-[#1e293b]">
               <FormLabel>Pilih hari pelaksanaan</FormLabel>
               <div className="flex flex-wrap gap-2">
                 {DAYS_OF_WEEK.map((d) => {
@@ -365,8 +365,8 @@ export function HabitFormModal({
                       className={cn(
                         'w-10 h-10 text-xs font-bold rounded-xl border transition-all',
                         isSelected
-                          ? 'bg-emerald-600 border-emerald-600 text-white shadow-sm scale-105'
-                          : 'bg-white dark:bg-[#111a16] border-slate-200 dark:border-[#1e2e26] text-slate-600 dark:text-slate-400 hover:border-emerald-400 hover:text-emerald-600'
+                          ? 'bg-emerald-600 dark:bg-[#aff33e] border-emerald-600 dark:border-[#aff33e] text-white dark:text-[#0f172a] shadow-sm scale-105'
+                          : 'bg-white dark:bg-[#0f172a] border-slate-200 dark:border-[#1e293b] text-slate-600 dark:text-slate-400 hover:border-emerald-400 dark:hover:border-[#aff33e] hover:text-emerald-600 dark:hover:text-[#aff33e]'
                       )}
                     >
                       {d.label}
@@ -386,7 +386,7 @@ export function HabitFormModal({
                 min="1"
                 step="1"
                 {...register('target_value', { valueAsNumber: true })}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e2e26] bg-slate-50 dark:bg-[#0d1612] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/60 transition"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#1e293b] text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/60 dark:focus:ring-[#aff33e]/60 transition"
               />
               {/* Quick Preset Numbers 1 to 5 */}
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
@@ -399,8 +399,8 @@ export function HabitFormModal({
                     className={cn(
                       'w-7 h-7 rounded-lg text-xs font-bold border transition-all cursor-pointer flex items-center justify-center',
                       watch('target_value') === num
-                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
-                        : 'bg-white dark:bg-[#111a16] border-slate-200 dark:border-[#1e2e26] text-slate-600 dark:text-slate-400 hover:border-emerald-400 hover:text-emerald-600'
+                        ? 'bg-emerald-600 dark:bg-[#aff33e] border-emerald-600 dark:border-[#aff33e] text-white dark:text-[#0f172a] shadow-xs'
+                        : 'bg-white dark:bg-[#0f172a] border-slate-200 dark:border-[#1e293b] text-slate-600 dark:text-slate-400 hover:border-emerald-400 dark:hover:border-[#aff33e] hover:text-emerald-600 dark:hover:text-[#aff33e]'
                     )}
                   >
                     {num}
@@ -414,7 +414,7 @@ export function HabitFormModal({
                 type="text"
                 placeholder="kali, menit, halaman"
                 {...register('target_unit')}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e2e26] bg-slate-50 dark:bg-[#0d1612] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/60 transition"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#1e293b] bg-slate-50 dark:bg-[#1e293b] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/60 dark:focus:ring-[#aff33e]/60 transition"
               />
               {/* Quick Preset Unit Chips */}
               <div className="flex items-center gap-1 mt-2 flex-wrap">
@@ -426,8 +426,8 @@ export function HabitFormModal({
                     className={cn(
                       'px-2 py-0.5 rounded-md text-[11px] font-semibold border transition-all cursor-pointer',
                       watch('target_unit') === unit
-                        ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
-                        : 'bg-white dark:bg-[#111a16] border-slate-200 dark:border-[#1e2e26] text-slate-600 dark:text-slate-400 hover:border-emerald-400 hover:text-emerald-600'
+                        ? 'bg-emerald-600 dark:bg-[#aff33e] border-emerald-600 dark:border-[#aff33e] text-white dark:text-[#0f172a] shadow-xs'
+                        : 'bg-white dark:bg-[#0f172a] border-slate-200 dark:border-[#1e293b] text-slate-600 dark:text-slate-400 hover:border-emerald-400 dark:hover:border-[#aff33e] hover:text-emerald-600 dark:hover:text-[#aff33e]'
                     )}
                   >
                     {unit}
@@ -440,7 +440,7 @@ export function HabitFormModal({
           {/* Icon & Color Selector */}
           <div>
             <FormLabel>Ikon & Aksen Warna</FormLabel>
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#0d1612] border border-slate-200 dark:border-[#1e2e26] space-y-3">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#1e293b] border border-slate-200 dark:border-[#1e293b] space-y-3">
               {/* Icons row */}
               <div className="flex items-center gap-2 flex-wrap">
                 {ICONS.map((item) => {
@@ -455,14 +455,14 @@ export function HabitFormModal({
                       className={cn(
                         'w-9 h-9 flex items-center justify-center rounded-xl border transition-all',
                         isSelected
-                          ? 'border-emerald-500 bg-white dark:bg-[#111a16] shadow-sm scale-110'
-                          : 'border-slate-200 dark:border-[#1e2e26] bg-white dark:bg-[#111a16] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:border-slate-300'
+                          ? 'border-emerald-500 bg-white dark:bg-[#0f172a] shadow-sm scale-110'
+                          : 'border-slate-200 dark:border-[#1e293b] bg-white dark:bg-[#0f172a] text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:border-slate-300'
                       )}
                     >
                       <IconComp
                         className={cn(
                           'w-4 h-4',
-                          isSelected ? 'text-emerald-600 dark:text-emerald-400' : ''
+                          isSelected ? 'text-emerald-600 dark:text-[#aff33e]' : ''
                         )}
                       />
                     </button>
@@ -483,7 +483,7 @@ export function HabitFormModal({
                       className={cn(
                         'w-7 h-7 rounded-full border-2 transition-all',
                         isSelected
-                          ? 'scale-125 border-white dark:border-[#111a16] shadow-lg ring-2 ring-offset-1 dark:ring-offset-[#0d1612]'
+                          ? 'scale-125 border-white dark:border-[#0f172a] shadow-lg ring-2 ring-offset-1 dark:ring-offset-[#1e293b]'
                           : 'border-transparent hover:scale-110 opacity-80 hover:opacity-100'
                       )}
                       style={{
@@ -498,7 +498,7 @@ export function HabitFormModal({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-[#1e2e26]">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-[#1e293b]">
             <button
               type="button"
               onClick={onClose}
@@ -509,7 +509,7 @@ export function HabitFormModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-md shadow-emerald-600/20 transition disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+              className="px-6 py-2.5 text-sm font-bold text-white dark:text-[#0f172a] bg-emerald-600 dark:bg-[#aff33e] hover:bg-emerald-500 dark:hover:bg-[#9de62e] rounded-xl shadow-md shadow-emerald-600/20 transition disabled:opacity-50 flex items-center gap-2 cursor-pointer"
             >
               {isSubmitting ? (
                 <>

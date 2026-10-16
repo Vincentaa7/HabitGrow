@@ -55,30 +55,30 @@ export function LandingHeroShowcase() {
   return (
     <div className="w-full max-w-5xl mx-auto">
       {/* App Mockup Container */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0c1410] shadow-xl shadow-slate-900/5 dark:shadow-black/40 overflow-hidden">
+      <div className="rounded-2xl border border-slate-200 dark:border-[#1e293b] bg-white dark:bg-[#0f172a] shadow-xl shadow-slate-900/5 dark:shadow-black/40 overflow-hidden">
         {/* Mockup Window Header */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-200 dark:border-slate-800/80 bg-slate-50/80 dark:bg-[#09100d] text-xs text-slate-500 dark:text-slate-400">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-slate-200 dark:border-[#1e293b]/80 bg-slate-50/80 dark:bg-[#020617] text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700" />
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700" />
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+            <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-[#1e293b]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-[#1e293b]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-[#1e293b]" />
             <span className="ml-2 font-mono text-[11px] text-slate-400 dark:text-slate-500 hidden sm:inline">
               habitgrow.app/dashboard
             </span>
           </div>
           <div className="flex items-center gap-2 font-medium">
-            <span className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+            <span className="text-[11px] px-2 py-0.5 rounded-md bg-slate-200/60 dark:bg-[#1e293b] text-slate-600 dark:text-[#94a3b8]">
               Simulasi Interaktif
             </span>
           </div>
         </div>
 
         {/* Mockup Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-slate-200 dark:divide-slate-800">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-slate-200 dark:divide-[#1e293b]">
           {/* Left/Center: The Living Tree Centerpiece */}
-          <div className="lg:col-span-7 p-6 sm:p-8 flex flex-col items-center justify-between bg-gradient-to-b from-slate-50/50 to-white dark:from-[#0c1410] dark:to-[#080d0a]">
+          <div className="lg:col-span-7 p-6 sm:p-8 flex flex-col items-center justify-between bg-gradient-to-b from-slate-50/50 to-white dark:from-[#0f172a] dark:to-[#020617]">
             {/* Stage Selector Pills */}
-            <div className="w-full flex items-center justify-center gap-1 sm:gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs">
+            <div className="w-full flex items-center justify-center gap-1 sm:gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-[#020617] border border-slate-200/80 dark:border-[#1e293b] text-xs">
               {STAGES.map((s, idx) => {
                 const isActive = idx === selectedStageIdx;
                 return (
@@ -89,7 +89,7 @@ export function LandingHeroShowcase() {
                     className={cn(
                       'px-2.5 py-1 rounded-lg font-medium transition cursor-pointer text-[11px] sm:text-xs',
                       isActive
-                        ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-bold shadow-xs'
+                        ? 'bg-white dark:bg-[#1e293b] text-slate-900 dark:text-[#aff33e] font-bold shadow-xs'
                         : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     )}
                   >
@@ -122,9 +122,9 @@ export function LandingHeroShowcase() {
             </div>
 
             {/* Bottom Status Row */}
-            <div className="w-full pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+            <div className="w-full pt-4 border-t border-slate-100 dark:border-[#1e293b]/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-1.5 font-medium">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-[#aff33e]" />
                 Pohon Berkelanjutan
               </span>
               <span>Klik fase di atas untuk melihat perubahan pohon</span>
@@ -132,7 +132,7 @@ export function LandingHeroShowcase() {
           </div>
 
           {/* Right: Daily Habit Execution Hub Mockup */}
-          <div className="lg:col-span-5 p-6 sm:p-7 flex flex-col justify-between bg-white dark:bg-[#0c1410]">
+          <div className="lg:col-span-5 p-6 sm:p-7 flex flex-col justify-between bg-white dark:bg-[#0f172a]">
             <div>
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -143,15 +143,15 @@ export function LandingHeroShowcase() {
                     Coba centang untuk simulasi progres
                   </p>
                 </div>
-                <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                <span className="text-xs font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#1e293b] text-slate-700 dark:text-slate-300">
                   {completedCount}/{totalHabits}
                 </span>
               </div>
 
               {/* Progress bar */}
-              <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden mb-5">
+              <div className="w-full bg-slate-100 dark:bg-[#1e293b] h-2 rounded-full overflow-hidden mb-5">
                 <div
-                  className="bg-emerald-600 h-full rounded-full transition-all duration-300"
+                  className="bg-emerald-600 dark:bg-[#aff33e] h-full rounded-full transition-all duration-300"
                   style={{ width: `${completionPercent}%` }}
                 />
               </div>
@@ -165,8 +165,8 @@ export function LandingHeroShowcase() {
                     className={cn(
                       'p-3.5 rounded-xl border transition cursor-pointer select-none flex items-center justify-between gap-3',
                       habit.completed
-                        ? 'border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/40 dark:bg-emerald-950/20'
-                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 hover:border-slate-300 dark:hover:border-slate-700'
+                        ? 'border-emerald-200 dark:border-[#aff33e]/30 bg-emerald-50/40 dark:bg-[#aff33e]/10'
+                        : 'border-slate-200 dark:border-[#1e293b] bg-white dark:bg-[#1e293b]/40 hover:border-slate-300 dark:hover:border-slate-700'
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -174,8 +174,8 @@ export function LandingHeroShowcase() {
                         className={cn(
                           'w-5 h-5 rounded-md border flex items-center justify-center transition shrink-0',
                           habit.completed
-                            ? 'bg-emerald-600 border-emerald-600 text-white'
-                            : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800'
+                            ? 'bg-emerald-600 dark:bg-[#aff33e] border-emerald-600 dark:border-[#aff33e] text-white dark:text-[#0f172a]'
+                            : 'border-slate-300 dark:border-[#1e293b] bg-white dark:bg-[#1e293b]'
                         )}
                       >
                         {habit.completed && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -202,7 +202,7 @@ export function LandingHeroShowcase() {
                         <Flame className="w-3 h-3 fill-amber-500" />
                         {habit.streak}
                       </span>
-                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100/70 dark:bg-emerald-950/50 px-1.5 py-0.5 rounded">
+                      <span className="text-[10px] font-bold text-emerald-700 dark:text-[#aff33e] bg-emerald-100/70 dark:bg-[#aff33e]/10 px-1.5 py-0.5 rounded">
                         +{habit.xp} XP
                       </span>
                     </div>
@@ -212,8 +212,8 @@ export function LandingHeroShowcase() {
             </div>
 
             {/* Micro Summary Footer */}
-            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-              <span className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-[#1e293b]/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span className="flex items-center gap-1 font-medium text-emerald-600 dark:text-[#aff33e]">
                 <Zap className="w-3.5 h-3.5" />
                 Level 4 · 480 XP
               </span>

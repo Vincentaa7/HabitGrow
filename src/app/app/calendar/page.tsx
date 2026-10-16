@@ -305,9 +305,9 @@ export default function CalendarPage() {
         {/* Quick Return to Today Button */}
         <button
           onClick={handleJumpToToday}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white dark:bg-[#111a16] border border-slate-200 dark:border-[#1e2e26] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500 dark:hover:border-emerald-500/60 shadow-xs transition-all self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500 dark:hover:border-[#aff33e]/60 shadow-xs transition-all self-start sm:self-auto"
         >
-          <CalendarDays className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <CalendarDays className="w-4 h-4 text-emerald-600 dark:text-[#aff33e]" />
           <span>Kembali ke Hari Ini</span>
         </button>
       </div>
@@ -315,8 +315,8 @@ export default function CalendarPage() {
       {/* 2. Monthly Executive Metric Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Total Completions in Month */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111a16] border border-slate-200 dark:border-[#1e2e26] shadow-sm flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-[#aff33e]/10 border border-emerald-200 dark:border-[#aff33e]/30 flex items-center justify-center text-emerald-600 dark:text-[#aff33e] shrink-0">
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
@@ -330,7 +330,7 @@ export default function CalendarPage() {
         </div>
 
         {/* Non-Zero Days in Month */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111a16] border border-slate-200 dark:border-[#1e2e26] shadow-sm flex items-center gap-3.5">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-2xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800/60 flex items-center justify-center text-teal-600 dark:text-teal-400 shrink-0">
             <Sparkles className="w-6 h-6" />
           </div>
@@ -345,7 +345,7 @@ export default function CalendarPage() {
         </div>
 
         {/* Monthly XP Earned */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111a16] border border-slate-200 dark:border-[#1e2e26] shadow-sm flex items-center gap-3.5">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
             <Zap className="w-6 h-6" />
           </div>
@@ -360,7 +360,7 @@ export default function CalendarPage() {
         </div>
 
         {/* Monthly Consistency Rate */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#111a16] border border-slate-200 dark:border-[#1e2e26] shadow-sm flex items-center gap-3.5">
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/60 flex items-center justify-center text-rose-600 dark:text-rose-400 shrink-0">
             <Flame className="w-6 h-6" />
           </div>
@@ -379,21 +379,21 @@ export default function CalendarPage() {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         {/* LEFT: Monthly Calendar Grid (xl:col-span-8) */}
         <div className="xl:col-span-8 space-y-6">
-          <div className="p-3.5 sm:p-7 rounded-3xl bg-white dark:bg-[#0e1713] border border-slate-200 dark:border-[#1e2e26] shadow-sm space-y-5">
+          <div className="p-3.5 sm:p-7 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm space-y-5">
             {/* Topbar: Month Title & Year Navigation */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100 dark:border-[#1a2c23]">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100 dark:border-[#1e293b]">
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1">
                   <button
                     onClick={prevMonth}
-                    className="p-2 rounded-xl border border-slate-200 dark:border-[#1e2e26] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#15231c] transition"
+                    className="p-2 rounded-xl border border-slate-200 dark:border-[#1e293b] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e293b] transition"
                     title="Bulan Sebelumnya"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={nextMonth}
-                    className="p-2 rounded-xl border border-slate-200 dark:border-[#1e2e26] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#15231c] transition"
+                    className="p-2 rounded-xl border border-slate-200 dark:border-[#1e293b] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1e293b] transition"
                     title="Bulan Berikutnya"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -412,7 +412,7 @@ export default function CalendarPage() {
 
               {/* Year Navigation Controls */}
               <div className="flex items-center gap-2 self-start sm:self-auto">
-                <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#121c17] p-1 rounded-xl border border-slate-200 dark:border-[#1e2e26]">
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-[#020617] p-1 rounded-xl border border-slate-200 dark:border-[#1e293b]">
                   <button
                     onClick={() => setSelectedYear((y) => y - 1)}
                     className="p-1 rounded-lg text-slate-500 hover:text-slate-900 dark:hover:text-white transition"
@@ -445,8 +445,8 @@ export default function CalendarPage() {
                     className={cn(
                       'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap',
                       isCurrent
-                        ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
-                        : 'bg-slate-100 dark:bg-[#15231c] text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-[#1f3329] hover:text-slate-900 dark:hover:text-white'
+                        ? 'bg-emerald-600 dark:bg-[#aff33e] text-white dark:text-[#0f172a] shadow-sm shadow-emerald-600/30'
+                        : 'bg-slate-100 dark:bg-[#1e293b] text-slate-600 dark:text-[#94a3b8] hover:bg-slate-200 dark:hover:bg-[#1e293b] hover:text-slate-900 dark:hover:text-white'
                     )}
                   >
                     {name}
@@ -463,8 +463,8 @@ export default function CalendarPage() {
                   className={cn(
                     'py-2 rounded-xl text-[11px] sm:text-xs font-extrabold',
                     idx >= 5
-                      ? 'text-emerald-600/90 dark:text-emerald-400/90 bg-emerald-50/60 dark:bg-emerald-950/20'
-                      : 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#121c17]'
+                      ? 'text-emerald-600/90 dark:text-[#aff33e] bg-emerald-50/60 dark:bg-[#aff33e]/10'
+                      : 'text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-[#1e293b]'
                   )}
                 >
                   <span className="hidden sm:inline">{dayName}</span>
@@ -486,12 +486,12 @@ export default function CalendarPage() {
                       'min-h-[66px] sm:min-h-[96px] p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl flex flex-col justify-between text-left transition-colors duration-150 relative group border text-xs',
                       // Selected state (no scale transform so grid baseline remains strictly aligned)
                       isSelected
-                        ? 'border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/50 ring-2 ring-emerald-500 dark:ring-emerald-400 shadow-sm z-10'
+                        ? 'border-emerald-500 bg-emerald-50/80 dark:bg-[#aff33e]/15 ring-2 ring-emerald-500 dark:ring-[#aff33e] shadow-sm z-10'
                         : cell.isToday
-                        ? 'border-emerald-400 dark:border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20 hover:border-emerald-500 shadow-xs'
+                        ? 'border-emerald-400 dark:border-[#aff33e]/40 bg-emerald-50/30 dark:bg-[#aff33e]/10 hover:border-emerald-500 shadow-xs'
                         : cell.isCurrentMonth
-                        ? 'border-slate-200/90 dark:border-[#1e2e26] bg-white dark:bg-[#111a16] hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:bg-slate-50/70 dark:hover:bg-[#16231c]'
-                        : 'border-slate-200/40 dark:border-[#16221c]/40 bg-slate-50/40 dark:bg-[#0c1411]/40 hover:opacity-90',
+                        ? 'border-slate-200/90 dark:border-[#1e293b] bg-white dark:bg-[#0f172a] hover:border-emerald-300 dark:hover:border-[#aff33e]/40 hover:bg-slate-50/70 dark:hover:bg-[#1e293b]'
+                        : 'border-slate-200/40 dark:border-[#1e293b]/40 bg-slate-50/40 dark:bg-[#020617]/40 hover:opacity-90',
                       cell.isFuture && !isSelected && 'opacity-60'
                     )}
                   >
@@ -501,9 +501,9 @@ export default function CalendarPage() {
                         className={cn(
                           'font-bold sm:font-black text-xs sm:text-sm',
                           isSelected
-                            ? 'text-emerald-700 dark:text-emerald-300'
+                            ? 'text-emerald-700 dark:text-[#aff33e]'
                             : cell.isToday
-                            ? 'text-emerald-600 dark:text-emerald-400 font-black'
+                            ? 'text-emerald-600 dark:text-[#aff33e] font-black'
                             : cell.isCurrentMonth
                             ? 'text-slate-800 dark:text-slate-100'
                             : 'text-slate-400 dark:text-slate-600'
@@ -617,18 +617,18 @@ export default function CalendarPage() {
         </div>
 
         {/* RIGHT: Selected Day Inspector Card (xl:col-span-4) */}
-        <div className="xl:col-span-4 p-5 sm:p-7 rounded-3xl bg-white dark:bg-[#0e1713] border border-slate-200 dark:border-[#1e2e26] shadow-sm space-y-5">
+        <div className="xl:col-span-4 p-5 sm:p-7 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-[#1e293b] shadow-sm space-y-5">
           {/* Card Header with Formatted Date */}
-          <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-[#1a2c23]">
+          <div className="flex items-start justify-between pb-4 border-b border-slate-100 dark:border-[#1e293b]">
             <div>
-              <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
+              <span className="text-[11px] font-bold text-emerald-600 dark:text-[#aff33e] uppercase tracking-wider block">
                 Tinjauan Hari Terpilih
               </span>
               <h3 className="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white mt-0.5">
                 {formattedSelectedDate}
               </h3>
             </div>
-            <div className="p-2.5 rounded-2xl bg-emerald-100/70 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
+            <div className="p-2.5 rounded-2xl bg-emerald-100/70 dark:bg-[#aff33e]/10 text-emerald-600 dark:text-[#aff33e]">
               <CalendarIcon className="w-5 h-5" />
             </div>
           </div>
@@ -636,8 +636,8 @@ export default function CalendarPage() {
           {/* Day Metric Summary */}
           {isDayLoading ? (
             <div className="space-y-3">
-              <div className="h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
-              <div className="h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
+              <div className="h-14 rounded-2xl bg-slate-100 dark:bg-[#1e293b] animate-pulse" />
+              <div className="h-20 rounded-2xl bg-slate-100 dark:bg-[#1e293b] animate-pulse" />
             </div>
           ) : (
             <div className="space-y-4">
@@ -646,8 +646,8 @@ export default function CalendarPage() {
                 className={cn(
                   'p-3.5 rounded-2xl border flex items-center justify-between gap-3',
                   dayDetail?.summary.isNonZeroDay
-                    ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300'
-                    : 'bg-slate-50 dark:bg-[#121d17] border-slate-200 dark:border-[#1e2e26] text-slate-600 dark:text-slate-400'
+                    ? 'bg-emerald-50/70 dark:bg-[#aff33e]/15 border-emerald-200 dark:border-[#aff33e]/30 text-emerald-800 dark:text-[#aff33e]'
+                    : 'bg-slate-50 dark:bg-[#1e293b] border-slate-200 dark:border-[#1e293b] text-slate-600 dark:text-slate-400'
                 )}
               >
                 <div className="flex items-center gap-2.5">
@@ -672,7 +672,7 @@ export default function CalendarPage() {
                   </div>
                 </div>
 
-                <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-white dark:bg-[#1a2c23] shadow-xs">
+                <span className="text-xs font-black px-2.5 py-1 rounded-xl bg-white dark:bg-[#1e293b] text-slate-900 dark:text-[#aff33e] shadow-xs">
                   +{dayDetail?.summary.totalXpEarned ?? 0} XP
                 </span>
               </div>
@@ -681,13 +681,13 @@ export default function CalendarPage() {
               <div>
                 <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">
                   <span>Tingkat Penyelesaian</span>
-                  <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">
+                  <span className="text-emerald-600 dark:text-[#aff33e] font-extrabold">
                     {dayDetail?.summary.completionRate ?? 0}%
                   </span>
                 </div>
-                <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-[#16231c] overflow-hidden">
+                <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-[#1e293b] overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500"
+                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-[#aff33e] transition-all duration-500"
                     style={{ width: `${dayDetail?.summary.completionRate ?? 0}%` }}
                   />
                 </div>
@@ -700,7 +700,7 @@ export default function CalendarPage() {
                 </h4>
 
                 {(!dayDetail?.items || dayDetail.items.length === 0) ? (
-                  <p className="text-xs text-slate-400 py-4 text-center bg-slate-50 dark:bg-[#121c17] rounded-2xl border border-dashed border-slate-200 dark:border-[#1e2e26]">
+                  <p className="text-xs text-slate-400 py-4 text-center bg-slate-50 dark:bg-[#1e293b] rounded-2xl border border-dashed border-slate-200 dark:border-[#1e293b]">
                     Tidak ada kebiasaan yang terjadwal pada hari ini.
                   </p>
                 ) : (
@@ -715,8 +715,8 @@ export default function CalendarPage() {
                           className={cn(
                             'p-3 rounded-2xl border flex items-center justify-between text-xs transition-all',
                             habit.is_completed_today
-                              ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200/60 dark:border-emerald-800/40 text-slate-800 dark:text-slate-200'
-                              : 'bg-slate-50/60 dark:bg-[#121d17]/80 border-slate-200/70 dark:border-[#1e2e26] text-slate-600 dark:text-slate-400'
+                              ? 'bg-emerald-50/50 dark:bg-[#aff33e]/10 border-emerald-200/60 dark:border-[#aff33e]/30 text-slate-800 dark:text-slate-200'
+                              : 'bg-slate-50/60 dark:bg-[#1e293b]/80 border-slate-200/70 dark:border-[#1e293b] text-slate-600 dark:text-slate-400'
                           )}
                         >
                           <div className="flex items-center gap-2.5 truncate pr-2">
@@ -738,11 +738,11 @@ export default function CalendarPage() {
                                 className={cn(
                                   'w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-white text-[10px]',
                                   habit.is_completed_today
-                                    ? 'bg-emerald-500 shadow-xs'
-                                    : 'border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800'
+                                    ? 'bg-emerald-500 dark:bg-[#aff33e] dark:text-[#0f172a] shadow-xs'
+                                    : 'border border-slate-300 dark:border-[#1e293b] bg-white dark:bg-[#1e293b]'
                                 )}
                               >
-                                {habit.is_completed_today && <Check className="w-3 h-3 stroke-[3]" />}
+                                {habit.is_completed_today && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                               </span>
                             )}
                             <span
@@ -759,8 +759,8 @@ export default function CalendarPage() {
                             className={cn(
                               'text-[10px] font-bold px-2 py-0.5 rounded-lg shrink-0',
                               habit.is_completed_today
-                                ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300'
-                                : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                                ? 'bg-emerald-100 dark:bg-[#1e293b] text-emerald-700 dark:text-[#aff33e] border border-transparent dark:border-[#aff33e]/30'
+                                : 'bg-slate-200 dark:bg-[#1e293b] text-slate-500 dark:text-slate-400'
                             )}
                           >
                             +{habit.xp_reward || 10} XP

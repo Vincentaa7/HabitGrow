@@ -24,9 +24,9 @@ const TREE_STAGES_DATA: { stage: TreeStage; name: string; range: string; desc: s
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8faf9] dark:bg-[#090e0c] text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen flex flex-col bg-[#fbfcf8] dark:bg-[#020617] text-slate-900 dark:text-[#f8fafc] font-sans">
       {/* Top Navigation */}
-      <header className="w-full border-b border-slate-200/80 dark:border-slate-800/80 sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+      <header className="w-full border-b border-slate-200/80 dark:border-[#1e293b] sticky top-0 z-50 bg-white/80 dark:bg-[#020617]/85 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center group transition-opacity hover:opacity-95" title="HabitGrow">
             <BrandLogo className="h-8 sm:h-9 w-auto" />
@@ -36,13 +36,13 @@ export default function LandingPage() {
             <ThemeToggle />
             <Link
               href="/login"
-              className="px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition"
+              className="px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-[#aff33e] transition"
             >
               Masuk
             </Link>
             <Link
               href="/register"
-              className="px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition shadow-xs"
+              className="px-4 py-2 text-xs sm:text-sm font-semibold text-white dark:text-[#020617] bg-emerald-600 dark:bg-[#aff33e] hover:bg-emerald-500 dark:hover:bg-[#9de62e] rounded-xl transition shadow-xs"
             >
               Daftar Gratis
             </Link>
@@ -54,9 +54,9 @@ export default function LandingPage() {
       <section className="pt-12 sm:pt-16 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto text-center space-y-5 sm:space-y-6">
           {/* Main Headline — Solid, Confident, No Gradient Tropes */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.15] max-w-4xl mx-auto">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-[#f8fafc] leading-[1.15] max-w-4xl mx-auto">
             Bangun kebiasaan harian.{' '}
-            <span className="text-slate-900 dark:text-white block sm:inline">
+            <span className="text-slate-900 dark:text-[#f8fafc] block sm:inline">
               Saksikan pohonmu bertumbuh.
             </span>
           </h1>
@@ -70,14 +70,14 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Link
               href="/register"
-              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm flex items-center justify-center gap-2 transition shadow-sm hover:shadow"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 dark:bg-[#aff33e] dark:hover:bg-[#9de62e] text-white dark:text-[#020617] font-semibold text-sm flex items-center justify-center gap-2 transition shadow-sm hover:shadow"
             >
               Mulai Rawat Kebiasaan
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/login"
-              className="w-full sm:w-auto px-5 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+              className="w-full sm:w-auto px-5 py-3 rounded-xl border border-slate-300 dark:border-[#1e293b] bg-white dark:bg-[#0f172a] text-slate-700 dark:text-slate-300 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-[#1e293b] transition"
             >
               Masuk ke Aplikasi
             </Link>
@@ -91,10 +91,10 @@ export default function LandingPage() {
       </section>
 
       {/* Core Pillars / Bento Showcase with Varied Card Proportions */}
-      <section className="py-16 sm:py-20 border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30">
+      <section className="py-16 sm:py-20 border-t border-slate-200/80 dark:border-[#1e293b] bg-slate-50/50 dark:bg-[#020617]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mb-12">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#f8fafc] tracking-tight">
               Dirancang untuk menjaga konsistensi jangka panjang
             </h2>
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-2">
@@ -104,12 +104,12 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
             {/* Bento Card 1: 7 Columns — Evolusi Pohon Berdasarkan Konsistensi */}
-            <div className="lg:col-span-7 p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0c1410] border border-slate-200/90 dark:border-slate-800 flex flex-col justify-between">
+            <div className="lg:col-span-7 p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/90 dark:border-[#1e293b] flex flex-col justify-between">
               <div>
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-[#1e293b] text-emerald-600 dark:text-[#aff33e] flex items-center justify-center mb-4">
                   <Trees className="w-5 h-5" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-[#f8fafc]">
                   Visualisasi Pohon Berdasarkan Konsistensi
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
@@ -117,8 +117,8 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">
+              <div className="mt-6 pt-5 border-t border-slate-100 dark:border-[#1e293b] flex items-center justify-between text-xs text-slate-500 dark:text-[#94a3b8]">
+                <span className="font-medium text-emerald-600 dark:text-[#aff33e]">
                   Konsistensi 0–100%
                 </span>
                 <span>5 Fase Pertumbuhan Dinamis</span>
@@ -126,12 +126,12 @@ export default function LandingPage() {
             </div>
 
             {/* Bento Card 2: 5 Columns — Streak yang Fleksibel */}
-            <div className="lg:col-span-5 p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0c1410] border border-slate-200/90 dark:border-slate-800 flex flex-col justify-between">
+            <div className="lg:col-span-5 p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/90 dark:border-[#1e293b] flex flex-col justify-between">
               <div>
-                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-[#1e293b] text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
                   <CalendarCheck className="w-5 h-5" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-[#f8fafc]">
                   Streak yang Menghormati Jadwal
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
@@ -139,7 +139,7 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div className="mt-6 pt-5 border-t border-slate-100 dark:border-[#1e293b] flex items-center justify-between text-xs text-slate-500 dark:text-[#94a3b8]">
                 <span className="font-medium text-amber-600 dark:text-amber-400">
                   Jadwal Kustom
                 </span>
@@ -148,12 +148,12 @@ export default function LandingPage() {
             </div>
 
             {/* Bento Card 3: 5 Columns — Peringatan Dini Kebiasaan Terancam */}
-            <div className="lg:col-span-5 p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0c1410] border border-slate-200/90 dark:border-slate-800 flex flex-col justify-between">
+            <div className="lg:col-span-5 p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/90 dark:border-[#1e293b] flex flex-col justify-between">
               <div>
-                <div className="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center mb-4">
+                <div className="w-10 h-10 rounded-xl bg-teal-100 dark:bg-[#1e293b] text-teal-600 dark:text-teal-400 flex items-center justify-center mb-4">
                   <BellRing className="w-5 h-5" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-[#f8fafc]">
                   Peringatan Dini Kebiasaan
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
@@ -161,7 +161,7 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div className="mt-6 pt-5 border-t border-slate-100 dark:border-[#1e293b] flex items-center justify-between text-xs text-slate-500 dark:text-[#94a3b8]">
                 <span className="font-medium text-teal-600 dark:text-teal-400">
                   Notifikasi Proaktif
                 </span>
@@ -170,12 +170,12 @@ export default function LandingPage() {
             </div>
 
             {/* Bento Card 4: 7 Columns — Gamifikasi & Level Pengguna */}
-            <div className="lg:col-span-7 p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0c1410] border border-slate-200/90 dark:border-slate-800 flex flex-col justify-between">
+            <div className="lg:col-span-7 p-6 sm:p-8 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/90 dark:border-[#1e293b] flex flex-col justify-between">
               <div>
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-[#1e293b] text-emerald-600 dark:text-[#aff33e] flex items-center justify-center mb-4">
                   <Compass className="w-5 h-5" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-[#f8fafc]">
                   Pengalaman Bertumbuh yang Memotivasi
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
@@ -183,8 +183,8 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">
+              <div className="mt-6 pt-5 border-t border-slate-100 dark:border-[#1e293b] flex items-center justify-between text-xs text-slate-500 dark:text-[#94a3b8]">
+                <span className="font-medium text-emerald-600 dark:text-[#aff33e]">
                   Sistem Level &amp; XP
                 </span>
                 <span>Progres Bertahap</span>
@@ -195,10 +195,10 @@ export default function LandingPage() {
       </section>
 
       {/* 5 Tree Stages Evolution Row */}
-      <section className="py-16 sm:py-20 border-t border-slate-200/80 dark:border-slate-800/80">
+      <section className="py-16 sm:py-20 border-t border-slate-200/80 dark:border-[#1e293b]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mb-10">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-[#f8fafc] tracking-tight">
               Lima Fase Evolusi Pohon
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1.5">
@@ -210,7 +210,7 @@ export default function LandingPage() {
             {TREE_STAGES_DATA.map((item, idx) => (
               <div
                 key={item.stage}
-                className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#0c1410] border border-slate-200/90 dark:border-slate-800 text-center flex flex-col items-center justify-between"
+                className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/90 dark:border-[#1e293b] text-center flex flex-col items-center justify-between"
               >
                 <div className="w-full flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
                   <span>Tahap {idx + 1}</span>
@@ -222,7 +222,7 @@ export default function LandingPage() {
                 </div>
 
                 <div>
-                  <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
+                  <h4 className="font-bold text-xs sm:text-sm text-slate-900 dark:text-[#f8fafc]">
                     {item.name}
                   </h4>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
@@ -236,7 +236,7 @@ export default function LandingPage() {
       </section>
 
       {/* Clean, Honest Footer */}
-      <footer className="mt-auto border-t border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#070b09] py-10">
+      <footer className="mt-auto border-t border-slate-200/80 dark:border-[#1e293b] bg-white dark:bg-[#020617] py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 text-center sm:text-left">
@@ -250,19 +250,19 @@ export default function LandingPage() {
             </div>
 
             <div className="flex items-center gap-5 text-xs font-medium text-slate-600 dark:text-slate-400">
-              <Link href="/login" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+              <Link href="/login" className="hover:text-emerald-600 dark:hover:text-[#aff33e] transition">
                 Masuk
               </Link>
-              <Link href="/register" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+              <Link href="/register" className="hover:text-emerald-600 dark:hover:text-[#aff33e] transition">
                 Daftar
               </Link>
-              <Link href="/app/dashboard" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition">
+              <Link href="/app/dashboard" className="hover:text-emerald-600 dark:hover:text-[#aff33e] transition">
                 Dashboard
               </Link>
             </div>
           </div>
 
-          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 dark:text-slate-500">
+          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-[#1e293b]/60 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 dark:text-[#94a3b8]">
             <div>
               &copy; {new Date().getFullYear()} HabitGrow. Hak cipta dilindungi.
             </div>

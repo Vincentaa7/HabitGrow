@@ -80,8 +80,8 @@ export function HabitCard({ habit, onComplete }: HabitCardProps) {
       className={cn(
         'group relative flex items-center justify-between p-3.5 sm:p-5 rounded-2xl border transition-all duration-200 shadow-xs sm:shadow-sm',
         isCompleted
-          ? 'bg-slate-50/60 dark:bg-[#111a16]/60 border-emerald-200/60 dark:border-emerald-900/40 opacity-90'
-          : 'bg-white dark:bg-[#0f1713] border-slate-200/90 dark:border-[#1e2e26] hover:border-emerald-400 dark:hover:border-emerald-600 hover:shadow-md hover:-translate-y-0.5'
+          ? 'bg-slate-50/60 dark:bg-[#0f172a]/60 border-emerald-200/60 dark:border-[#aff33e]/30 opacity-90'
+          : 'bg-white dark:bg-[#0f172a] border-slate-200/90 dark:border-[#1e293b] hover:border-emerald-400 dark:hover:border-[#aff33e]/60 hover:shadow-md hover:-translate-y-0.5'
       )}
       style={{
         borderLeftColor: habit.color,
@@ -113,13 +113,13 @@ export function HabitCard({ habit, onComplete }: HabitCardProps) {
             </h4>
 
             {habit.category_name && (
-              <span className="text-[9px] sm:text-[10px] font-semibold tracking-wider px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#1a2620] text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/50">
+              <span className="text-[9px] sm:text-[10px] font-semibold tracking-wider px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-[#1e293b] text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-[#1e293b]">
                 {CATEGORY_NAMES_ID[habit.category_name] || habit.category_name}
               </span>
             )}
 
             {isCompleted && (
-              <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300">
+              <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-100/80 dark:bg-[#aff33e]/10 text-emerald-700 dark:text-[#aff33e]">
                 ✓ Selesai
               </span>
             )}
@@ -137,7 +137,7 @@ export function HabitCard({ habit, onComplete }: HabitCardProps) {
               </span>
             )}
 
-            <span className="inline-flex items-center font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 sm:px-2 py-0.5 rounded-md border border-emerald-200/50 dark:border-emerald-900/40">
+            <span className="inline-flex items-center font-bold text-emerald-600 dark:text-[#aff33e] bg-emerald-50 dark:bg-[#aff33e]/10 px-1.5 sm:px-2 py-0.5 rounded-md border border-emerald-200/50 dark:border-[#aff33e]/20">
               +{habit.xp_reward} XP
             </span>
           </div>
@@ -153,12 +153,12 @@ export function HabitCard({ habit, onComplete }: HabitCardProps) {
         className={cn(
           'relative w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-200 shrink-0 shadow-xs sm:shadow-sm touch-manipulation cursor-pointer',
           isCompleted
-            ? 'bg-emerald-600 text-white shadow-emerald-600/20 cursor-default'
-            : 'border-2 border-slate-300 dark:border-slate-700 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-transparent hover:text-emerald-500 hover:scale-105 active:scale-95'
+            ? 'bg-emerald-600 dark:bg-[#aff33e] text-white dark:text-[#0f172a] shadow-emerald-600/20 cursor-default'
+            : 'border-2 border-slate-300 dark:border-[#1e293b] hover:border-emerald-500 dark:hover:border-[#aff33e] hover:bg-emerald-50 dark:hover:bg-[#aff33e]/10 text-transparent hover:text-emerald-500 dark:hover:text-[#aff33e] hover:scale-105 active:scale-95'
         )}
       >
         {isLoading ? (
-          <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-emerald-500 dark:border-[#aff33e] border-t-transparent rounded-full animate-spin" />
         ) : (
           <Check className={cn('w-4 h-4 sm:w-5 sm:h-5 transition-transform', isCompleted ? 'scale-100 stroke-[3]' : 'scale-75')} />
         )}
