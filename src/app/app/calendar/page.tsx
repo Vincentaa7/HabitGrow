@@ -379,7 +379,7 @@ export default function CalendarPage() {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         {/* LEFT: Monthly Calendar Grid (xl:col-span-8) */}
         <div className="xl:col-span-8 space-y-6">
-          <div className="p-5 sm:p-7 rounded-3xl bg-white dark:bg-[#0e1713] border border-slate-200 dark:border-[#1e2e26] shadow-sm space-y-5">
+          <div className="p-3.5 sm:p-7 rounded-3xl bg-white dark:bg-[#0e1713] border border-slate-200 dark:border-[#1e2e26] shadow-sm space-y-5">
             {/* Topbar: Month Title & Year Navigation */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-100 dark:border-[#1a2c23]">
               <div className="flex items-center gap-3">
@@ -456,7 +456,7 @@ export default function CalendarPage() {
             </div>
 
             {/* Weekdays Header: Senin s/d Minggu */}
-            <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center text-xs font-bold uppercase tracking-wider">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center text-xs font-bold uppercase tracking-wider">
               {['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'].map((dayName, idx) => (
                 <div
                   key={dayName}
@@ -474,7 +474,7 @@ export default function CalendarPage() {
             </div>
 
             {/* 7-Column Days Grid (Per Tanggal) */}
-            <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {monthGridCells.map((cell) => {
                 const isSelected = selectedDate === cell.dateStr;
 
@@ -483,23 +483,23 @@ export default function CalendarPage() {
                     key={cell.dateStr}
                     onClick={() => handleSelectDate(cell.dateStr, cell.month, cell.year)}
                     className={cn(
-                      'min-h-[72px] sm:min-h-[96px] p-2 sm:p-2.5 rounded-2xl flex flex-col justify-between text-left transition-all duration-200 relative group border text-xs',
-                      // Selected state
+                      'min-h-[66px] sm:min-h-[96px] p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl flex flex-col justify-between text-left transition-colors duration-150 relative group border text-xs',
+                      // Selected state (no scale transform so grid baseline remains strictly aligned)
                       isSelected
-                        ? 'border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/50 ring-2 ring-emerald-500 dark:ring-emerald-400 shadow-md scale-[1.02] z-10'
+                        ? 'border-emerald-500 bg-emerald-50/80 dark:bg-emerald-950/50 ring-2 ring-emerald-500 dark:ring-emerald-400 shadow-sm z-10'
                         : cell.isToday
                         ? 'border-emerald-400 dark:border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20 hover:border-emerald-500 shadow-xs'
                         : cell.isCurrentMonth
                         ? 'border-slate-200/90 dark:border-[#1e2e26] bg-white dark:bg-[#111a16] hover:border-emerald-300 dark:hover:border-emerald-700/60 hover:bg-slate-50/70 dark:hover:bg-[#16231c]'
-                        : 'border-slate-100 dark:border-[#16221c]/50 bg-slate-50/30 dark:bg-[#0c1411]/30 opacity-35 hover:opacity-75',
+                        : 'border-slate-200/40 dark:border-[#16221c]/40 bg-slate-50/40 dark:bg-[#0c1411]/40 hover:opacity-90',
                       cell.isFuture && !isSelected && 'opacity-60'
                     )}
                   >
                     {/* Top: Day Number & Today indicator */}
-                    <div className="flex items-center justify-between w-full">
+                    <div className="h-5 sm:h-6 flex items-center justify-between w-full">
                       <span
                         className={cn(
-                          'font-black text-xs sm:text-sm',
+                          'font-bold sm:font-black text-xs sm:text-sm',
                           isSelected
                             ? 'text-emerald-700 dark:text-emerald-300'
                             : cell.isToday
@@ -513,38 +513,70 @@ export default function CalendarPage() {
                       </span>
 
                       {cell.isToday && (
-                        <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500 text-white shadow-xs">
-                          <span className="hidden sm:inline">Hari Ini</span>
-                          <span className="sm:hidden">&bull;</span>
-                        </span>
+                        <>
+                          <span className="hidden sm:inline-flex text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500 text-white shadow-xs">
+                            Hari Ini
+                          </span>
+                          <span className="sm:hidden w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" title="Hari Ini" />
+                        </>
                       )}
                     </div>
 
-                    {/* Bottom: Botanical Activity Badge */}
-                    <div className="mt-1 w-full">
+                    {/* Bottom: Botanical Activity Badge with standardized baseline */}
+                    <div className="h-7 sm:h-8 w-full flex items-center justify-center sm:justify-start mt-auto">
                       {cell.count > 0 ? (
-                        <div
-                          className={cn(
-                            'w-full py-1 px-1.5 rounded-xl flex items-center justify-between text-[10px] font-bold transition-all',
-                            cell.level === 1 && 'bg-emerald-100 dark:bg-[#0e4429]/90 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-[#006d32]/60',
-                            cell.level === 2 && 'bg-emerald-200/90 dark:bg-[#006d32]/90 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-600/60',
-                            cell.level === 3 && 'bg-emerald-500 text-white border border-emerald-600 shadow-xs shadow-emerald-500/20',
-                            cell.level === 4 && 'bg-teal-500 text-white border border-teal-400 shadow-xs shadow-teal-500/30'
-                          )}
-                        >
-                          <div className="flex items-center gap-1 truncate">
-                            <span className="text-xs">{cell.level >= 4 ? '🌸' : cell.level >= 3 ? '🌳' : cell.level >= 2 ? '🌿' : '🌱'}</span>
-                            <span className="hidden md:inline truncate">{cell.count} selesai</span>
-                            <span className="md:hidden">{cell.count}</span>
+                        <>
+                          {/* Mobile View: Perfectly centered circular badge */}
+                          <div
+                            className={cn(
+                              'sm:hidden w-7 h-7 rounded-full flex items-center justify-center text-xs shrink-0 shadow-xs transition-transform',
+                              !cell.isCurrentMonth && 'opacity-40',
+                              cell.level === 1 && 'bg-emerald-100 dark:bg-[#0e4429] text-emerald-800 dark:text-emerald-300 border border-emerald-300/80 dark:border-[#006d32]',
+                              cell.level === 2 && 'bg-emerald-200 dark:bg-[#006d32] text-emerald-900 dark:text-emerald-200 border border-emerald-400/80 dark:border-emerald-600',
+                              cell.level === 3 && 'bg-emerald-500 text-white border border-emerald-600 shadow-xs shadow-emerald-500/20',
+                              cell.level === 4 && 'bg-teal-500 text-white border border-teal-400 shadow-xs shadow-teal-500/30'
+                            )}
+                            title={`${cell.count} selesai (+${cell.xp} XP)`}
+                          >
+                            <span className="select-none leading-none">
+                              {cell.level >= 4 ? '🌸' : cell.level >= 3 ? '🌳' : cell.level >= 2 ? '🌿' : '🌱'}
+                            </span>
                           </div>
-                          <span className="text-[9px] opacity-80 shrink-0 hidden lg:inline">+{cell.xp}</span>
-                        </div>
+
+                          {/* Desktop View: Full horizontal badge with count and XP */}
+                          <div
+                            className={cn(
+                              'hidden sm:flex w-full py-1 px-1.5 rounded-xl items-center justify-between text-[10px] font-bold transition-all',
+                              !cell.isCurrentMonth && 'opacity-40',
+                              cell.level === 1 && 'bg-emerald-100 dark:bg-[#0e4429]/90 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-[#006d32]/60',
+                              cell.level === 2 && 'bg-emerald-200/90 dark:bg-[#006d32]/90 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-600/60',
+                              cell.level === 3 && 'bg-emerald-500 text-white border border-emerald-600 shadow-xs shadow-emerald-500/20',
+                              cell.level === 4 && 'bg-teal-500 text-white border border-teal-400 shadow-xs shadow-teal-500/30'
+                            )}
+                          >
+                            <div className="flex items-center gap-1 truncate">
+                              <span className="text-xs">{cell.level >= 4 ? '🌸' : cell.level >= 3 ? '🌳' : cell.level >= 2 ? '🌿' : '🌱'}</span>
+                              <span className="truncate">{cell.count} selesai</span>
+                            </div>
+                            <span className="text-[9px] opacity-80 shrink-0 hidden lg:inline">+{cell.xp}</span>
+                          </div>
+                        </>
                       ) : cell.isToday ? (
-                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold italic truncate">
-                          Belum selesai
-                        </div>
+                        <>
+                          {/* Mobile: Subtle dashed green sprout placeholder */}
+                          <div className="sm:hidden w-7 h-7 rounded-full border border-dashed border-emerald-300/80 dark:border-emerald-700/60 flex items-center justify-center text-[10px] text-emerald-600/60 dark:text-emerald-400/60 select-none">
+                            🌱
+                          </div>
+                          {/* Desktop: Text note */}
+                          <div className="hidden sm:block text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold italic truncate">
+                            Belum selesai
+                          </div>
+                        </>
                       ) : (
-                        <div className="h-4" />
+                        <>
+                          <div className="sm:hidden w-7 h-7" />
+                          <div className="hidden sm:block h-4" />
+                        </>
                       )}
                     </div>
                   </button>
