@@ -97,7 +97,7 @@ describe('predictHabitFailureRisk', () => {
       name: 'Membaca Buku',
       target_value: 1,
       target_unit: 'sesi',
-      created_at: '2026-09-22T00:00:00Z', // brand new (2 days old)
+      created_at: '2026-09-08T00:00:00Z', // 16 days old (in 14-20 day early post-baseline window)
     };
 
     const prediction = predictHabitFailureRisk({
@@ -164,6 +164,54 @@ describe('predictHabitFailureRisk', () => {
     expect(prediction.suggested_action.suggested_target_value).toBe(500);
     expect(prediction.suggested_action.suggested_target_unit).toBe('ml');
     expect(prediction.suggested_action.message).toContain('500 ml');
+  });
+
+  it('assigns C4 maturity score across all 4 post-baseline tiers (14-20d, 21-29d, 30-59d, >=60d)', () => {
+    const evalDate = new Date(2026, 8, 25); // Sept 25, 2026
+
+    // Tier 1: 15 days old (14-20 days) -> 0.85 (85%)
+    const tier1 = predictHabitFailureRisk({
+      habit: { ...baseHabit, created_at: '2026-09-10T00:00:00Z' },
+      schedules,
+      completions: [],
+      evaluationDate: evalDate,
+      totalScheduledToday: 3,
+      totalDifficultyPointsToday: 4,
+    });
+    expect(tier1.factor_breakdown.maturity_score).toBe(85);
+
+    // Tier 2: 24 days old (21-29 days) -> 0.65 (65%)
+    const tier2 = predictHabitFailureRisk({
+      habit: { ...baseHabit, created_at: '2026-09-01T00:00:00Z' },
+      schedules,
+      completions: [],
+      evaluationDate: evalDate,
+      totalScheduledToday: 3,
+      totalDifficultyPointsToday: 4,
+    });
+    expect(tier2.factor_breakdown.maturity_score).toBe(65);
+
+    // Tier 3: 40 days old (30-59 days) -> 0.35 (35%)
+    const tier3 = predictHabitFailureRisk({
+      habit: { ...baseHabit, created_at: '2026-08-16T00:00:00Z' },
+      schedules,
+      completions: [],
+      evaluationDate: evalDate,
+      totalScheduledToday: 3,
+      totalDifficultyPointsToday: 4,
+    });
+    expect(tier3.factor_breakdown.maturity_score).toBe(35);
+
+    // Tier 4: 65 days old (>= 60 days) -> 0.12 (12%)
+    const tier4 = predictHabitFailureRisk({
+      habit: { ...baseHabit, created_at: '2026-07-22T00:00:00Z' },
+      schedules,
+      completions: [],
+      evaluationDate: evalDate,
+      totalScheduledToday: 3,
+      totalDifficultyPointsToday: 4,
+    });
+    expect(tier4.factor_breakdown.maturity_score).toBe(12);
   });
 });
 

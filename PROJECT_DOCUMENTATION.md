@@ -1061,12 +1061,12 @@ Seluruh kriteria bertipe **Benefit** (semakin tinggi nilainya, semakin besar ris
    Akumulasi bobot kesulitan kebiasaan yang terjadwal hari ini (Easy: 1, Medium: 2, Hard: 3), dinormalisasi terhadap ambang kelelahan 16 poin:
    $$C_3 = \min\left(1.0, \frac{\text{Total Poin Kesulitan Hari Ini}}{16}\right)$$
 4. **$C_4$ — Habit Maturity & Fragility (Bobot $W_4 = 0.15$ / 15%):**
-   Faktor kerentanan usia kebiasaan sejak dibuat. Kebiasaan baru masih dalam fase penyesuaian:
+   Faktor kerentanan usia kebiasaan sejak dibuat (dievaluasi pasca-masa observasi baseline 14 hari):
    $$C_4 = \begin{cases} 
-   0.85, & \text{jika usia} < 7\text{ hari (fase kritis)} \\
-   0.65, & \text{jika } 7 \le \text{usia} \le 13\text{ hari} \\
-   0.35, & \text{jika } 14 \le \text{usia} \le 29\text{ hari (mulai stabil)} \\
-   0.12, & \text{jika usia} \ge 30\text{ hari (kebiasaan matang/terbentuk)}
+   0.85, & \text{jika } 14 \le \text{usia} \le 20\text{ hari (fase rawan awal pasca-observasi / minggu ke-3)} \\
+   0.65, & \text{jika } 21 \le \text{usia} \le 29\text{ hari (fase adaptasi menengah / minggu ke-4)} \\
+   0.35, & \text{jika } 30 \le \text{usia} \le 59\text{ hari (fase penguatan rutinitas / bulan ke-2)} \\
+   0.12, & \text{jika usia} \ge 60\text{ hari (kebiasaan mapan / automaticity)}
    \end{cases}$$
 5. **$C_5$ — Late Hour Procrastination (Bobot $W_5 = 0.15$ / 15%):**
    Pola penundaan waktu pengerjaan berdasarkan rata-rata jam penyelesaian riwayat:
@@ -1105,7 +1105,7 @@ Misalkan hari evaluasi adalah hari **Rabu**, dan sistem mengevaluasi kebiasaan *
    * **$C_3$ (Beban Kesulitan Harian):** Pengguna memiliki 4 jadwal kebiasaan hari ini dengan tingkat kesulitan: Minum Air (`EASY` = 1), Baca Buku (`MEDIUM` = 2), Belajar Coding (`HARD` = 3), dan Olahraga (`MEDIUM` = 2). Total kesulitan $= 1 + 2 + 3 + 2 = 8$ poin dari ambang batas lelah 16 poin:  
      $$C_3 = \frac{8}{16} = \mathbf{0.50}$$  
      *(Catatan: Jika total poin $\ge 16$, fungsi `Math.min(1.0, total/16)` mengunci nilainya maksimal tetap $1.0$ sesuai batas atas kejenuhan mental kognitif).*
-   * **$C_4$ (Usia Kebiasaan):** Kebiasaan telah berjalan 20 hari (fase adaptasi menengah). Berdasarkan tabel bobot umur, $C_4 = \mathbf{0.35}$.
+   * **$C_4$ (Usia Kebiasaan):** Kebiasaan telah berjalan 35 hari (fase penguatan rutinitas 30–59 hari). Berdasarkan tabel bobot umur, $C_4 = \mathbf{0.35}$.
    * **$C_5$ (Pola Jam Malam):** Rata-rata jam penyelesaian riwayat adalah pukul 22.30 malam ($\ge 22.00$, rawan tertidur/menunda). Maka $C_5 = \mathbf{0.85}$.
 
 2. **Matriks Perhitungan Terbobot SAW:**
