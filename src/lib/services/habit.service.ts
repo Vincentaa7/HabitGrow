@@ -46,15 +46,7 @@ export class HabitService {
       }
     }
 
-    // 3. Insert initial streak entry
-    await supabase.from('user_streaks').insert({
-      user_id: userId,
-      habit_id: habit.id,
-      current_streak: 0,
-      longest_streak: 0,
-    });
-
-    // 4. Log Activity
+    // 3. Log Activity
     await supabase.from('activity_logs').insert({
       user_id: userId,
       activity_type: 'HABIT_CREATED',
@@ -76,7 +68,7 @@ export class HabitService {
   ): Promise<Habit[]> {
     let query = supabase
       .from('habits')
-      .select('*, category:habit_categories(*), habit_schedules(*), streak:user_streaks(*)')
+      .select('*, category:habit_categories(*), habit_schedules(*)')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -93,7 +85,6 @@ export class HabitService {
     return (data || []).map((h) => ({
       ...h,
       schedules: h.habit_schedules,
-      streak: Array.isArray(h.streak) ? h.streak[0] : h.streak,
     })) as unknown as Habit[];
   }
 
@@ -107,10 +98,10 @@ export class HabitService {
   ): Promise<TodayHabitItem[]> {
     const dateStr = targetDateStr || toDateString(new Date());
 
-    // 1. Fetch active habits with schedules and streaks
+    // 1. Fetch active habits with schedules
     const { data: habits, error } = await supabase
       .from('habits')
-      .select('*, category:habit_categories(name), habit_schedules(*), user_streaks(*)')
+      .select('*, category:habit_categories(name), habit_schedules(*)')
       .eq('user_id', userId)
       .eq('is_active', true)
       .eq('is_archived', false);
@@ -137,7 +128,6 @@ export class HabitService {
       const isScheduled = isHabitScheduledOnDate(habit, schedules, dateStr);
 
       if (isScheduled) {
-        const streakRecord = Array.isArray(h.user_streaks) ? h.user_streaks[0] : h.user_streaks;
         const completionId = completionMap.get(h.id);
 
         todayItems.push({
@@ -153,10 +143,7 @@ export class HabitService {
           category_name: h.category?.name,
           is_completed_today: Boolean(completionId),
           today_completion_id: completionId,
-          current_streak:
-            Boolean(completionId) && (streakRecord?.current_streak ?? 0) === 0
-              ? 1
-              : streakRecord?.current_streak ?? 0,
+          current_streak: 0,
           xp_reward: calculateXP(h.difficulty),
         });
       }

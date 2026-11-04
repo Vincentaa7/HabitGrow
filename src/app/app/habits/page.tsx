@@ -18,7 +18,6 @@ import {
   Briefcase,
   Smile,
   Zap,
-  Flame,
   AlertTriangle,
   X,
 } from 'lucide-react';
@@ -219,7 +218,6 @@ export default function HabitsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {habits.map((habit) => {
             const IconComp = ICON_MAP[habit.icon] || Sparkles;
-            const streakCount = habit.streak?.current_streak ?? 0;
             const catName = habit.category?.name
               ? (CATEGORY_NAMES_ID[habit.category.name] || habit.category.name)
               : 'Umum';
@@ -250,14 +248,6 @@ export default function HabitsPage() {
                         </span>
                       </div>
                     </div>
-
-                    {/* Streak badge */}
-                    {streakCount > 0 && (
-                      <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-1 rounded-lg">
-                        <Flame className="w-3.5 h-3.5 fill-amber-500" />
-                        {streakCount}
-                      </span>
-                    )}
                   </div>
 
                   {habit.description && (

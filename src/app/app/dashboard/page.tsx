@@ -8,7 +8,6 @@ import { HabitCategory } from '@/types/database';
 import { HabitCard } from '@/components/habits/HabitCard';
 import { TreeVisualization } from '@/components/tree/TreeVisualization';
 import { HabitFormModal } from '@/components/habits/HabitFormModal';
-import { StreakAlertBanner } from '@/components/habits/StreakAlertBanner';
 import { PredictionAlertBanner } from '@/components/habits/PredictionAlertBanner';
 import { NotificationPermissionBanner } from '@/components/notifications/NotificationPermissionBanner';
 import {
@@ -128,7 +127,7 @@ export default function DashboardPage() {
           },
           today_habits: previousSummary.today_habits.map((h) =>
             h.id === habitId
-              ? { ...h, is_completed_today: true, current_streak: h.current_streak + 1 }
+              ? { ...h, is_completed_today: true }
               : h
           ),
         });
@@ -351,7 +350,6 @@ export default function DashboardPage() {
       {/* 2. ALERT BANNERS (PENGINGAT & REKOMENDASI) */}
       <div className="space-y-3">
         <NotificationPermissionBanner />
-        <StreakAlertBanner brokenStreaks={summary.broken_streaks} />
         <PredictionAlertBanner predictions={summary.at_risk_habits} />
       </div>
 

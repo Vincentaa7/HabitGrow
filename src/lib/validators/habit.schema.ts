@@ -8,7 +8,7 @@ export const habitCreateSchema = z.object({
   icon: z.string().default('sparkles'),
   color: z.string().default('#10b981'),
   difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']).default('MEDIUM'),
-  frequency_type: z.enum(['DAILY', 'SELECTED_DAYS', 'WEEKLY_TARGET']),
+  frequency_type: z.enum(['DAILY', 'SELECTED_DAYS']),
   target_value: z.coerce.number().positive('Target harus lebih besar dari 0').default(1),
   target_unit: z.string().min(1).default('times'),
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format tanggal harus YYYY-MM-DD'),

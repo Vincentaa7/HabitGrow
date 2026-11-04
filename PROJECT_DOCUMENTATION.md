@@ -77,10 +77,10 @@ HabitGrow mengatasi masalah tersebut melalui:
 ### 2.1 Kebutuhan Fungsional (Functional Requirements)
 * **[FR-01] Autentikasi & Profil:** Pengguna dapat mendaftar, masuk, keluar, serta memperbarui nama tampilan dan preferensi zona waktu secara aman.
 * **[FR-02] Manajemen Kebiasaan (CRUD):** Pengguna dapat membuat, melihat, memperbarui (Edit Modal), mengarsipkan, dan menghapus kebiasaan dengan kustomisasi ikon, warna hex, tingkat kesulitan (*Easy/Medium/Hard*), target kuantitatif, dan satuan. Konfirmasi penghapusan disajikan melalui modal dialog kustom profesional dengan peringatan risiko kehilangan riwayat data.
-* **[FR-03] Penjadwalan Fleksibel:** Sistem mendukung tiga modalitas frekuensi: Harian (*DAILY*), Hari Tertentu (*SELECTED_DAYS*), dan Target Mingguan (*WEEKLY_TARGET*).
+* **[FR-03] Penjadwalan Fleksibel:** Sistem mendukung dua modalitas frekuensi: Harian (*DAILY*) dan Hari Tertentu (*SELECTED_DAYS*).
 * **[FR-04] Eksekusi & Checklist Instan:** Pengguna dapat mencentang kebiasaan harian dengan umpan balik visual instan (0 milidetik) melalui mekanisme *Optimistic UI Update*.
 * **[FR-05] Mesin Gamifikasi XP & Level:** Setiap penyelesaian kebiasaan menghasilkan *Experience Points* (XP) berdasarkan tingkat kesulitan yang berkontribusi pada kenaikan level pengguna secara terstruktur.
-* **[FR-06] Pelacak Multi-Streak (Global & Individual):** Sistem memelihara *streak* spesifik untuk masing-masing kebiasaan sekaligus menghitung *Global Daily Streak* berbasis prinsip *Non-Zero Day*.
+* **[FR-06] Pelacak Non-Zero Day Global Daily Streak:** Sistem menghitung *Global Daily Streak* akun terpusat berbasis prinsip *Non-Zero Day* untuk memitigasi *streak fatigue*, di mana penyelesaian $\ge 1$ kebiasaan apa pun per hari menjaga kelangsungan api streak utama.
 * **[FR-07] Deteksi & Peringatan Streak Putus (*Broken Streak Alert*):** Sistem secara otomatis mendeteksi jika sebuah kebiasaan mengalami putus *streak* pada hari kemarin dan menampilkan banner pemberitahuan yang empatik.
 * **[FR-08] Ekosistem Pohon Virtual:** Pertumbuhan dan kesehatan pohon ditentukan oleh skor konsistensi bergulir 30 hari (*Rolling 30-Day Consistency Score*).
 * **[FR-09] Sistem Pencapaian (*Achievements*):** Membuka lencana dan trofi khusus ketika pengguna mencapai tonggak sejarah tertentu (misal: *First Step*, *Streak 7 Days*, *Mature Tree*).
@@ -353,7 +353,7 @@ Diagram Konteks memodelkan batas sistem HabitGrow secara makro (*high-level*). S
      * Token Kunci Kriptografi Web Push Subscription (*Endpoint URL*, *p256dh*, *auth* via VAPID).
      * Pemicu Evaluasi SPK SAW Seketika (*On-Demand Trigger* via Halaman Profil).
    * **Aliran Data Keluar (*Outflow*):**
-     * Ringkasan Dasbor Real-time (Status Streak Global & Individual, Level XP, Bilah Konsistensi Bergulir 30 Hari).
+     * Ringkasan Dasbor Real-time (Status Non-Zero Day Global Streak, Level XP, Bilah Konsistensi Bergulir 30 Hari).
      * Visualisasi Metamorfosis Pohon Virtual (Tahap Pertumbuhan, Persentase Kesehatan Organik).
      * Umpan Balik Taktil Antarmuka (Animasi Ceklis, Efek Letupan Konfeti Partikel Instan).
      * Kartu Peringatan Dini SPK SAW & Rekomendasi Adaptif Tindakan Mitigasi (Aturan 2-Menit, Penyesuaian Beban).
@@ -658,7 +658,7 @@ flowchart TD
     CheckUniqueDate -- Lolos --> CommitDB[(Simpan Rekaman ke habit_completions)]
     
     CommitDB --> RecordXP[(Catat Transaksi ke xp_transactions & user_levels)]
-    RecordXP --> UpdateStreakSub[Panggil Sub-proses: Mutasi user_streaks Global & Individual]
+    RecordXP --> UpdateStreakSub[Panggil Sub-proses: Sinkronisasi user_streaks Global]
     UpdateStreakSub --> UpdateTreeSub[Panggil Sub-proses: Mutasi user_trees Konsistensi 30 Hari]
     
     UpdateTreeSub --> ServerOK[/Server Merespon HTTP 200 OK dengan Payload Baru/]
@@ -731,7 +731,7 @@ erDiagram
     auth_users ||--o{ habit_completions : "mencatat (1:N)"
     auth_users ||--o{ xp_transactions : "menerima (1:N)"
     auth_users ||--o{ user_levels : "memiliki (1:1)"
-    auth_users ||--o{ user_streaks : "memiliki (1:N)"
+    auth_users ||--o{ user_streaks : "memiliki (1:1)"
     auth_users ||--o{ user_trees : "memiliki (1:1)"
     auth_users ||--o{ user_achievements : "mengoleksi (1:N)"
     auth_users ||--o{ notifications : "menerima (1:N)"
@@ -740,7 +740,6 @@ erDiagram
     habit_categories ||--o{ habits : "mengelompokkan (1:N)"
     habits ||--o{ habit_schedules : "memiliki jadwal (1:N)"
     habits ||--o{ habit_completions : "memiliki rekaman (1:N)"
-    habits ||--o{ user_streaks : "memiliki streak (1:1)"
     achievements ||--o{ user_achievements : "dibuka dalam (1:N)"
 ```
 
@@ -774,7 +773,7 @@ Entitas utama kebiasaan yang dibuat oleh pengguna.
 * `icon` (VARCHAR 50, Ikon kartu)
 * `color` (VARCHAR 30, Kode HEX warna aksen)
 * `difficulty` (VARCHAR 20, Enum: 'EASY', 'MEDIUM', 'HARD')
-* `frequency_type` (VARCHAR 30, Enum: 'DAILY', 'SELECTED_DAYS', 'WEEKLY_TARGET')
+* `frequency_type` (VARCHAR 30, Enum: 'DAILY', 'SELECTED_DAYS')
 * `target_value` (NUMERIC 10,2, Nilai target kuantitas)
 * `target_unit` (VARCHAR 50, Satuan target, misal: 'kali', 'halaman', 'menit')
 * `start_date` (DATE, Tanggal kebiasaan dimulai)
@@ -816,13 +815,13 @@ Status level progresif pengguna.
 * `total_xp` (INTEGER, Akumulasi seluruh XP)
 
 #### 8. Tabel `user_streaks`
-Pencatatan rekor konsistensi berturut-turut untuk setiap kebiasaan.
+Pencatatan rekor kontinuitas berturut-turut akun pengguna berbasis prinsip *Non-Zero Day*.
 * `id` (UUID, Primary Key)
-* `user_id` (UUID, FK ke `auth.users.id`)
-* `habit_id` (UUID, FK ke `habits.id`)
-* `current_streak` (INTEGER, Streak berjalan)
-* `longest_streak` (INTEGER, Rekor terbaik)
-* `last_completed_date` (DATE, Tanggal terakhir centang)
+* `user_id` (UUID, FK ke `auth.users.id` ON DELETE CASCADE)
+* `current_streak` (INTEGER, Global streak berjalan akun pengguna)
+* `longest_streak` (INTEGER, Rekor terbaik sepanjang masa)
+* `last_completed_date` (DATE, Tanggal terakhir aktif/centang)
+* `updated_at` (TIMESTAMPTZ)
 
 #### 9. Tabel `user_trees`
 Representasi virtual pohon tanaman pengguna.
@@ -891,7 +890,7 @@ Tabel matriks di bawah ini menyajikan seluruh relasi relasional, aturan integrit
 | **5** | `habit_categories` | `public.habits` | **1 : N** | `habits.category_id` $\rightarrow$ `habit_categories.id` | **SET NULL** | Satu kategori dapat menaungi banyak kebiasaan. Jika kategori dihapus, kebiasaan tetap ada dengan kategori kosong. |
 | **6** | `habits` | `public.habit_schedules` | **1 : N** | `habit_schedules.habit_id` $\rightarrow$ `habits.id` | **CASCADE** | Satu kebiasaan dapat memiliki banyak hari penjadwalan berulang (0 = Minggu s/d 6 = Sabtu). |
 | **7** | `habits` | `public.habit_completions`| **1 : N** | `habit_completions.habit_id` $\rightarrow$ `habits.id`| **CASCADE** | Satu kebiasaan memiliki banyak riwayat centang checklist harian (*constraint unique per habit & date*). |
-| **8** | `habits` | `public.user_streaks` | **1 : 1** | `user_streaks.habit_id` $\rightarrow$ `habits.id` | **CASCADE** | Setiap kebiasaan memiliki tepat satu rekaman pelacak streak individual. |
+| **8** | `auth.users` | `public.user_streaks` | **1 : 1** | `user_streaks.user_id` $\rightarrow$ `auth.users.id` | **CASCADE** | Setiap akun pengguna memiliki tepat satu rekaman pelacak Non-Zero Day Global Streak. |
 | **9** | `auth.users` | `public.xp_transactions` | **1 : N** | `xp_transactions.user_id` $\rightarrow$ `auth.users.id` | **CASCADE** | Satu pengguna memiliki banyak transaksi penerimaan XP dalam buku besar (*ledger*). |
 | **10**| `auth.users` | `public.user_achievements`| **1 : N** | `user_achievements.user_id` $\rightarrow$ `auth.users.id`| **CASCADE** | Satu pengguna dapat membuka banyak lencana pencapaian. |
 | **11**| `achievements` | `public.user_achievements`| **1 : N** | `user_achievements.achievement_id` $\rightarrow$ `achievements.id` | **CASCADE** | Satu jenis lencana dapat dibuka oleh banyak pengguna (*many-to-many junction* via `user_achievements`). |
@@ -925,35 +924,21 @@ Misalkan $d_{today}$ adalah tanggal hari evaluasi saat ini, dan $d_{yesterday} =
 4. **Rekor Streak Terpanjang (*Longest Streak*):**
    $$\text{LongestStreak} = \max_{j} (\text{ConsecutiveDays}_j)$$
 
-#### 5.1.1 Perbedaan Streak Global vs. Streak Individual Kebiasaan (*Per-Habit Streak*):
-* **Streak Global (Ditampilkan pada Command Bar Atas):** Berprinsip *Non-Zero Day*. Selama pengguna menyelesaikan minimal 1 kebiasaan apapun setiap hari, streak global akun tetap hidup.
-* **Streak Individual (Ditampilkan pada Masing-Masing Kartu Kebiasaan):**
-  * Terikat ketat pada jadwal masing-masing kebiasaan (`DAILY`, `SELECTED_DAYS`, `WEEKLY_TARGET`).
-  * Jika suatu kebiasaan dijadwalkan kemarin ($d_{yesterday}$) dan tidak diselesaikan, maka streak individual kebiasaan tersebut **hangus dan di-reset ke 0**.
+#### 5.1.1 Arsitektur Tunggal *Non-Zero Day Global Streak* vs. Eliminasi *Individual Streak*:
+* **Landasan Teoretis (*Streak Fatigue Mitigation*):**
+  Dalam perancangan awal sistem gamifikasi tradisional, *streak* sering kali disematkan pada setiap kartu kebiasaan individual (*per-habit streak*). Namun, dalam evaluasi psikologi perilaku, keberadaan *streak* individual memicu kontradiksi langsung dengan prinsip *Non-Zero Day*. Ketika seorang pengguna mengalami kelelahan fisik/mental dan hanya mampu menyelesaikan 1 tugas agar harinya tidak bernilai nol, hilangnya *streak* pada 4 kebiasaan lainnya secara psikologis tetap menghukum pengguna (*the what-the-hell effect* / keputusasaan berantai).
+* **Solusi Arsitektural HabitGrow:**
+  Sistem secara sengaja **mengeliminasi *streak* individual** dan memusatkan seluruh perhitungan kontinuitas hanya pada **satu *Global Daily Streak* akun** yang terpampang di bilah navigasi utama (ikon api 🔥).
+  * Kartu kebiasaan individual fokus pada target kuantitas harian, kategori, dan perolehan XP.
+  * *Global Daily Streak* bertambah $+1$ saat kebiasaan pertama hari itu diselesaikan.
+  * Rekor disimpan secara terpusat pada tabel `user_streaks` yang berelasi 1:1 dengan `auth.users`.
 * **Mekanisme Sinkronisasi Otomatis (*Self-Healing Streak Sync*):**
-  * *Berkas:* `src/lib/services/streak.service.ts` $\rightarrow$ `recalculateAllUserStreaks()`
-  * Karena basis data Supabase menyimpan `user_streaks` secara statis, ketika pengguna melewati hari tanpa mencentang tugas, mutasi `completeHabit` tidak terpanggil.
-  * Setiap kali dashboard dibuka (`GET /api/dashboard/summary`), sistem secara otomatis menjalankan `recalculateAllUserStreaks(supabase, userId, evalDate)` di latar belakang. Fungsi ini mengevaluasi seluruh riwayat centang terhadap tanggal evaluasi lokal, mendeteksi tugas yang terlewat kemarin, dan menyinkronkan nilai `current_streak: 0` ke dalam basis data secara instan.
+  * *Berkas:* `src/lib/services/streak.service.ts` $\rightarrow$ `calculateUserGlobalStreak()`
+  * Setiap kali dashboard dibuka atau kebiasaan dicentang, sistem secara otomatis mengevaluasi riwayat hari aktif terhadap tanggal lokal pengguna dan menyinkronkan status *global streak* ke dalam tabel `user_streaks`.
 
 ---
 
-### 5.2 Algoritma Deteksi & Pemulihan Streak Putus (*Broken Streak Detection*)
-*Berkas Implementasi:* `src/lib/algorithms/streak.ts` $\rightarrow$ `detectBrokenStreak()`
-
-#### Tujuan:
-Mendeteksi kegagalan pada hari terjadwal terakhir dan menghitung berapa hari *streak* yang hilang untuk memicu empati dan notifikasi pemulihan.
-
-#### Logika:
-1. Dapatkan tanggal terjadwal terakhir sebelum hari ini: $d_{last\_sched} < d_{today}$.
-2. Jika $d_{last\_sched} \in \text{Completions}$, maka $\text{isBroken} = \text{false}$.
-3. Jika $d_{last\_sched} \notin \text{Completions}$ dan rentang waktu $(d_{today} - d_{last\_sched}) \le 3\text{ hari}$:
-   * Hitung hari beruntun sebelum $d_{last\_sched}$ yang berhasil diselesaikan:
-   $$\text{LostStreak} = \sum_{i=1}^{m} 1 \quad \text{selama } (d_{last\_sched} - i) \in \text{Completions}$$
-   * Jika $\text{LostStreak} > 0$, maka $\text{isBroken} = \text{true}$ dan sistem mengeluarkan banner peringatan.
-
----
-
-### 5.3 Algoritma Skor Konsistensi Bergulir 30 Hari (*Rolling Consistency Score*)
+### 5.2 Algoritma Skor Konsistensi Bergulir 30 Hari (*Rolling Consistency Score*)
 *Berkas Implementasi:* `src/lib/algorithms/consistency.ts` $\rightarrow$ `calculateOverallConsistency()`
 
 #### Definisi Matematis:

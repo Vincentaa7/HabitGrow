@@ -18,7 +18,7 @@ export interface TodayHabitItem {
   icon: string;
   color: string;
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
-  frequency_type: 'DAILY' | 'SELECTED_DAYS' | 'WEEKLY_TARGET';
+  frequency_type: 'DAILY' | 'SELECTED_DAYS';
   target_value: number;
   target_unit: string;
   category_name?: string;

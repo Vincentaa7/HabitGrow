@@ -89,7 +89,7 @@ export class PredictionService {
 
       // Check if scheduled today
       let isScheduled = false;
-      if (h.frequency_type === 'DAILY' || h.frequency_type === 'WEEKLY_TARGET') {
+      if (h.frequency_type === 'DAILY') {
         isScheduled = true;
       } else if (h.frequency_type === 'SELECTED_DAYS') {
         const dow = today.getDay();

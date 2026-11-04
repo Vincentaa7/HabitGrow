@@ -18,7 +18,6 @@ export function parseDateString(str: string): Date {
  * Strictly respects habit frequency:
  * - DAILY: Always scheduled if within start_date and end_date.
  * - SELECTED_DAYS: Scheduled if the date's day of week matches one of the habit_schedules entries.
- * - WEEKLY_TARGET: Allowed any day of the week until weekly target is met or flexible.
  */
 export function isHabitScheduledOnDate(
   habit: Pick<Habit, 'frequency_type' | 'start_date' | 'end_date' | 'is_active' | 'is_archived'>,
@@ -47,10 +46,6 @@ export function isHabitScheduledOnDate(
   if (habit.frequency_type === 'SELECTED_DAYS') {
     const dayOfWeek = targetDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     return schedules.some((s) => s.day_of_week === dayOfWeek);
-  }
-
-  if (habit.frequency_type === 'WEEKLY_TARGET') {
-    return true;
   }
 
   return false;

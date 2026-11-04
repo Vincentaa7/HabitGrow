@@ -26,7 +26,7 @@ export async function GET(request: Request, context: RouteContext) {
 
     const { data: habit, error } = await supabase
       .from('habits')
-      .select('*, category:habit_categories(*), habit_schedules(*), streak:user_streaks(*)')
+      .select('*, category:habit_categories(*), habit_schedules(*)')
       .eq('id', id)
       .eq('user_id', user.id)
       .single();

@@ -73,7 +73,6 @@ const DIFFICULTY_OPTIONS = [
 const FREQUENCY_OPTIONS = [
   { id: 'DAILY', label: 'Setiap Hari', icon: '📅' },
   { id: 'SELECTED_DAYS', label: 'Hari Tertentu', icon: '🗓️' },
-  { id: 'WEEKLY_TARGET', label: 'Target Mingguan', icon: '📊' },
 ];
 
 // Reusable label component
@@ -328,7 +327,7 @@ export function HabitFormModal({
           {/* Frequency Type */}
           <div>
             <FormLabel>Frekuensi Jadwal</FormLabel>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {FREQUENCY_OPTIONS.map((f) => (
                 <button
                   key={f.id}

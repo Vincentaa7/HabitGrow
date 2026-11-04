@@ -4,7 +4,7 @@
 export type UserRole = 'USER' | 'ADMIN';
 export type TreeStage = 'Seed' | 'Sprout' | 'Young Tree' | 'Healthy Tree' | 'Mature Tree';
 export type HabitDifficulty = 'EASY' | 'MEDIUM' | 'HARD';
-export type FrequencyType = 'DAILY' | 'SELECTED_DAYS' | 'WEEKLY_TARGET';
+export type FrequencyType = 'DAILY' | 'SELECTED_DAYS';
 export type AchievementConditionType = 'first_step' | 'streak_days' | 'total_completions' | 'consistency_rate' | 'tree_stage';
 export type ActivityType =
   | 'HABIT_CREATED'

@@ -38,7 +38,6 @@ export async function GET(request: Request) {
       treeData,
       globalStreak,
       { data: recentAchievements },
-      brokenStreaks,
       atRiskHabits,
     ] = await Promise.all([
       supabase.from('profiles').select('display_name, avatar_url').eq('id', user.id).maybeSingle(),
@@ -52,10 +51,7 @@ export async function GET(request: Request) {
         .eq('user_id', user.id)
         .order('unlocked_at', { ascending: false })
         .limit(3),
-      StreakService.detectBrokenStreaks(supabase, user.id, evalDate),
       PredictionService.getAtRiskHabitsToday(supabase, user.id, evalDate),
-      // Synchronize habit streaks in parallel without blocking main queries
-      StreakService.recalculateAllUserStreaks(supabase, user.id, evalDate),
     ]);
 
     const completedCount = todayHabits.filter((h) => h.is_completed_today).length;
@@ -108,7 +104,7 @@ export async function GET(request: Request) {
         growth_points: 0,
       },
       recent_achievements: formattedAchievements,
-      broken_streaks: brokenStreaks,
+      broken_streaks: [],
       at_risk_habits: atRiskHabits,
     };
 

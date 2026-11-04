@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { TodayHabitItem } from '@/types';
 import confetti from 'canvas-confetti';
-import { Check, Flame, Sparkles, Dumbbell, BookOpen, Heart, Briefcase, Smile, Zap } from 'lucide-react';
+import { Check, Sparkles, Dumbbell, BookOpen, Heart, Briefcase, Smile, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface HabitCardProps {
@@ -129,13 +129,6 @@ export function HabitCard({ habit, onComplete }: HabitCardProps) {
             <span className="inline-flex items-center gap-1 font-medium">
               Target: <strong className="text-slate-700 dark:text-slate-300">{habit.target_value} {habit.target_unit}</strong>
             </span>
-
-            {habit.current_streak > 0 && (
-              <span className="inline-flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-1.5 sm:px-2 py-0.5 rounded-md border border-amber-200/50 dark:border-amber-900/40">
-                <Flame className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-amber-500 text-amber-500" />
-                {habit.current_streak} hari
-              </span>
-            )}
 
             <span className="inline-flex items-center font-bold text-emerald-600 dark:text-[#aff33e] bg-emerald-50 dark:bg-[#aff33e]/10 px-1.5 sm:px-2 py-0.5 rounded-md border border-emerald-200/50 dark:border-[#aff33e]/20">
               +{habit.xp_reward} XP

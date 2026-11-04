@@ -2,7 +2,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { calculateXP } from '../algorithms/xp';
 import { calculateLevel } from '../algorithms/level';
-import { calculateStreak } from '../algorithms/streak';
 import { isHabitScheduledOnDate, toDateString, parseDateString } from '../algorithms/schedule';
 import { ConsistencyService } from './consistency.service';
 import { AchievementService } from './achievement.service';
@@ -121,11 +120,10 @@ export class CompletionService {
       updated_at: new Date().toISOString(),
     });
 
-    // 8. Recalculate Streak
-    const streakResult = await StreakService.recalculateHabitStreak(
+    // 8. Calculate & Synchronize Non-Zero Day Global Streak
+    const globalStreak = await StreakService.calculateUserGlobalStreak(
       supabase,
       userId,
-      habitId,
       new Date(todayStr + 'T12:00:00')
     );
 
@@ -141,7 +139,7 @@ export class CompletionService {
     const newAchievements = await AchievementService.evaluateAchievements(
       supabase,
       userId,
-      streakResult.currentStreak,
+      globalStreak.currentStreak,
       consistencyScore,
       treeStage
     );
@@ -156,15 +154,15 @@ export class CompletionService {
         habit_name: habit.name,
         xp_earned: xpReward,
         date: todayStr,
-        streak: streakResult.currentStreak,
+        global_streak: globalStreak.currentStreak,
       },
     });
 
     return {
       completionId: insertedCompletion.id,
       xpEarned: xpReward,
-      currentStreak: streakResult.currentStreak,
-      longestStreak: streakResult.longestStreak,
+      currentStreak: globalStreak.currentStreak,
+      longestStreak: globalStreak.longestStreak,
       totalXp: newTotalXp,
       level: levelInfo.level,
       consistencyScore,
@@ -227,7 +225,7 @@ export class CompletionService {
     const evalDate = parseDateString(completion.date);
     await ConsistencyService.recalculateUserConsistencyAndTree(supabase, userId, evalDate);
 
-    // 6. Recalculate Streak for this habit
-    await StreakService.recalculateHabitStreak(supabase, userId, completion.habit_id, evalDate);
+    // 6. Recalculate Non-Zero Day Global Streak
+    await StreakService.calculateUserGlobalStreak(supabase, userId, evalDate);
   }
 }
