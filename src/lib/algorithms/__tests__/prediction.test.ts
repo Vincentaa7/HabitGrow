@@ -39,7 +39,7 @@ describe('predictHabitFailureRisk', () => {
       completions.push({
         habit_id: 'habit-1',
         date: dateStr,
-        completed_at: `${dateStr}T14:30:00Z`,
+        completed_at: `${dateStr}T14:30:00+07:00`,
         value: 20,
       });
     }
@@ -59,18 +59,18 @@ describe('predictHabitFailureRisk', () => {
 
   it('predicts high failure probability when recent 14-day miss rate is high and done late at night', () => {
     const evalDate = new Date(2026, 8, 24); // Sept 24, 2026
-    // Only 2 completions in last 14 days, and both done at 23:30 (near midnight)
+    // Only 2 completions in last 14 days, and both done at 23:30 WIB (near midnight)
     const completions = [
       {
         habit_id: 'habit-1',
         date: '2026-09-20',
-        completed_at: '2026-09-20T23:30:00Z',
+        completed_at: '2026-09-20T23:30:00+07:00',
         value: 20,
       },
       {
         habit_id: 'habit-1',
         date: '2026-09-15',
-        completed_at: '2026-09-15T23:45:00Z',
+        completed_at: '2026-09-15T23:45:00+07:00',
         value: 20,
       },
     ];
@@ -80,10 +80,12 @@ describe('predictHabitFailureRisk', () => {
       schedules,
       completions,
       evaluationDate: evalDate,
+      timezone: 'Asia/Jakarta',
       totalScheduledToday: 7,
       totalDifficultyPointsToday: 14, // high workload
     });
 
+    expect(prediction.factor_breakdown.late_hour_score).toBe(85);
     expect(prediction.failure_probability).toBeGreaterThanOrEqual(65);
     expect(prediction.suggested_action.type).toBe('LOWER_TARGET');
     expect(prediction.suggested_action.suggested_target_value).toBe(10);
@@ -212,6 +214,50 @@ describe('predictHabitFailureRisk', () => {
       totalDifficultyPointsToday: 4,
     });
     expect(tier4.factor_breakdown.maturity_score).toBe(12);
+  });
+
+  it('accurately evaluates C5 late_hour_score from UTC timestamps using Indonesian timezone (WIB)', () => {
+    const evalDate = new Date(2026, 8, 25); // Sept 25, 2026
+
+    // Case A: User completes at 22:30 WIB -> stored in DB as 15:30:00.000Z (UTC)
+    // Should be detected as 22:30 (score 85), NOT 15:30 afternoon (score 15)
+    const lateNightWib = predictHabitFailureRisk({
+      habit: baseHabit,
+      schedules,
+      completions: [
+        {
+          habit_id: 'habit-1',
+          date: '2026-09-24',
+          completed_at: '2026-09-24T15:30:00.000Z',
+          value: 20,
+        },
+      ],
+      evaluationDate: evalDate,
+      timezone: 'Asia/Jakarta',
+      totalScheduledToday: 3,
+      totalDifficultyPointsToday: 4,
+    });
+    expect(lateNightWib.factor_breakdown.late_hour_score).toBe(85);
+
+    // Case B: User completes at 06:00 morning WIB -> stored in DB as 23:00:00.000Z previous day (UTC)
+    // Should be detected as 06:00 morning (score 15), NOT 23:00 late night (score 85)
+    const earlyMorningWib = predictHabitFailureRisk({
+      habit: baseHabit,
+      schedules,
+      completions: [
+        {
+          habit_id: 'habit-1',
+          date: '2026-09-24',
+          completed_at: '2026-09-23T23:00:00.000Z',
+          value: 20,
+        },
+      ],
+      evaluationDate: evalDate,
+      timezone: 'Asia/Jakarta',
+      totalScheduledToday: 3,
+      totalDifficultyPointsToday: 4,
+    });
+    expect(earlyMorningWib.factor_breakdown.late_hour_score).toBe(15);
   });
 });
 

@@ -17,7 +17,8 @@ export class PredictionService {
   static async getAtRiskHabitsToday(
     supabase: SupabaseClient,
     userId: string,
-    evalDate: Date = new Date()
+    evalDate: Date = new Date(),
+    timezone: string = 'Asia/Jakarta'
   ): Promise<HabitRiskPrediction[]> {
     const today = new Date(evalDate);
     today.setHours(0, 0, 0, 0);
@@ -128,6 +129,7 @@ export class PredictionService {
         schedules: hSchedules,
         completions: hCompletions,
         evaluationDate: today,
+        timezone,
         totalScheduledToday: habits.length,
         totalDifficultyPointsToday,
       });

@@ -24,9 +24,10 @@ export async function GET(request: Request) {
       );
     }
 
-    // Support client local date query param (?date=YYYY-MM-DD) to resolve client-server timezone difference
+    // Support client local date & timezone query params (?date=YYYY-MM-DD&tz=Asia/Jakarta) to resolve client-server timezone difference
     const { searchParams } = new URL(request.url);
     const dateParam = searchParams.get('date');
+    const tzParam = searchParams.get('tz') || 'Asia/Jakarta';
     const evalDate = dateParam ? parseDateString(dateParam) : new Date();
     const todayStr = dateParam || toDateString(evalDate);
 
@@ -51,7 +52,7 @@ export async function GET(request: Request) {
         .eq('user_id', user.id)
         .order('unlocked_at', { ascending: false })
         .limit(3),
-      PredictionService.getAtRiskHabitsToday(supabase, user.id, evalDate),
+      PredictionService.getAtRiskHabitsToday(supabase, user.id, evalDate, tzParam),
     ]);
 
     const completedCount = todayHabits.filter((h) => h.is_completed_today).length;

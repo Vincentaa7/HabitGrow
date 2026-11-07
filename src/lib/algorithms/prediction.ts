@@ -30,6 +30,7 @@ export interface PredictionInput {
   schedules: HabitSchedule[];
   completions: HabitCompletionRecord[];
   evaluationDate?: Date;
+  timezone?: string;
   totalScheduledToday: number;
   totalDifficultyPointsToday: number;
 }
@@ -53,12 +54,35 @@ export const SAW_WEIGHTS = {
   LATE_HOUR: 0.15,
 };
 
+/**
+ * Mengekstrak jam lokal (0-23) dari timestamp ISO berdasarkan zona waktu pengguna.
+ * Mencegah bug perbedaan zona waktu antara server cloud (UTC) dan waktu lokal pengguna (WIB/WITA/WIT).
+ */
+export function getHourInTimezone(isoTimestamp: string, timeZone: string = 'Asia/Jakarta'): number {
+  const d = new Date(isoTimestamp);
+  if (isNaN(d.getTime())) return 12;
+
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hour: '2-digit',
+      hourCycle: 'h23',
+    });
+    const formattedHour = formatter.format(d);
+    const parsed = parseInt(formattedHour, 10);
+    return isNaN(parsed) ? d.getHours() : parsed % 24;
+  } catch {
+    return d.getHours();
+  }
+}
+
 export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPrediction {
   const {
     habit,
     schedules,
     completions,
     evaluationDate = new Date(),
+    timezone = 'Asia/Jakarta',
     totalDifficultyPointsToday,
   } = input;
 
@@ -147,15 +171,12 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
   const recentCompletions = completions.filter((c) => {
     const cDate = parseDateString(c.date);
     const diff = Math.round((evalDate.getTime() - cDate.getTime()) / (1000 * 3600 * 24));
-    return diff <= 14;
+    return diff >= 0 && diff <= 14;
   });
 
   let c5_lateHour = 0.15;
   if (recentCompletions.length > 0) {
-    const hours = recentCompletions.map((c) => {
-      const d = new Date(c.completed_at);
-      return d.getHours();
-    });
+    const hours = recentCompletions.map((c) => getHourInTimezone(c.completed_at, timezone));
     const avgHour = hours.reduce((acc, h) => acc + h, 0) / hours.length;
 
     if (avgHour >= 22) {
