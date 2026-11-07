@@ -2,6 +2,7 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { calculateXP } from '../algorithms/xp';
 import { calculateLevel } from '../algorithms/level';
+import { calculateGlobalDailyStreak } from '../algorithms/streak';
 import { isHabitScheduledOnDate, toDateString, parseDateString } from '../algorithms/schedule';
 import { ConsistencyService } from './consistency.service';
 import { AchievementService } from './achievement.service';
@@ -23,7 +24,7 @@ export interface CompletionResult {
 
 export class CompletionService {
   /**
-   * Completes a habit for a given date. Idempotent and atomic.
+   * Completes a habit for a given date. Idempotent, atomic, and parallelized for minimal latency.
    * PRD Section 16, 17, 65, 80.
    */
   static async completeHabit(
@@ -35,15 +36,30 @@ export class CompletionService {
   ): Promise<CompletionResult> {
     const todayStr = dateStr || toDateString(new Date());
 
-    // 1. Fetch habit and its schedules
-    const { data: habitData, error: habitError } = await supabase
-      .from('habits')
-      .select('*, habit_schedules(*)')
-      .eq('id', habitId)
-      .eq('user_id', userId)
-      .single();
+    // 1. Parallel Read Batch: Fetch user's habits, completions, and current XP in a single round-trip
+    const [
+      { data: allHabitsData, error: habitsError },
+      { data: allCompletionsData },
+      { data: currentLevelRecord },
+    ] = await Promise.all([
+      supabase
+        .from('habits')
+        .select('*, habit_schedules(*)')
+        .eq('user_id', userId),
+      supabase
+        .from('habit_completions')
+        .select('id, habit_id, date, xp_earned')
+        .eq('user_id', userId),
+      supabase
+        .from('user_levels')
+        .select('total_xp')
+        .eq('user_id', userId)
+        .maybeSingle(),
+    ]);
 
-    if (habitError || !habitData) {
+    const habitData = (allHabitsData || []).find((h) => h.id === habitId);
+
+    if (habitsError || !habitData) {
       throw new Error('Kebiasaan tidak ditemukan atau tidak memiliki akses.');
     }
 
@@ -60,13 +76,10 @@ export class CompletionService {
       throw new Error('Kebiasaan tidak dijadwalkan untuk tanggal ini.');
     }
 
-    // 3. Idempotency Check (PRD Section 16 & 17)
-    const { data: existingCompletion } = await supabase
-      .from('habit_completions')
-      .select('id, xp_earned')
-      .eq('habit_id', habitId)
-      .eq('date', todayStr)
-      .maybeSingle();
+    // 3. Idempotency Check in-memory (PRD Section 16 & 17)
+    const existingCompletion = (allCompletionsData || []).find(
+      (c) => c.habit_id === habitId && c.date === todayStr
+    );
 
     if (existingCompletion) {
       throw new Error('Kebiasaan sudah diselesaikan untuk hari ini.');
@@ -94,69 +107,76 @@ export class CompletionService {
       throw new Error(`Gagal menyimpan completion: ${insertError?.message}`);
     }
 
-    // 6. Record XP Transaction
-    await supabase.from('xp_transactions').insert({
-      user_id: userId,
-      source_type: 'habit_completion',
-      source_id: insertedCompletion.id,
-      amount: xpReward,
-      description: `Menyelesaikan habit: ${habit.name}`,
-    });
-
-    // 7. Update User Total XP & Level
-    const { data: currentLevelRecord } = await supabase
-      .from('user_levels')
-      .select('total_xp')
-      .eq('user_id', userId)
-      .maybeSingle();
+    // 6. Compute updated metrics in-memory (0ms latency)
+    const updatedCompletions = [
+      ...(allCompletionsData || []),
+      { id: insertedCompletion.id, habit_id: habitId, date: todayStr, xp_earned: xpReward },
+    ];
 
     const newTotalXp = (currentLevelRecord?.total_xp ?? 0) + xpReward;
     const levelInfo = calculateLevel(newTotalXp);
 
-    await supabase.from('user_levels').upsert({
-      user_id: userId,
-      level: levelInfo.level,
-      total_xp: newTotalXp,
-      updated_at: new Date().toISOString(),
-    });
-
-    // 8. Calculate & Synchronize Non-Zero Day Global Streak
-    const globalStreak = await StreakService.calculateUserGlobalStreak(
-      supabase,
-      userId,
+    const activeDatesSet = new Set<string>(updatedCompletions.map((c) => c.date));
+    const globalStreak = calculateGlobalDailyStreak(
+      activeDatesSet,
       new Date(todayStr + 'T12:00:00')
     );
 
-    // 9. Recalculate Consistency & Tree Stage
+    const activeUnarchivedHabits = (allHabitsData || []).filter(
+      (h) => h.is_active && !h.is_archived
+    );
     const evalDate = parseDateString(todayStr);
-    const { consistencyScore, treeStage, health } = await ConsistencyService.recalculateUserConsistencyAndTree(
-      supabase,
-      userId,
-      evalDate
-    );
+    const { consistencyScore, treeStage, health } =
+      ConsistencyService.computeConsistencyFromData(
+        activeUnarchivedHabits,
+        updatedCompletions,
+        evalDate
+      );
 
-    // 10. Check & Unlock Achievements
-    const newAchievements = await AchievementService.evaluateAchievements(
-      supabase,
-      userId,
-      globalStreak.currentStreak,
-      consistencyScore,
-      treeStage
-    );
-
-    // 11. Write Activity Log
-    await supabase.from('activity_logs').insert({
-      user_id: userId,
-      activity_type: 'HABIT_COMPLETED',
-      entity_type: 'habit',
-      entity_id: habitId,
-      metadata: {
-        habit_name: habit.name,
-        xp_earned: xpReward,
-        date: todayStr,
-        global_streak: globalStreak.currentStreak,
-      },
-    });
+    // 7. Parallel Write Batch: Update all related tables & evaluate achievements concurrently
+    const [, , , , newAchievements] = await Promise.all([
+      supabase.from('xp_transactions').insert({
+        user_id: userId,
+        source_type: 'habit_completion',
+        source_id: insertedCompletion.id,
+        amount: xpReward,
+        description: `Menyelesaikan habit: ${habit.name}`,
+      }),
+      supabase.from('user_levels').upsert({
+        user_id: userId,
+        level: levelInfo.level,
+        total_xp: newTotalXp,
+        updated_at: new Date().toISOString(),
+      }),
+      StreakService.syncGlobalStreakToDb(supabase, userId, globalStreak),
+      supabase.from('user_trees').upsert({
+        user_id: userId,
+        stage: treeStage,
+        health,
+        consistency_score: consistencyScore,
+        updated_at: new Date().toISOString(),
+      }),
+      AchievementService.evaluateAchievements(
+        supabase,
+        userId,
+        globalStreak.currentStreak,
+        consistencyScore,
+        treeStage,
+        updatedCompletions.length
+      ),
+      supabase.from('activity_logs').insert({
+        user_id: userId,
+        activity_type: 'HABIT_COMPLETED',
+        entity_type: 'habit',
+        entity_id: habitId,
+        metadata: {
+          habit_name: habit.name,
+          xp_earned: xpReward,
+          date: todayStr,
+          global_streak: globalStreak.currentStreak,
+        },
+      }),
+    ]);
 
     return {
       completionId: insertedCompletion.id,
@@ -173,59 +193,53 @@ export class CompletionService {
   }
 
   /**
-   * Undoes a completion if created today. Adjusts XP and stats cleanly.
+   * Undoes a completion if created today. Adjusts XP and stats cleanly in parallel.
    */
   static async uncompleteHabit(
     supabase: SupabaseClient,
     userId: string,
     completionId: string
   ): Promise<void> {
-    // 1. Fetch completion
-    const { data: completion, error } = await supabase
-      .from('habit_completions')
-      .select('*')
-      .eq('id', completionId)
-      .eq('user_id', userId)
-      .single();
+    const [{ data: completion, error }, { data: levelRecord }] = await Promise.all([
+      supabase
+        .from('habit_completions')
+        .select('*')
+        .eq('id', completionId)
+        .eq('user_id', userId)
+        .single(),
+      supabase
+        .from('user_levels')
+        .select('total_xp')
+        .eq('user_id', userId)
+        .maybeSingle(),
+    ]);
 
     if (error || !completion) {
       throw new Error('Catatan completion tidak ditemukan.');
     }
 
-    // 2. Delete completion
     await supabase.from('habit_completions').delete().eq('id', completionId);
-
-    // 3. Reverse XP transaction
-    await supabase.from('xp_transactions').insert({
-      user_id: userId,
-      source_type: 'habit_uncomplete',
-      source_id: completion.habit_id,
-      amount: -completion.xp_earned,
-      description: 'Pembatalan penyelesaian habit',
-    });
-
-    // 4. Update Level
-    const { data: levelRecord } = await supabase
-      .from('user_levels')
-      .select('total_xp')
-      .eq('user_id', userId)
-      .single();
 
     const newXp = Math.max(0, (levelRecord?.total_xp ?? 0) - completion.xp_earned);
     const { level } = calculateLevel(newXp);
-
-    await supabase.from('user_levels').upsert({
-      user_id: userId,
-      level,
-      total_xp: newXp,
-      updated_at: new Date().toISOString(),
-    });
-
-    // 5. Recalculate Consistency & Tree
     const evalDate = parseDateString(completion.date);
-    await ConsistencyService.recalculateUserConsistencyAndTree(supabase, userId, evalDate);
 
-    // 6. Recalculate Non-Zero Day Global Streak
-    await StreakService.calculateUserGlobalStreak(supabase, userId, evalDate);
+    await Promise.all([
+      supabase.from('xp_transactions').insert({
+        user_id: userId,
+        source_type: 'habit_uncomplete',
+        source_id: completion.habit_id,
+        amount: -completion.xp_earned,
+        description: 'Pembatalan penyelesaian habit',
+      }),
+      supabase.from('user_levels').upsert({
+        user_id: userId,
+        level,
+        total_xp: newXp,
+        updated_at: new Date().toISOString(),
+      }),
+      ConsistencyService.recalculateUserConsistencyAndTree(supabase, userId, evalDate),
+      StreakService.calculateUserGlobalStreak(supabase, userId, evalDate),
+    ]);
   }
 }

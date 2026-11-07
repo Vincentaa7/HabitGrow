@@ -17,20 +17,21 @@ export async function GET() {
       );
     }
 
-    // 1. All active achievements
-    const { data: achievements, error: achError } = await supabase
-      .from('achievements')
-      .select('*')
-      .eq('is_active', true)
-      .order('condition_value', { ascending: true });
+    // Fetch active achievements and user unlocked achievements in parallel
+    const [{ data: achievements, error: achError }, { data: userAchievements }] =
+      await Promise.all([
+        supabase
+          .from('achievements')
+          .select('*')
+          .eq('is_active', true)
+          .order('condition_value', { ascending: true }),
+        supabase
+          .from('user_achievements')
+          .select('achievement_id, unlocked_at')
+          .eq('user_id', user.id),
+      ]);
 
     if (achError) throw new Error(achError.message);
-
-    // 2. User unlocked achievements
-    const { data: userAchievements } = await supabase
-      .from('user_achievements')
-      .select('achievement_id, unlocked_at')
-      .eq('user_id', user.id);
 
     const unlockMap = new Map<string, string>();
     (userAchievements || []).forEach((u) => unlockMap.set(u.achievement_id, u.unlocked_at));

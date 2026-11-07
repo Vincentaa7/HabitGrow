@@ -16,7 +16,8 @@ export default function TreePage() {
     queryKey: ['dashboard-summary'],
     queryFn: async () => {
       const localDate = toDateString(new Date());
-      const res = await fetch(`/api/dashboard/summary?date=${localDate}`);
+      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Jakarta';
+      const res = await fetch(`/api/dashboard/summary?date=${localDate}&tz=${encodeURIComponent(userTz)}`);
       const json = await res.json();
       if (!json.success) throw new Error(json.error?.message || 'Gagal memuat pohon');
       return json.data;

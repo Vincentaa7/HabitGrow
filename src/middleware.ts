@@ -17,6 +17,22 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
+  // Fast-path for Next.js client-side route prefetching:
+  // Avoid remote HTTP round-trip to Supabase Auth when prefetching <Link> if session cookie exists
+  const isPrefetch =
+    request.headers.get('purpose') === 'prefetch' ||
+    request.headers.get('next-router-prefetch') === '1' ||
+    request.headers.get('x-middleware-prefetch') === '1';
+
+  if (isPrefetch) {
+    const hasAuthCookie = request.cookies
+      .getAll()
+      .some((c) => c.name.startsWith('sb-') && c.name.includes('-auth-token'));
+    if (hasAuthCookie) {
+      return response;
+    }
+  }
+
   const supabase = createServerClient(
     supabaseUrl,
     supabaseAnonKey,

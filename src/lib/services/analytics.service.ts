@@ -65,21 +65,21 @@ export class AnalyticsService {
     const startDateStr = toDateString(dates[0]);
     const endDateStr = toDateString(dates[dates.length - 1]);
 
-    // Fetch active habits
-    const { data: habitsData } = await supabase
-      .from('habits')
-      .select('*, habit_schedules(*)')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .eq('is_archived', false);
-
-    // Fetch completions in range
-    const { data: completionsData } = await supabase
-      .from('habit_completions')
-      .select('habit_id, date')
-      .eq('user_id', userId)
-      .gte('date', startDateStr)
-      .lte('date', endDateStr);
+    // Fetch active habits and completions in range concurrently
+    const [{ data: habitsData }, { data: completionsData }] = await Promise.all([
+      supabase
+        .from('habits')
+        .select('*, habit_schedules(*)')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .eq('is_archived', false),
+      supabase
+        .from('habit_completions')
+        .select('habit_id, date')
+        .eq('user_id', userId)
+        .gte('date', startDateStr)
+        .lte('date', endDateStr),
+    ]);
 
     const completionDatesSet = new Set(
       (completionsData || []).map((c) => `${c.habit_id}_${c.date}`)
@@ -134,21 +134,22 @@ export class AnalyticsService {
     bestHabit: HabitPerformanceItem | null;
     needsAttentionHabit: HabitPerformanceItem | null;
   }> {
-    const { data: habitsData } = await supabase
-      .from('habits')
-      .select('*, habit_schedules(*)')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .eq('is_archived', false);
+    const [{ data: habitsData }, { data: completionsData }] = await Promise.all([
+      supabase
+        .from('habits')
+        .select('*, habit_schedules(*)')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .eq('is_archived', false),
+      supabase
+        .from('habit_completions')
+        .select('habit_id, date')
+        .eq('user_id', userId),
+    ]);
 
     if (!habitsData || habitsData.length === 0) {
       return { items: [], bestHabit: null, needsAttentionHabit: null };
     }
-
-    const { data: completionsData } = await supabase
-      .from('habit_completions')
-      .select('habit_id, date')
-      .eq('user_id', userId);
 
     const completionsByHabit = new Map<string, Set<string>>();
     (completionsData || []).forEach((c) => {

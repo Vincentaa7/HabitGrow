@@ -34,17 +34,105 @@ export function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { isInstallable, isInstalled, promptInstall } = usePwaInstall();
 
+  const [currentDateStr, setCurrentDateStr] = useState(() => toDateString(new Date()));
+
   // Fetch summary for Duolingo-style Streak & Level header stats
   const { data: summary } = useQuery<DashboardSummary>({
     queryKey: ['dashboard-summary'],
     queryFn: async () => {
       const localDate = toDateString(new Date());
-      const res = await fetch(`/api/dashboard/summary?date=${localDate}`);
+      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Jakarta';
+      const res = await fetch(
+        `/api/dashboard/summary?date=${localDate}&tz=${encodeURIComponent(userTz)}`
+      );
       const json = await res.json();
       return json.data;
     },
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 60 * 2,
   });
+
+  // Automatically detect midnight day rollover & warm cache for instant page transitions
+  useEffect(() => {
+    const checkDayRollover = () => {
+      const nowDateStr = toDateString(new Date());
+      if (nowDateStr !== currentDateStr) {
+        setCurrentDateStr(nowDateStr);
+        queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+        queryClient.invalidateQueries({ queryKey: ['habits'] });
+        queryClient.invalidateQueries({ queryKey: ['calendar-activity'] });
+        queryClient.invalidateQueries({ queryKey: ['calendar-day-detail'] });
+      }
+    };
+
+    const interval = setInterval(checkDayRollover, 30000);
+    window.addEventListener('focus', checkDayRollover);
+    document.addEventListener('visibilitychange', checkDayRollover);
+
+    // Background prefetch of secondary pages so tab switching is 0ms instant
+    const prefetchTimer = setTimeout(() => {
+      const year = new Date().getFullYear();
+      queryClient.prefetchQuery({
+        queryKey: ['habits', 'active', 'all'],
+        queryFn: async () => {
+          const res = await fetch('/api/habits?archived=false');
+          const json = await res.json();
+          return json.data || [];
+        },
+        staleTime: 1000 * 60 * 2,
+      });
+      queryClient.prefetchQuery({
+        queryKey: ['categories'],
+        queryFn: async () => {
+          const res = await fetch('/api/categories');
+          const json = await res.json();
+          return json.data || [];
+        },
+        staleTime: 1000 * 60 * 5,
+      });
+      queryClient.prefetchQuery({
+        queryKey: ['achievements'],
+        queryFn: async () => {
+          const res = await fetch('/api/achievements');
+          const json = await res.json();
+          return json.data || [];
+        },
+        staleTime: 1000 * 60 * 2,
+      });
+      queryClient.prefetchQuery({
+        queryKey: ['analytics-overview', '7'],
+        queryFn: async () => {
+          const res = await fetch('/api/analytics/weekly?range=7');
+          const json = await res.json();
+          return json.data || [];
+        },
+        staleTime: 1000 * 60 * 2,
+      });
+      queryClient.prefetchQuery({
+        queryKey: ['analytics-performance'],
+        queryFn: async () => {
+          const res = await fetch('/api/analytics/performance');
+          const json = await res.json();
+          return json.data || { items: [], bestHabit: null, needsAttentionHabit: null };
+        },
+        staleTime: 1000 * 60 * 2,
+      });
+      queryClient.prefetchQuery({
+        queryKey: ['calendar-activity', year],
+        queryFn: async () => {
+          const res = await fetch(`/api/calendar/activity?year=${year}`);
+          return res.json();
+        },
+        staleTime: 1000 * 60 * 2,
+      });
+    }, 350);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(prefetchTimer);
+      window.removeEventListener('focus', checkDayRollover);
+      document.removeEventListener('visibilitychange', checkDayRollover);
+    };
+  }, [currentDateStr, queryClient]);
 
   const currentStreak = summary?.streak?.current_streak ?? 0;
   const userLevel = summary?.user_level?.level ?? 1;

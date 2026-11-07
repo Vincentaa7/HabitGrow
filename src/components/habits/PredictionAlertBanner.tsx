@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { HabitRiskPrediction } from '@/types';
+import { HabitRiskPrediction, DashboardSummary } from '@/types';
 import { useQueryClient } from '@tanstack/react-query';
 import confetti from 'canvas-confetti';
 import { toDateString } from '@/lib/algorithms/schedule';
@@ -115,6 +115,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
 
   // Binary/Checklist: Quick 2-Minute Completion
   const handleComplete2Min = async (prediction: HabitRiskPrediction) => {
+    const previousSummary = queryClient.getQueryData<DashboardSummary>(['dashboard-summary']);
     try {
       setCompletingId(prediction.habit_id);
 
@@ -125,6 +126,44 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
         origin: { y: 0.3 },
         colors: ['#10b981', '#34d399', '#f59e0b'],
       });
+
+      // Instant 0ms Optimistic Update for Navbar Streak, XP, and Dashboard list
+      if (previousSummary) {
+        const targetHabit = previousSummary.today_habits.find(
+          (h) => h.id === prediction.habit_id
+        );
+        const xpEarned = targetHabit?.xp_reward || 10;
+        const alreadyCompletedCount = previousSummary.today_habits.filter(
+          (h) => h.is_completed_today
+        ).length;
+        const newCompletedCount = alreadyCompletedCount + 1;
+        const newPercentage =
+          previousSummary.total_scheduled_today > 0
+            ? Math.round((newCompletedCount / previousSummary.total_scheduled_today) * 100)
+            : 0;
+        const isFirstCompletionToday = alreadyCompletedCount === 0;
+        const newCurrentStreak = isFirstCompletionToday
+          ? previousSummary.streak.current_streak + 1
+          : Math.max(1, previousSummary.streak.current_streak);
+
+        queryClient.setQueryData<DashboardSummary>(['dashboard-summary'], {
+          ...previousSummary,
+          completed_count: newCompletedCount,
+          completion_percentage: newPercentage,
+          streak: {
+            ...previousSummary.streak,
+            current_streak: newCurrentStreak,
+            longest_streak: Math.max(previousSummary.streak.longest_streak, newCurrentStreak),
+          },
+          user_level: {
+            ...previousSummary.user_level,
+            total_xp: previousSummary.user_level.total_xp + xpEarned,
+          },
+          today_habits: previousSummary.today_habits.map((h) =>
+            h.id === prediction.habit_id ? { ...h, is_completed_today: true } : h
+          ),
+        });
+      }
 
       const res = await fetch(`/api/habits/${prediction.habit_id}/complete`, {
         method: 'POST',
@@ -150,6 +189,9 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
         setSuccessMessage(null);
       }, 2500);
     } catch (err) {
+      if (previousSummary) {
+        queryClient.setQueryData(['dashboard-summary'], previousSummary);
+      }
       console.error('Error completing habit in 2 min:', err);
     } finally {
       setCompletingId(null);

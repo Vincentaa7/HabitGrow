@@ -98,22 +98,22 @@ export class HabitService {
   ): Promise<TodayHabitItem[]> {
     const dateStr = targetDateStr || toDateString(new Date());
 
-    // 1. Fetch active habits with schedules
-    const { data: habits, error } = await supabase
-      .from('habits')
-      .select('*, category:habit_categories(name), habit_schedules(*)')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .eq('is_archived', false);
+    // 1. Fetch active habits (with schedules) and today's completions in parallel
+    const [{ data: habits, error }, { data: completions }] = await Promise.all([
+      supabase
+        .from('habits')
+        .select('*, category:habit_categories(name), habit_schedules(*)')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .eq('is_archived', false),
+      supabase
+        .from('habit_completions')
+        .select('id, habit_id')
+        .eq('user_id', userId)
+        .eq('date', dateStr),
+    ]);
 
     if (error) throw new Error(error.message);
-
-    // 2. Fetch completions for this date
-    const { data: completions } = await supabase
-      .from('habit_completions')
-      .select('id, habit_id')
-      .eq('user_id', userId)
-      .eq('date', dateStr);
 
     const completionMap = new Map<string, string>();
     (completions || []).forEach((c) => {

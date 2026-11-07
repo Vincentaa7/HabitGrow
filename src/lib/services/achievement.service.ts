@@ -12,29 +12,31 @@ export class AchievementService {
     userId: string,
     currentStreak: number,
     consistencyScore: number,
-    treeStage: string
+    treeStage: string,
+    knownTotalCompletions?: number
   ): Promise<Array<{ id: string; name: string; xp_reward: number }>> {
-    // 1. Fetch user's currently unlocked achievement IDs
-    const { data: unlockedData } = await supabase
-      .from('user_achievements')
-      .select('achievement_id')
-      .eq('user_id', userId);
+    // 1. Fetch unlocked achievements, active achievements, and total completions concurrently
+    const [{ data: unlockedData }, { data: allAchievements }, countRes] = await Promise.all([
+      supabase
+        .from('user_achievements')
+        .select('achievement_id')
+        .eq('user_id', userId),
+      supabase
+        .from('achievements')
+        .select('*')
+        .eq('is_active', true),
+      typeof knownTotalCompletions === 'number'
+        ? Promise.resolve({ count: knownTotalCompletions })
+        : supabase
+            .from('habit_completions')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', userId),
+    ]);
+
+    if (!allAchievements || allAchievements.length === 0) return [];
 
     const unlockedIds = new Set((unlockedData || []).map((u) => u.achievement_id));
-
-    // 2. Fetch active system achievements
-    const { data: allAchievements } = await supabase
-      .from('achievements')
-      .select('*')
-      .eq('is_active', true);
-
-    if (!allAchievements) return [];
-
-    // 3. Fetch user total completions count
-    const { count: totalCompletions } = await supabase
-      .from('habit_completions')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId);
+    const totalCompletions = countRes.count ?? 0;
 
     const newlyUnlocked: Array<{ id: string; name: string; xp_reward: number }> = [];
 
@@ -54,13 +56,13 @@ export class AchievementService {
 
       switch (achievement.condition_type) {
         case 'first_step':
-          if ((totalCompletions ?? 0) >= 1) conditionMet = true;
+          if (totalCompletions >= 1) conditionMet = true;
           break;
         case 'streak_days':
           if (currentStreak >= achievement.condition_value) conditionMet = true;
           break;
         case 'total_completions':
-          if ((totalCompletions ?? 0) >= achievement.condition_value) conditionMet = true;
+          if (totalCompletions >= achievement.condition_value) conditionMet = true;
           break;
         case 'consistency_rate':
           if (consistencyScore >= achievement.condition_value) conditionMet = true;
@@ -84,43 +86,41 @@ export class AchievementService {
             xp_reward: achievement.xp_reward,
           });
 
-          // Award bonus XP for achievement
-          await supabase.from('xp_transactions').insert({
-            user_id: userId,
-            source_type: 'achievement',
-            source_id: achievement.id,
-            amount: achievement.xp_reward,
-            description: `Unlocked achievement: ${achievement.name}`,
-          });
-
-          // Update user level
           const { data: levelRecord } = await supabase
             .from('user_levels')
             .select('total_xp')
             .eq('user_id', userId)
-            .single();
+            .maybeSingle();
 
           const newTotalXp = (levelRecord?.total_xp ?? 0) + achievement.xp_reward;
           const { level } = calculateLevel(newTotalXp);
 
-          await supabase.from('user_levels').upsert({
-            user_id: userId,
-            level,
-            total_xp: newTotalXp,
-            updated_at: new Date().toISOString(),
-          });
-
-          // Log activity
-          await supabase.from('activity_logs').insert({
-            user_id: userId,
-            activity_type: 'ACHIEVEMENT_UNLOCKED',
-            entity_type: 'achievement',
-            entity_id: achievement.id,
-            metadata: {
-              achievement_name: achievement.name,
-              xp_reward: achievement.xp_reward,
-            },
-          });
+          // Execute achievement reward transactions in parallel
+          await Promise.all([
+            supabase.from('xp_transactions').insert({
+              user_id: userId,
+              source_type: 'achievement',
+              source_id: achievement.id,
+              amount: achievement.xp_reward,
+              description: `Unlocked achievement: ${achievement.name}`,
+            }),
+            supabase.from('user_levels').upsert({
+              user_id: userId,
+              level,
+              total_xp: newTotalXp,
+              updated_at: new Date().toISOString(),
+            }),
+            supabase.from('activity_logs').insert({
+              user_id: userId,
+              activity_type: 'ACHIEVEMENT_UNLOCKED',
+              entity_type: 'achievement',
+              entity_id: achievement.id,
+              metadata: {
+                achievement_name: achievement.name,
+                xp_reward: achievement.xp_reward,
+              },
+            }),
+          ]);
         }
       }
     }

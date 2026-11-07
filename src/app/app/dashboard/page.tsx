@@ -68,7 +68,7 @@ export default function DashboardPage() {
       if (!json.success) throw new Error(json.error?.message || 'Gagal memuat dashboard');
       return json.data;
     },
-    staleTime: 1000 * 30, // 30 seconds cache (avoids repeated re-fetching)
+    staleTime: 1000 * 60 * 2, // 2 minutes cache synced with Navbar
     refetchOnWindowFocus: false, // Prevents aggressive re-fetching on alt-tab
   });
 
@@ -84,7 +84,7 @@ export default function DashboardPage() {
     refetchOnWindowFocus: false,
   });
 
-  // 3. Complete Habit Mutation with Optimistic UI updates
+  // 3. Complete Habit Mutation with Instant 0ms Optimistic UI & Direct Server-Result Sync
   const completeMutation = useMutation({
     mutationFn: async (habitId: string) => {
       const localDate = toDateString(new Date());
@@ -104,15 +104,19 @@ export default function DashboardPage() {
       if (previousSummary) {
         const targetHabit = previousSummary.today_habits.find((h) => h.id === habitId);
         const xpEarned = targetHabit?.xp_reward || 10;
-        const newCompletedCount = previousSummary.completed_count + 1;
-        const newPercentage = previousSummary.total_scheduled_today > 0
-          ? Math.round((newCompletedCount / previousSummary.total_scheduled_today) * 100)
-          : 0;
+        const alreadyCompletedTodayCount = previousSummary.today_habits.filter(
+          (h) => h.is_completed_today
+        ).length;
+        const newCompletedCount = alreadyCompletedTodayCount + 1;
+        const newPercentage =
+          previousSummary.total_scheduled_today > 0
+            ? Math.round((newCompletedCount / previousSummary.total_scheduled_today) * 100)
+            : 0;
 
-        const isFirstCompletionToday = previousSummary.completed_count === 0;
+        const isFirstCompletionToday = alreadyCompletedTodayCount === 0;
         const newCurrentStreak = isFirstCompletionToday
           ? previousSummary.streak.current_streak + 1
-          : previousSummary.streak.current_streak;
+          : Math.max(1, previousSummary.streak.current_streak);
 
         queryClient.setQueryData<DashboardSummary>(['dashboard-summary'], {
           ...previousSummary,
@@ -121,29 +125,61 @@ export default function DashboardPage() {
           streak: {
             ...previousSummary.streak,
             current_streak: newCurrentStreak,
+            longest_streak: Math.max(previousSummary.streak.longest_streak, newCurrentStreak),
           },
           user_level: {
             ...previousSummary.user_level,
             total_xp: previousSummary.user_level.total_xp + xpEarned,
           },
           today_habits: previousSummary.today_habits.map((h) =>
-            h.id === habitId
-              ? { ...h, is_completed_today: true }
-              : h
+            h.id === habitId ? { ...h, is_completed_today: true } : h
+          ),
+          at_risk_habits: (previousSummary.at_risk_habits || []).filter(
+            (p) => p.habit_id !== habitId
           ),
         });
       }
 
       return { previousSummary };
     },
+    onSuccess: (result, habitId) => {
+      // Immediately lock authoritative server metrics into cache without waiting for another GET round-trip
+      const currentSummary = queryClient.getQueryData<DashboardSummary>(['dashboard-summary']);
+      if (currentSummary && result) {
+        queryClient.setQueryData<DashboardSummary>(['dashboard-summary'], {
+          ...currentSummary,
+          streak: {
+            current_streak: result.currentStreak,
+            longest_streak: result.longestStreak,
+          },
+          user_level: {
+            ...currentSummary.user_level,
+            level: result.level,
+            total_xp: result.totalXp,
+          },
+          tree: {
+            ...currentSummary.tree,
+            stage: result.treeStage as any,
+            health: result.treeHealth,
+            consistency_score: result.consistencyScore,
+          },
+          today_habits: currentSummary.today_habits.map((h) =>
+            h.id === habitId
+              ? { ...h, is_completed_today: true, today_completion_id: result.completionId }
+              : h
+          ),
+        });
+      }
+      // Invalidate secondary tab caches so statistics/calendar/achievements update in background
+      queryClient.invalidateQueries({ queryKey: ['analytics-overview'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics-performance'] });
+      queryClient.invalidateQueries({ queryKey: ['calendar-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['achievements'] });
+    },
     onError: (_err, _habitId, context) => {
       if (context?.previousSummary) {
         queryClient.setQueryData(['dashboard-summary'], context.previousSummary);
       }
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
-      queryClient.invalidateQueries({ queryKey: ['user-tree'] });
     },
   });
 

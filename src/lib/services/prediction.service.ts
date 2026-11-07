@@ -24,42 +24,33 @@ export class PredictionService {
     today.setHours(0, 0, 0, 0);
     const todayStr = toDateString(today);
 
-    // 1. Fetch all active, unarchived habits for this user
-    const { data: habits, error: habitsError } = await supabase
-      .from('habits')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('is_active', true)
-      .eq('is_archived', false);
+    // 1. Fetch active habits (with schedules) and past 35 days completions concurrently in 1 round-trip
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 35);
+    const thirtyDaysAgoStr = toDateString(thirtyDaysAgo);
+
+    const [{ data: habits, error: habitsError }, { data: completionsData }] = await Promise.all([
+      supabase
+        .from('habits')
+        .select('*, habit_schedules(*)')
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .eq('is_archived', false),
+      supabase
+        .from('habit_completions')
+        .select('habit_id, date, completed_at, value')
+        .eq('user_id', userId)
+        .gte('date', thirtyDaysAgoStr),
+    ]);
 
     if (habitsError || !habits || habits.length === 0) {
       return [];
     }
 
-    // 2. Fetch all schedules for these habits
-    const habitIds = habits.map((h: Habit) => h.id);
-    const { data: schedules } = await supabase
-      .from('habit_schedules')
-      .select('*')
-      .in('habit_id', habitIds);
-
     const schedulesByHabit = new Map<string, HabitSchedule[]>();
-    (schedules || []).forEach((s: HabitSchedule) => {
-      const list = schedulesByHabit.get(s.habit_id) || [];
-      list.push(s);
-      schedulesByHabit.set(s.habit_id, list);
-    });
-
-    // 3. Fetch completions in the past 30 days
-    const thirtyDaysAgo = new Date(today);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 35);
-    const thirtyDaysAgoStr = toDateString(thirtyDaysAgo);
-
-    const { data: completionsData } = await supabase
-      .from('habit_completions')
-      .select('habit_id, date, completed_at, value')
-      .eq('user_id', userId)
-      .gte('date', thirtyDaysAgoStr);
+    for (const h of habits as Array<Habit & { habit_schedules?: HabitSchedule[] }>) {
+      schedulesByHabit.set(h.id, h.habit_schedules || []);
+    }
 
     const completionsByHabit = new Map<string, HabitCompletionRecord[]>();
     const completedTodayHabitIds = new Set<string>();
