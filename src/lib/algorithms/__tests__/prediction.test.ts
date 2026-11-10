@@ -258,6 +258,27 @@ describe('predictHabitFailureRisk', () => {
       totalDifficultyPointsToday: 4,
     });
     expect(earlyMorningWib.factor_breakdown.late_hour_score).toBe(15);
+
+    // Case C: User completes the NEW day's habit right after midnight (00:35 WIB, date = new day)
+    // The deadline for that date is 23:59, so this is the EARLIEST possible completion (~23h before deadline)
+    // Should be scored as low procrastination risk (score 15), NOT as late night (score 85)
+    const justAfterMidnightWib = predictHabitFailureRisk({
+      habit: baseHabit,
+      schedules,
+      completions: [
+        {
+          habit_id: 'habit-1',
+          date: '2026-09-24',
+          completed_at: '2026-09-24T00:35:00+07:00',
+          value: 20,
+        },
+      ],
+      evaluationDate: evalDate,
+      timezone: 'Asia/Jakarta',
+      totalScheduledToday: 3,
+      totalDifficultyPointsToday: 4,
+    });
+    expect(justAfterMidnightWib.factor_breakdown.late_hour_score).toBe(15);
   });
 });
 

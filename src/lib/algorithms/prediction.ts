@@ -176,17 +176,21 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
 
   let c5_lateHour = 0.15;
   if (recentCompletions.length > 0) {
+    // Model tenggat (deadline) harian: setiap centang dicatat pada tanggal lokal saat diklik,
+    // dan tenggat kebiasaan untuk tanggal tersebut adalah pukul 23:59 di hari yang sama.
+    // Maka jam 00:35 berarti kebiasaan hari itu dikerjakan PALING AWAL (sisa waktu ~23 jam),
+    // bukan penundaan. Jam 0-23 dipakai apa adanya: semakin besar jam, semakin dekat ke tenggat.
     const hours = recentCompletions.map((c) => getHourInTimezone(c.completed_at, timezone));
     const avgHour = hours.reduce((acc, h) => acc + h, 0) / hours.length;
 
     if (avgHour >= 22) {
-      c5_lateHour = 0.85; // kecenderungan menumpuk lewat pukul 22:00
+      c5_lateHour = 0.85; // rata-rata dikerjakan < 2 jam sebelum tenggat tengah malam
     } else if (avgHour >= 20) {
       c5_lateHour = 0.65;
     } else if (avgHour >= 16) {
       c5_lateHour = 0.40;
     } else {
-      c5_lateHour = 0.15; // diselesaikan pagi / siang hari
+      c5_lateHour = 0.15; // dikerjakan jauh sebelum tenggat (dini hari / pagi / siang)
     }
   }
 
@@ -203,11 +207,18 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
   const failurePercentage = Math.min(99, Math.max(1, Math.round(preferenceScore * 100)));
 
   // Menentukan Faktor Kriteria Dominan Penyebab Risiko
+  const maturityFactorLabel =
+    daysSinceCreation < 30
+      ? 'Kebiasaan masih dalam fase adaptasi pasca-observasi (< 30 hari)'
+      : daysSinceCreation < 60
+      ? 'Kebiasaan dalam fase penguatan rutinitas (< 60 hari)'
+      : 'Faktor pemeliharaan rutinitas jangka panjang';
+
   const weightedContributions = [
     { factor: `Tingkat terlewat cukup tinggi dalam 14 hari terakhir (${Math.round(c1_missRate * 100)}%)`, weight: SAW_WEIGHTS.MISS_RATE * c1_missRate },
     { factor: `Riwayat historis sering terlewat setiap hari ${currentDayName}`, weight: SAW_WEIGHTS.WEEKDAY * c2_weekday },
     { factor: 'Jadwal kebiasaanmu cukup padat hari ini', weight: SAW_WEIGHTS.WORKLOAD * c3_workload },
-    { factor: 'Kebiasaan masih dalam fase adaptasi pasca-observasi (< 30 hari)', weight: SAW_WEIGHTS.MATURITY * c4_maturity },
+    { factor: maturityFactorLabel, weight: SAW_WEIGHTS.MATURITY * c4_maturity },
     { factor: 'Pola pengerjaan cenderung menumpuk larut malam', weight: SAW_WEIGHTS.LATE_HOUR * c5_lateHour },
   ];
 

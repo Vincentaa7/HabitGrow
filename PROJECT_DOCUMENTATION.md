@@ -529,12 +529,12 @@ flowchart TD
     LitReview --> SpecSRS[Penyusunan SRS: Kebutuhan Fungsional & Non-Fungsional]
     SpecSRS --> ProtoDesign[Perancangan Prototipe: Wireframe UI & Skema Database 3NF]
     ProtoDesign --> Coding[Pengkodean Sistem: Next.js 16, Supabase, Tailwind, Vitest]
-    Coding --> UnitTesting[Pengujian Unit Otomatis: 48 Test Cases Vitest]
+    Coding --> UnitTesting[Pengujian Unit Otomatis: 45 Test Cases Vitest]
     
     UnitTesting --> CheckUnit{Seluruh Unit Test Lulus 100%?}
     CheckUnit -- Tidak --> FixCode[Perbaikan Bug & Refaktorisasi Logika]
     FixCode --> Coding
-    CheckUnit -- Ya --> DeployStaging[Deployment Vercel & PWA Build Testing]
+    CheckUnit -- Ya --> DeployStaging[Deployment Vercel Region sin1 & PWA Build Testing]
     
     DeployStaging --> E2ETesting[Pengujian End-to-End Otomatis & Uji Pengguna]
     E2ETesting --> CheckE2E{Memenuhi Syarat Evaluasi Pengguna?}
@@ -551,33 +551,34 @@ Bagan alir algoritma inti Sistem Pendukung Keputusan menggunakan metode *Simple 
 
 ```mermaid
 flowchart TD
-    Start([Mulai: Pemicu Evaluasi SPK SAW]) --> FetchPending[/Tarik Seluruh Kebiasaan Terjadwal Hari Ini yang Belum Selesai/]
-    FetchPending --> CheckList{Apakah Ada Kebiasaan Belum Tuntas?}
+    Start([Mulai: Pemicu Evaluasi SPK SAW]) --> FetchPending[/Tarik Paralel Kebiasaan Aktif + Jadwal & Riwayat Centang/]
+    FetchPending --> CheckList{Apakah Ada Kebiasaan Terjadwal Hari Ini yang Belum Tuntas?}
     CheckList -- Tidak --> ReturnZero[/Kembalikan Hasil: Risiko Nihil - Seluruh Tugas Aman/]
     ReturnZero --> End([Selesai])
 
-    CheckList -- Ya --> LoopHabit[Iterasi Setiap Kebiasaan Terjadwal]
-    LoopHabit --> CalcAge[Hitung Usia Kebiasaan: Tanggal Hari Ini - Tanggal Mulai]
-    CalcAge --> CheckColdStart{Usia Kebiasaan < 14 Hari?<br/>Cold-Start Guard}
+    CheckList -- Ya --> CalcWorkload[Hitung Total Poin Kesulitan Hari Ini: EASY=1, MEDIUM=2, HARD=3]
+    CalcWorkload --> LoopHabit[Iterasi Setiap Kebiasaan Belum Tuntas]
+    LoopHabit --> CalcAge[Hitung Usia Kebiasaan: Tanggal Evaluasi Lokal - Tanggal Mulai]
+    CalcAge --> CheckColdStart{Usia Kebiasaan < 14 Hari?<br/>Cold-Start Guard 2 Siklus}
     
-    CheckColdStart -- Ya --> AssignColdStart[Tetapkan Status: COLD_START<br/>Skor Vi = 0.00, Beri Afirmasi Adaptasi Baru]
+    CheckColdStart -- Ya --> AssignColdStart[Lewati Peringatan Dini:<br/>Masa Adaptasi Awal < 14 Hari]
     AssignColdStart --> NextHabit{Masih Ada Kebiasaan Lain?}
 
-    CheckColdStart -- Tidak --> ComputeC1[Hitung C1: Miss Rate 30 Hari Terakhir - Bobot 30%]
-    ComputeC1 --> ComputeC2[Hitung C2: Historic Miss Rate pada Hari Serupa - Bobot 25%]
-    ComputeC2 --> ComputeC3[Hitung C3: Daily Workload Ratio - Bobot 15%]
-    ComputeC3 --> ComputeC4[Hitung C4: Kebalikan Maturity Usia Kebiasaan - Bobot 15%]
-    ComputeC4 --> ComputeC5[Hitung C5: Faktor Keterlambatan Waktu Saat Ini - Bobot 15%]
+    CheckColdStart -- Tidak --> ComputeC1[Hitung C1: Miss Rate 14 Hari Terakhir - Bobot 30%]
+    ComputeC1 --> ComputeC2[Hitung C2: Day-of-Week Vulnerability 14 Hari Terakhir - Bobot 25%]
+    ComputeC2 --> ComputeC3[Hitung C3: Rasio Beban Kognitif Hari Ini per 16 Poin - Bobot 15%]
+    ComputeC3 --> ComputeC4[Hitung C4: Faktor Kerentanan Usia Kebiasaan - Bobot 15%]
+    ComputeC4 --> ComputeC5[Hitung C5: Pola Rata-Rata Jam Penyelesaian Zona Waktu Lokal - Bobot 15%]
 
-    ComputeC5 --> Normalize[Normalisasi Matriks Keputusan R: Rij = Xij / Max Xj]
+    ComputeC5 --> Normalize[Normalisasi Matriks Keputusan R pada Skala 0.0 s/d 1.0]
     Normalize --> SAWScore[Hitung Nilai Preferensi Vi = SUM Wj * Rij]
 
     SAWScore --> CheckHigh{Apakah Vi >= 0.70?}
-    CheckHigh -- Ya --> SetHigh[Tetapkan Status: TINGGI / HIGH RISK<br/>Generate Rekomendasi Adaptif Aturan 2-Menit]
+    CheckHigh -- Ya --> SetHigh[Tetapkan Status: HIGH RISK<br/>Rekomendasi: LOWER_TARGET jika Target > 1 atau CHECKLIST_2MIN jika Target = 1]
     
     CheckHigh -- Tidak --> CheckMod{Apakah Vi >= 0.50?}
-    CheckMod -- Ya --> SetMod[Tetapkan Status: SEDANG / MODERATE RISK<br/>Generate Rekomendasi Pengingat & Pemecahan Tugas]
-    CheckMod -- Tidak --> SetLow[Tetapkan Status: RENDAH / LOW RISK<br/>Status Terkendali]
+    CheckMod -- Ya --> SetMod[Tetapkan Status: MODERATE RISK<br/>Rekomendasi: LOWER_TARGET jika Target > 1 atau CHECKLIST_2MIN jika Target = 1]
+    CheckMod -- Tidak --> SetLow[Tetapkan Status: LOW RISK / AMAN<br/>Tidak Menampilkan Pop-up Intervensi]
 
     SetHigh --> NextHabit
     SetMod --> NextHabit
@@ -585,7 +586,7 @@ flowchart TD
 
     NextHabit -- Ya --> LoopHabit
     NextHabit -- Tidak --> SortResult[Urutkan Kebiasaan Berdasarkan Skor Vi Tertinggi]
-    SortResult --> OutputResult[/Keluarkan Daftar Risiko & Rekomendasi Mitigasi/]
+    SortResult --> OutputResult[/Keluarkan Daftar Kebiasaan Berisiko Vi >= 0.50 & Aksi Adaptif/]
     OutputResult --> End
 ```
 
@@ -638,32 +639,32 @@ flowchart TD
 
 ---
 
-#### 3.10.4 Flowchart 4: Alur Eksekusi Checklist Taktil (0ms Optimistic UI & Server Sync)
+#### 3.10.4 Flowchart 4: Alur Eksekusi Checklist Taktil (0ms Optimistic UI & 2-Batch Parallel Server Sync)
 
-Bagan alir mutasi instan checklist kartu kebiasaan dengan penanganan pemulihan kegagalan (*rollback*):
+Bagan alir mutasi instan checklist kartu kebiasaan dengan arsitektur paralel 2-batch dan penanganan pemulihan kegagalan (*rollback*):
 
 ```mermaid
 flowchart TD
     Start([Mulai: Pengguna Mengetuk Tombol Centang Kartu]) --> OptimisticLocal[Perbarui State Klien Secara Seketika - Latensi 0ms:<br/>Tandai Tugas Selesai di Antarmuka]
     OptimisticLocal --> TriggerConfetti[/Tembakkan Animasi Letupan Konfeti Partikel/]
-    OptimisticLocal --> OptimisticCounter[Tambah Angka Selesai & XP Sementara di Layar]
+    OptimisticLocal --> OptimisticCounter[Tambah Angka Selesai, XP & Global Streak Sementara di Layar]
     
     OptimisticCounter --> AsyncCall[Kirim Permintaan Asinkron di Latar Belakang:<br/>POST /api/habits/:id/complete]
-    AsyncCall --> ValidateAuth{Autentikasi Sesi & CSRF Valid?}
+    AsyncCall --> ValidateAuth{Autentikasi Sesi & RLS Valid?}
     
     ValidateAuth -- Tidak --> TriggerRollback[Batalkan Perubahan Klien: Kembalikan State ke Semula]
-    ValidateAuth -- Ya --> CheckUniqueDate{Apakah Tugas Sudah Pernah Dicentang Hari Ini?<br/>Constraint Unik Tanggal}
+    ValidateAuth -- Ya --> Batch1Read[(Batch 1 Parallel Read via Promise.all:<br/>Baca habits, habit_completions & user_levels)]
     
+    Batch1Read --> CheckUniqueDate{Apakah Tugas Sudah Pernah Dicentang Hari Ini?<br/>Constraint Unik Tanggal}
     CheckUniqueDate -- Duplikat --> TriggerRollback
-    CheckUniqueDate -- Lolos --> CommitDB[(Simpan Rekaman ke habit_completions)]
+    CheckUniqueDate -- Lolos --> CommitDB[(INSERT Rekaman Baru ke habit_completions)]
     
-    CommitDB --> RecordXP[(Catat Transaksi ke xp_transactions & user_levels)]
-    RecordXP --> UpdateStreakSub[Panggil Sub-proses: Sinkronisasi user_streaks Global]
-    UpdateStreakSub --> UpdateTreeSub[Panggil Sub-proses: Mutasi user_trees Konsistensi 30 Hari]
+    CommitDB --> InMemoryCalc[0ms In-Memory Compute di RAM Server:<br/>Hitung XP/Level, Global Streak & Konsistensi Pohon 30 Hari]
+    InMemoryCalc --> Batch2Write[(Batch 2 Parallel Write via Promise.all:<br/>Simpan xp_transactions, user_levels, user_streaks, user_trees, achievements & activity_logs)]
     
-    UpdateTreeSub --> ServerOK[/Server Merespon HTTP 200 OK dengan Payload Baru/]
-    ServerOK --> InvalidateQuery[TanStack Query Invalidate & Revalidate Silent]
-    InvalidateQuery --> End([Selesai: Sinkronisasi Sempurna])
+    Batch2Write --> ServerOK[/Server Merespon HTTP 200 OK dengan Payload Otoritatif/]
+    ServerOK --> DirectInject[Direct Cache Injection di Klien onSuccess:<br/>Kunci Streak, XP, Level & Pohon Resmi Tanpa Refetch Ulang]
+    DirectInject --> End([Selesai: Sinkronisasi Sempurna])
 
     TriggerRollback --> ShowToast[/Tampilkan Pesan Peringatan Toast Error ke Pengguna/]
     ShowToast --> End
@@ -1242,88 +1243,203 @@ Seluruh endpoint menerima header `Content-Type: application/json` dan cookie ses
 
 ---
 
-## 7. ALUR BISNIS END-TO-END (USER JOURNEY & STATE MACHINE)
+## 7. ALUR BISNIS END-TO-END (USER JOURNEY & SEQUENCE DIAGRAMS)
 
-### 7.1 Alur Eksekusi Checklist Taktil (Optimistic UI & Server Sync)
+### 7.1 Sequence Diagram Eksekusi Checklist Taktil (0ms Optimistic UI & 2-Batch Parallel Server Sync)
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as Pengguna
-    participant UI as Komponen Dashboard (React)
+    participant UI as Komponen Dashboard / HabitCard (React)
     participant Cache as TanStack React Query Cache
-    participant API as Next.js REST API
+    participant API as Next.js API (CompletionService)
     participant DB as PostgreSQL (Supabase)
 
-    User->>UI: Menekan tombol centang pada kebiasaan
-    Note over UI,Cache: FASE 1: OPTIMISTIC UPDATE (0ms)
-    UI->>UI: Ubah ikon jadi hijau centang & bunyikan confetti
-    UI->>Cache: Update cache lokal (streak + 1, completed_count + 1, XP bertambah)
-    UI-->>User: Tampilan langsung tercentang seketika
+    User->>UI: Menekan tombol centang pada kartu kebiasaan
+    Note over UI,Cache: FASE 1: ZERO-LATENCY OPTIMISTIC UPDATE (0ms - onMutate)
+    UI->>UI: Ubah ikon menjadi hijau centang & ledakkan partikel konfeti
+    UI->>Cache: Simpan snapshot lama & update cache lokal (completed_count + 1, XP + reward, Global Streak + 1 jika centang pertama hari ini)
+    UI-->>User: Antarmuka & Streak Global Navbar langsung berubah seketika (0ms)
 
-    Note over UI,DB: FASE 2: SERVER SYNCHRONIZATION
-    UI->>API: POST /api/habits/[id]/complete
-    API->>DB: Validasi RLS & Cek unique_habit_completion_per_day
-    API->>DB: INSERT into habit_completions
-    API->>DB: Evaluasi streak, kalkulasi konsistensi 30 hari & status pohon
-    API->>DB: INSERT into xp_transactions & UPDATE user_levels
-    DB-->>API: Data transaksi tersimpan aman
-    API-->>UI: Response JSON 200 OK (Data resmi server)
+    Note over UI,DB: FASE 2: 2-BATCH PARALLEL SERVER SYNCHRONIZATION (sin1)
+    UI->>API: POST /api/habits/[id]/complete { date: localDate }
+    API->>DB: Batch 1 Parallel Read (Promise.all): SELECT habits + schedules, habit_completions, user_levels
+    DB-->>API: Kembalikan data habit, riwayat centang & level saat ini
+    API->>DB: Validasi RLS & INSERT INTO habit_completions (UNIQUE habit_id, date)
+    DB-->>API: Rekaman centang baru tersimpan
+    API->>API: 0ms In-Memory Compute: Hitung XP/Level, Non-Zero Day Global Streak, & Konsistensi Pohon 30 Hari di RAM
+    API->>DB: Batch 2 Parallel Write (Promise.all): Simpan ke xp_transactions, user_levels, user_streaks, user_trees, user_achievements & activity_logs
+    DB-->>API: Seluruh 6 tabel berhasil diperbarui secara konkuren
+    API-->>UI: Response JSON 200 OK (Data otoritatif: currentStreak, longestStreak, level, totalXp, treeStage, treeHealth, consistencyScore)
 
-    alt Jika Request Gagal / Putus Jaringan
-        API-->>UI: Response 500 / Network Error
-        UI->>Cache: Rollback ke snapshot sebelum centang
-        UI-->>User: Kembalikan centang & tampilkan notifikasi kendala
+    Note over UI,Cache: FASE 3: DIRECT CACHE INJECTION (onSuccess) / ROLLBACK (onError)
+    alt Jika Request Berhasil (HTTP 200 OK)
+        UI->>Cache: Suntikkan metrik resmi server langsung ke cache ['dashboard-summary'] & invalidate tab sekunder di latar belakang
+    else Jika Request Gagal / Putus Jaringan
+        API-->>UI: Response 4xx / 500 / Network Error
+        UI->>Cache: Rollback cache ['dashboard-summary'] ke snapshot sebelum centang
+        UI-->>User: Kembalikan status centang & tampilkan pesan kendala
     end
 ```
 
-### 7.2 Alur Sistem Pendukung Keputusan (SPK) SAW & Nudge Adaptif
+---
+
+### 7.2 Sequence Diagram Sistem Pendukung Keputusan (SPK) SAW & Nudge Adaptif
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor User as Pengguna
     participant UI as Dashboard & PredictionAlertBanner
+    participant Cache as TanStack React Query Cache
     participant API as GET /api/dashboard/summary
     participant DSS as PredictionService & SAW Engine
     participant DB as PostgreSQL (Supabase)
 
     User->>UI: Membuka halaman Dashboard HabitGrow
-    UI->>API: Request data ringkasan harian
-    API->>DB: Query daftar kebiasaan hari ini & riwayat 14 hari
-    DB-->>API: Data mentah kebiasaan dan status completion
-    API->>DSS: Evaluasi kebiasaan belum tuntas (Cek Usia Kebiasaan >= 14 Hari)
-    alt Usia Kebiasaan < 14 Hari (Masa Adaptasi Awal 2 Siklus)
-        DSS-->>API: Lewati evaluasi (Cegah false alarm & noise sampel minim)
+    UI->>API: GET /api/dashboard/summary?date=YYYY-MM-DD&tz=Asia/Jakarta
+    API->>DB: Parallel Query (Promise.all): Ambil habits + habit_schedules(*) & riwayat habit_completions
+    DB-->>API: Data kebiasaan aktif, jadwal mingguan & riwayat penyelesaian
+    API->>DSS: Evaluasi kebiasaan belum tuntas hari ini (getAtRiskHabitsToday)
+    alt Usia Kebiasaan < 14 Hari (Cold-Start Guard 2 Siklus Kalender)
+        DSS-->>API: Lewati evaluasi peringatan dini (Cegah false alarm & small sample noise)
     else Usia Kebiasaan >= 14 Hari
-        DSS->>DSS: Normalisasi 5 Kriteria (C1-C5) & Hitung Nilai Preferensi SAW (Vi)
-        alt Nilai Preferensi Vi >= 0.50 (Skor Risiko >= 50%)
-            DSS-->>API: Buat rekomendasi adaptif (LOWER_TARGET jika >1, CHECKLIST_2MIN jika =1)
+        DSS->>DSS: Hitung 5 Kriteria Benefit (C1 Miss Rate 14d, C2 Day Vulnerability, C3 Workload/16, C4 Maturity, C5 Late Hour Local TZ)
+        DSS->>DSS: Normalisasi Matriks R & Hitung Nilai Preferensi SAW Vi = SUM(Wj * Rij)
+        alt Nilai Preferensi Vi >= 0.50 (Indeks Risiko >= 50%)
+            DSS-->>API: Susun rekomendasi adaptif (LOWER_TARGET jika target > 1, CHECKLIST_2MIN jika target = 1)
         end
     end
-    API-->>UI: Response JSON 200 OK (Memuat daftar at_risk_habits)
-    UI->>User: Tampilkan PredictionAlertBanner (Penyebab Utama, Rekomendasi SPK & Tombol Aksi)
+    API-->>UI: Response JSON 200 OK (Memuat daftar at_risk_habits terurut dari risiko tertinggi)
+    UI-->>User: Tampilkan PredictionAlertBanner (Indeks Risiko, Faktor Dominan, & Tombol Aksi Adaptif)
     
-    opt Pengguna Memilih Aksi Adaptif
-        alt Opsi LOWER_TARGET
-            User->>UI: Klik tombol "Pangkas Target Jadi [X]"
-            UI->>API: PATCH /api/habits/[id] (target_value baru)
+    opt Pengguna Memilih Aksi Adaptif pada Banner SPK SAW
+        alt Jalur 1: Opsi LOWER_TARGET (Kebiasaan Kuantitatif > 1 atau Jam/Liter)
+            User->>UI: Klik tombol "Pangkas Target Jadi [X] [Satuan]"
+            UI->>API: PATCH /api/habits/[id] { target_value, target_unit }
             API->>DB: UPDATE habits SET target_value = new_target
-            DB-->>API: Berhasil update
+            DB-->>API: Berhasil diperbarui
             API-->>UI: Response 200 OK
-            UI-->>User: Target baru aktif seketika, risiko gagal termitigasi & pop-up tertutup
-        else Opsi CHECKLIST_2MIN
-            User->>UI: Klik tombol "Selesaikan Versi Ringan"
-            UI->>API: POST /api/habits/[id]/complete (Inisiasi 2 Menit)
-            API->>DB: INSERT into habit_completions & UPDATE streaks/trees
-            DB-->>API: Berhasil simpan
+            UI->>Cache: Invalidate ['dashboard-summary'] & ['habits']
+            UI-->>User: Target baru aktif seketika, beban turun & banner tertutup
+        else Jalur 2: Opsi CHECKLIST_2MIN (Kebiasaan Biner Target = 1)
+            User->>UI: Klik tombol "Selesaikan Versi 2 Menit"
+            UI->>Cache: 0ms Optimistic UI Update (Hapus banner, tambah XP, Global Streak + 1 jika centang pertama)
+            UI-->>User: Ledakan konfeti & status langsung selesai seketika (0ms)
+            UI->>API: POST /api/habits/[id]/complete { date: localDate }
+            API->>DB: Eksekusi 2-Batch Parallel Completion Pipeline
+            DB-->>API: Tersimpan aman
             API-->>UI: Response 200 OK
-            UI-->>User: Tuntas seketika (0ms confetti), streak & pohon aman, pop-up tertutup
-        else Opsi SNOOZE_1HOUR
-            User->>UI: Klik tombol "Nanti Saja (1 Jam)"
-            UI->>UI: Simpan timestamp tunda ke client localStorage
-            UI-->>User: Pop-up disembunyikan sementara selama 60 menit
+        else Jalur 3: Opsi SNOOZE_1HOUR
+            User->>UI: Klik tombol "Tunda 1 Jam"
+            UI->>UI: Simpan timestamp tunda (Date.now() + 3600000) ke localStorage
+            UI-->>User: Banner disembunyikan sementara selama 60 menit
         end
+    end
+```
+
+---
+
+### 7.3 Sequence Diagram Autentikasi Pengguna (Registrasi, Trigger Inisialisasi 3NF & Login)
+
+Diagram urutan ini memodelkan proses pendaftaran akun baru (termasuk eksekusi otomatis *Database Trigger* PostgreSQL untuk menginisialisasi 4 tabel 1:1 secara atomik) serta proses masuk (*login*) pengguna:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Pengguna
+    participant UI as Halaman Auth (Register / Login UI)
+    participant Cache as TanStack React Query Cache
+    participant API as Next.js Auth API (/api/auth/*)
+    participant Auth as Supabase Auth (GoTrue)
+    participant DB as PostgreSQL (Trigger & Tabel 3NF)
+
+    alt Alur 1: Registrasi Akun Pengguna Baru (Sign Up)
+        User->>UI: Mengisi Nama Tampilan, Email & Password lalu klik "Daftar"
+        UI->>API: POST /api/auth/register { display_name, email, password }
+        API->>API: Validasi skema input dengan Zod (registerSchema)
+        API->>Auth: supabase.auth.signUp({ email, password, data: { display_name } })
+        Auth->>DB: INSERT INTO auth.users
+        Note over Auth,DB: PostgreSQL Trigger: on_auth_user_created -> handle_new_user()
+        DB->>DB: Otomatis INSERT 1:1 ke tabel profiles, user_levels (Lv.1, 0 XP), user_streaks (0 Hari) & user_trees (Seed, 100%)
+        Auth-->>API: Kembalikan objek User & status verifikasi
+        API-->>UI: Response JSON 200 OK
+        UI-->>User: Tampilkan konfirmasi pendaftaran berhasil / arahkan ke Login
+    else Alur 2: Masuk ke Sistem (Sign In / Login)
+        User->>UI: Mengisi Email & Password lalu klik "Masuk"
+        UI->>Cache: queryClient.clear() (Bersihkan sisa cache akun sebelumnya)
+        UI->>API: POST /api/auth/login { email, password }
+        API->>API: Validasi skema input dengan Zod (loginSchema)
+        API->>Auth: supabase.auth.signInWithPassword({ email, password })
+        alt Kredensial Valid
+            Auth-->>API: Kembalikan Session Token (JWT) & Set HTTP-Only Auth Cookie
+            API-->>UI: Response JSON 200 OK { user, session }
+            UI-->>User: Redirect ke /app/dashboard & mulai Background Tab Prefetching
+        else Email atau Password Salah
+            Auth-->>API: Error 401 Invalid Login Credentials
+            API-->>UI: Response JSON 401 Unauthorized
+            UI-->>User: Tampilkan pesan peringatan "Email atau password salah"
+        end
+    end
+```
+
+---
+
+### 7.4 Sequence Diagram Manajemen Data Kebiasaan (CRUD: Tambah, Ubah & Hapus Kebiasaan)
+
+Diagram urutan ini memodelkan siklus pengelolaan data kebiasaan (*Create, Update, Delete*) beserta relasi jadwal mingguan (`habit_schedules`), pencatatan jejak audit (`activity_logs`), dan penghapusan berjenjang (`ON DELETE CASCADE`):
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Pengguna
+    participant UI as Halaman Kebiasaan & HabitFormModal
+    participant Cache as TanStack React Query Cache
+    participant API as Next.js Habits API (/api/habits/*)
+    participant Svc as HabitService
+    participant DB as PostgreSQL (Supabase)
+
+    alt Operasi 1: Tambah Kebiasaan Baru (Create Habit)
+        User->>UI: Mengisi form modal (Nama, Kategori, Kesulitan, Target, Satuan, Frekuensi) & klik "Simpan"
+        UI->>API: POST /api/habits { name, category_id, difficulty, target_value, target_unit, frequency_type, selected_days }
+        API->>API: Verifikasi sesi pengguna & validasi Zod (habitCreateSchema)
+        API->>Svc: HabitService.createHabit(supabase, userId, data)
+        Svc->>DB: INSERT INTO habits (user_id, category_id, difficulty, target_value, ...)
+        DB-->>Svc: Kembalikan rekaman habit baru (habit.id)
+        opt Jika frequency_type == 'SELECTED_DAYS'
+            Svc->>DB: INSERT INTO habit_schedules (habit_id, day_of_week)
+        end
+        Svc->>DB: INSERT INTO activity_logs (activity_type: 'HABIT_CREATED', entity_id: habit.id)
+        Svc-->>API: Data habit baru lengkap
+        API-->>UI: Response JSON 201 Created
+        UI->>Cache: Invalidate ['habits'] & ['dashboard-summary']
+        UI-->>User: Tutup modal & tampilkan kartu kebiasaan baru di daftar
+    else Operasi 2: Ubah Data Kebiasaan (Update Habit)
+        User->>UI: Mengubah atribut kebiasaan pada modal edit & klik "Simpan Perubahan"
+        UI->>API: PATCH /api/habits/[id] { name?, difficulty?, target_value?, selected_days? }
+        API->>API: Verifikasi kepemilikan (RLS) & validasi Zod (habitUpdateSchema)
+        API->>Svc: HabitService.updateHabit(supabase, userId, habitId, data)
+        Svc->>DB: UPDATE habits SET ..., updated_at = NOW() WHERE id = habitId AND user_id = userId
+        opt Jika jadwal hari (selected_days) diubah
+            Svc->>DB: DELETE FROM habit_schedules WHERE habit_id = habitId
+            Svc->>DB: INSERT INTO habit_schedules (jadwal hari baru)
+        end
+        Svc-->>API: Data habit yang telah diperbarui
+        API-->>UI: Response JSON 200 OK
+        UI->>Cache: Invalidate ['habits'] & ['dashboard-summary']
+        UI-->>User: Perbarui kartu kebiasaan di layar secara instan
+    else Operasi 3: Hapus Kebiasaan Permanen (Delete Habit)
+        User->>UI: Klik tombol Hapus & konfirmasi pada Custom Danger Alert Modal
+        UI->>API: DELETE /api/habits/[id]
+        API->>Svc: HabitService.deleteHabit(supabase, userId, habitId)
+        Svc->>DB: DELETE FROM habits WHERE id = habitId AND user_id = userId
+        Note over Svc,DB: ON DELETE CASCADE otomatis menghapus habit_schedules & habit_completions terkait
+        DB-->>Svc: Konfirmasi terhapus
+        Svc-->>API: Sukses
+        API-->>UI: Response JSON 200 OK { deleted: true }
+        UI->>Cache: Invalidate ['habits'] & ['dashboard-summary']
+        UI-->>User: Hapus kartu kebiasaan dari antarmuka & perbarui metrik pohon
     end
 ```
 
@@ -1598,12 +1714,14 @@ Gunakan tabel rujukan berikut saat menyusun bab perancangan dan implementasi dal
 | **9** | **ERD Relasional (13 Tabel)** | Crow's Foot Chen / UML DB | **Bab 3** | Sub-bab 4.1 | `supabase/migrations/001_initial_schema.sql` | Memodelkan struktur relasi basis data normalisasi ketiga (3NF) antar entitas. |
 | **10**| **Kamus Data & Spesifikasi Tabel** | Relational Data Dictionary | **Bab 3** | Sub-bab 4.2 | `001_initial_schema.sql` | Menyajikan detail atribut, tipe data, dan konstrain pada 13 tabel basis data. |
 | **11**| **Matriks Kardinalitas & Cascade Rules**| Entity Cardinality Matrix | **Bab 3** | Sub-bab 4.3 | `001_initial_schema.sql` | Merinci relasi 1:1, 1:N, M:N dan aturan `ON DELETE CASCADE / SET NULL` demi integritas data referensial. |
-| **12**| **Sequence Diagram Checklist Taktil** | UML Sequence | **Bab 3** | Sub-bab 7.1 | `src/app/app/dashboard/page.tsx` $\leftrightarrow$ API | Menggambarkan urutan pesan kronologis antara Pengguna, Browser Klien, API Server, dan Database. |
-| **13**| **Sequence Diagram Web Push Latar Belakang**| UML Sequence | **Bab 3** | Sub-bab 3.7 | `public/sw.js` $\leftrightarrow$ FCM $\leftrightarrow$ Server | Menggambarkan interaksi kriptografi VAPID antara Service Worker ponsel, Google FCM/APNs, dan Vercel Cron. |
-| **14**| **State Machine Metamorfosis Pohon** | UML State Machine | **Bab 3** | Sub-bab 7.3 | `src/lib/algorithms/tree.ts` | Memodelkan status transisi keadaan pohon (*Seed* $\rightarrow$ *Sprout* $\rightarrow$ *Young* $\rightarrow$ *Healthy* $\rightarrow$ *Mature*). |
-| **15**| **Tabel Pengujian Unit Vitest (45 Kasus)**| White-box Unit Test Table | **Bab 4** | Sub-bab 10.2 | `src/lib/algorithms/__tests__/*`, `src/lib/services/__tests__/*` | Membuktikan kebenaran matematis dan fungsional seluruh modul algoritma dengan kelulusan 100%. |
-| **16**| **Tabel Pengujian E2E TestSprite (15 Kasus)**| Black-box E2E Test Table | **Bab 4** | Sub-bab 10.2 | TestSprite MCP Autonomous Browser Reports | Memvalidasi kehandalan antarmuka pengguna pada peramban Chromium secara otonom. |
-| **17**| **Matriks Perbandingan Performa Sistem (Sebelum vs. Sesudah Optimisasi)** | Benchmark Comparison Table | **Bab 4** | Sub-bab 5.9 | `completion.service.ts`, `Navbar.tsx`, `middleware.ts`, `vercel.json` | Membuktikan lompatan performa responsifitas dari 2.500–4.000 ms menjadi ~0 ms tanpa mengurangi 13 tabel 3NF. |
+| **12**| **Sequence Diagram Checklist Taktil (0ms & 2-Batch Parallel)** | UML Sequence | **Bab 3 / Bab 4** | Sub-bab 7.1 | `src/app/app/dashboard/page.tsx` $\leftrightarrow$ `completion.service.ts` | Menggambarkan urutan pesan kronologis Optimistic UI 0ms dan sinkronisasi 2-batch paralel ke 6 tabel database. |
+| **13**| **Sequence Diagram SPK SAW & Nudge Adaptif** | UML Sequence | **Bab 3 / Bab 4** | Sub-bab 7.2 | `PredictionAlertBanner.tsx` $\leftrightarrow$ `prediction.service.ts` | Menggambarkan evaluasi 5 kriteria SAW, Cold-Start Guard 14 hari, dan 3 cabang aksi adaptif (Lower Target, 2-Min Rule, Snooze). |
+| **14**| **Sequence Diagram Autentikasi (Registrasi & Login)** | UML Sequence | **Bab 3 / Bab 4** | Sub-bab 7.3 | `src/app/api/auth/*` $\leftrightarrow$ Supabase Auth & Trigger | Memodelkan registrasi akun beserta trigger PostgreSQL otomatis (`handle_new_user`) ke 4 tabel 1:1 dan alur sesi login. |
+| **15**| **Sequence Diagram Manajemen Kebiasaan (CRUD)** | UML Sequence | **Bab 3 / Bab 4** | Sub-bab 7.4 | `src/app/api/habits/*` $\leftrightarrow$ `habit.service.ts` | Memodelkan operasi Tambah, Ubah, dan Hapus kebiasaan beserta relasi jadwal mingguan (`habit_schedules`) dan `ON DELETE CASCADE`. |
+| **16**| **Sequence Diagram Web Push Latar Belakang**| UML Sequence | **Bab 3 / Bab 4** | Sub-bab 3.7 | `public/sw.js` $\leftrightarrow$ FCM $\leftrightarrow$ Server | Menggambarkan interaksi kriptografi VAPID antara Service Worker ponsel, Google FCM/APNs, dan Vercel Cron. |
+| **17**| **Tabel Pengujian Unit Vitest (45 Kasus)**| White-box Unit Test Table | **Bab 4** | Sub-bab 10.2 | `src/lib/algorithms/__tests__/*`, `src/lib/services/__tests__/*` | Membuktikan kebenaran matematis dan fungsional seluruh modul algoritma dengan kelulusan 100%. |
+| **18**| **Tabel Pengujian E2E TestSprite (15 Kasus)**| Black-box E2E Test Table | **Bab 4** | Sub-bab 10.2 | TestSprite MCP Autonomous Browser Reports | Memvalidasi kehandalan antarmuka pengguna pada peramban Chromium secara otonom. |
+| **19**| **Matriks Perbandingan Performa Sistem (Sebelum vs. Sesudah Optimisasi)** | Benchmark Comparison Table | **Bab 4** | Sub-bab 5.9 | `completion.service.ts`, `Navbar.tsx`, `middleware.ts`, `vercel.json` | Membuktikan lompatan performa responsifitas dari 2.500–4.000 ms menjadi ~0 ms tanpa mengurangi 13 tabel 3NF. |
 
 ---
 
