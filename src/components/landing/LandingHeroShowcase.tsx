@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { TreeVisualization } from '@/components/tree/TreeVisualization';
 import { TreeStage } from '@/types/database';
-import { Check, Flame, Zap, Sparkles } from 'lucide-react';
+import { Check, Flame, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SampleHabit {
@@ -12,7 +12,6 @@ interface SampleHabit {
   name: string;
   category: string;
   xp: number;
-  streak: number;
   completed: boolean;
 }
 
@@ -25,9 +24,9 @@ const STAGES: { stage: TreeStage; label: string; score: number; desc: string }[]
 ];
 
 const INITIAL_HABITS: SampleHabit[] = [
-  { id: '1', name: 'Minum 2 Liter Air', category: 'Kesehatan', xp: 10, streak: 14, completed: true },
-  { id: '2', name: 'Membaca Buku 20 Menit', category: 'Pengembangan Diri', xp: 15, streak: 8, completed: true },
-  { id: '3', name: 'Olahraga Pagi 15 Menit', category: 'Kebugaran', xp: 20, streak: 5, completed: false },
+  { id: '1', name: 'Minum 2 Liter Air', category: 'Kesehatan', xp: 10, completed: true },
+  { id: '2', name: 'Membaca Buku 20 Menit', category: 'Pengembangan Diri', xp: 15, completed: true },
+  { id: '3', name: 'Olahraga Pagi 15 Menit', category: 'Kebugaran', xp: 20, completed: false },
 ];
 
 export function LandingHeroShowcase() {
@@ -198,10 +197,6 @@ export function LandingHeroShowcase() {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded">
-                        <Flame className="w-3 h-3 fill-amber-500" />
-                        {habit.streak}
-                      </span>
                       <span className="text-[10px] font-bold text-emerald-700 dark:text-[#aff33e] bg-emerald-100/70 dark:bg-[#aff33e]/10 px-1.5 py-0.5 rounded">
                         +{habit.xp} XP
                       </span>
@@ -217,7 +212,10 @@ export function LandingHeroShowcase() {
                 <Zap className="w-3.5 h-3.5" />
                 Level 4 · 480 XP
               </span>
-              <span>Streak Aktif: 14 Hari</span>
+              <span className="flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400">
+                <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                Streak Aktif: 14 Hari
+              </span>
             </div>
           </div>
         </div>
