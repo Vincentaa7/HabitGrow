@@ -135,6 +135,16 @@ export function Navbar() {
   }, [currentDateStr, queryClient]);
 
   const currentStreak = summary?.streak?.current_streak ?? 0;
+  const completedTodayCount =
+    summary?.completed_count ??
+    summary?.today_habits?.filter((h) => h.is_completed_today).length ??
+    0;
+  const isStreakLitToday = completedTodayCount > 0;
+  const streakTooltip = isStreakLitToday
+    ? `Streak: ${currentStreak} Hari Beruntun · Api menyala hari ini! (Lihat Kalender)`
+    : currentStreak > 0
+    ? `Streak: ${currentStreak} Hari Beruntun · Selesaikan 1 kebiasaan hari ini untuk menyalakan api! (Lihat Kalender)`
+    : 'Belum ada streak · Selesaikan 1 kebiasaan hari ini untuk menyalakan api! (Lihat Kalender)';
   const userLevel = summary?.user_level?.level ?? 1;
   const userXp = summary?.user_level?.total_xp ?? 0;
 
@@ -229,14 +239,27 @@ export function Navbar() {
 
             {/* Right Controls: Duolingo-style Streak & Level Crystal + Profile */}
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* 1. Streak Badge (Duolingo Flame style) */}
+              {/* 1. Streak Badge (Duolingo Flame style: gray until >= 1 habit is completed today) */}
               <Link
                 href="/app/calendar"
                 prefetch={true}
-                className="flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl bg-orange-50 dark:bg-orange-950/40 border border-orange-200/80 dark:border-orange-900/60 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/60 transition active:scale-95 group shadow-xs"
-                title={`Streak: ${currentStreak} Hari Beruntun (Lihat Kalender)`}
+                className={cn(
+                  'flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl border transition-all duration-300 active:scale-95 group shadow-xs',
+                  isStreakLitToday
+                    ? 'bg-orange-50 dark:bg-orange-950/40 border-orange-200/80 dark:border-orange-900/60 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/60'
+                    : 'bg-slate-100 dark:bg-slate-800/70 border-slate-200/90 dark:border-slate-700/80 text-slate-500 dark:text-slate-400 hover:bg-slate-200/70 dark:hover:bg-slate-800'
+                )}
+                title={streakTooltip}
+                aria-label={streakTooltip}
               >
-                <Flame className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-orange-500 fill-orange-500 group-hover:scale-110 transition-transform" />
+                <Flame
+                  className={cn(
+                    'w-4 h-4 sm:w-4.5 sm:h-4.5 group-hover:scale-110 transition-all duration-300',
+                    isStreakLitToday
+                      ? 'text-orange-500 fill-orange-500'
+                      : 'text-slate-400 fill-slate-400 dark:text-slate-500 dark:fill-slate-500'
+                  )}
+                />
                 <span className="font-black text-xs sm:text-sm tracking-tight">
                   {currentStreak}
                 </span>
