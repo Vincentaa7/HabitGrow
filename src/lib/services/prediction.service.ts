@@ -7,7 +7,7 @@ import {
   isHabitEligibleForPrediction,
   HabitCompletionRecord,
 } from '@/lib/algorithms/prediction';
-import { toDateString } from '@/lib/algorithms/schedule';
+import { isHabitScheduledOnDate, toDateString } from '@/lib/algorithms/schedule';
 
 export class PredictionService {
   /**
@@ -24,10 +24,10 @@ export class PredictionService {
     today.setHours(0, 0, 0, 0);
     const todayStr = toDateString(today);
 
-    // 1. Fetch active habits (with schedules) and past 35 days completions concurrently in 1 round-trip
-    const thirtyDaysAgo = new Date(today);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 35);
-    const thirtyDaysAgoStr = toDateString(thirtyDaysAgo);
+    // 1. Fetch active habits (with schedules) and past 15 days completions (14-day SAW window + 1-day TZ margin) concurrently in 1 round-trip
+    const lookbackStart = new Date(today);
+    lookbackStart.setDate(lookbackStart.getDate() - 15);
+    const lookbackStartStr = toDateString(lookbackStart);
 
     const [{ data: habits, error: habitsError }, { data: completionsData }] = await Promise.all([
       supabase
@@ -40,7 +40,7 @@ export class PredictionService {
         .from('habit_completions')
         .select('habit_id, date, completed_at, value')
         .eq('user_id', userId)
-        .gte('date', thirtyDaysAgoStr),
+        .gte('date', lookbackStartStr),
     ]);
 
     if (habitsError || !habits || habits.length === 0) {
@@ -79,14 +79,8 @@ export class PredictionService {
       const isCompleted = completedTodayHabitIds.has(h.id);
       const hSchedules = schedulesByHabit.get(h.id) || [];
 
-      // Check if scheduled today
-      let isScheduled = false;
-      if (h.frequency_type === 'DAILY') {
-        isScheduled = true;
-      } else if (h.frequency_type === 'SELECTED_DAYS') {
-        const dow = today.getDay();
-        isScheduled = hSchedules.some((s) => s.day_of_week === dow);
-      }
+      // Check if scheduled today (strictly respects start_date, end_date, is_active, is_archived, and frequency)
+      const isScheduled = isHabitScheduledOnDate(h, hSchedules, today);
 
       if (isScheduled) {
         totalDifficultyPointsToday += difficultyPointsMap[h.difficulty] || 2;
@@ -108,7 +102,7 @@ export class PredictionService {
       // Predictive risk nudges only activate after a habit has been tracked for at least 14 days (2 weeks).
       // Brand new accounts and freshly created habits are in their onboarding baseline phase to capture
       // 2 full calendar cycles and eliminate small sample noise.
-      if (!isHabitEligibleForPrediction(habit, today)) {
+      if (!isHabitEligibleForPrediction(habit, today, timezone)) {
         continue;
       }
 

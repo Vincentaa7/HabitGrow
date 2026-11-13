@@ -41,9 +41,15 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
     return false;
   };
 
+  const isDismissedToday = (habitId: string) => {
+    if (typeof window === 'undefined') return false;
+    const todayStr = toDateString(new Date());
+    return localStorage.getItem(`habitgrow_dismissed_${habitId}_${todayStr}`) === '1';
+  };
+
   // Filter out any dismissed or snoozed predictions
   const activePredictions = (predictions || []).filter(
-    (p) => !dismissedIds.has(p.habit_id) && !isSnoozed(p.habit_id)
+    (p) => !dismissedIds.has(p.habit_id) && !isSnoozed(p.habit_id) && !isDismissedToday(p.habit_id)
   );
 
   const current = activePredictions[0];
@@ -60,9 +66,13 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
     return () => clearTimeout(timer);
   }, [current?.habit_id]);
 
-  const handleDismiss = (id: string) => {
+  const handleDismiss = (id: string, persistForToday = true) => {
     setIsExiting(true);
     setTimeout(() => {
+      if (persistForToday && typeof window !== 'undefined') {
+        const todayStr = toDateString(new Date());
+        localStorage.setItem(`habitgrow_dismissed_${id}_${todayStr}`, '1');
+      }
       setDismissedIds((prev) => new Set([...prev, id]));
       setIsExiting(false);
     }, 280);
@@ -208,7 +218,7 @@ export function PredictionAlertBanner({ predictions }: PredictionAlertBannerProp
     }
     setSuccessMessage(`Pengingat untuk "${prediction.habit_name}" ditunda 1 jam.`);
     setTimeout(() => {
-      handleDismiss(prediction.habit_id);
+      handleDismiss(prediction.habit_id, false);
       setSuccessMessage(null);
     }, 1800);
   };

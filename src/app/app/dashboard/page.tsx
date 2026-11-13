@@ -529,6 +529,10 @@ export default function DashboardPage() {
         onClose={() => setIsCreateModalOpen(false)}
         onSubmitSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+          queryClient.invalidateQueries({ queryKey: ['habits'] });
+          queryClient.invalidateQueries({ queryKey: ['analytics-overview'] });
+          queryClient.invalidateQueries({ queryKey: ['analytics-performance'] });
+          queryClient.invalidateQueries({ queryKey: ['calendar-day-detail'] });
         }}
         categories={categories}
       />

@@ -107,7 +107,7 @@ $$V_i = (0.30 \times C_1) + (0.25 \times C_2) + (0.15 \times C_3) + (0.15 \times
   * **Kalau targetnya angka $> 1$ (misal: *"Baca 3 artikel"* atau *"Minum 2 liter"*):** Sistem menyarankan **Potong Target Jadi Setengah** (`LOWER_TARGET`, misal dari 3 kali dipangkas jadi 1 kali).
   * **Kalau targetnya cuma 1 kali biner (misal: *"Duolingo 1 kali"*):** Karena angka 1 tidak bisa dibagi dua jadi 0,5 kali, sistem menyarankan **Aturan 2 Menit** (`CHECKLIST_2MIN` — kerjakan versi paling ringannya selama 2 menit saja lalu klik selesai).
 * **File Kodingan yang Bekerja:**
-  * `src/lib/algorithms/prediction.ts` $\rightarrow$ Fungsi `predictHabitFailure()`
+  * `src/lib/algorithms/prediction.ts` $\rightarrow$ Fungsi `predictHabitFailureRisk()` & `isHabitEligibleForPrediction()`
   * `src/lib/services/prediction.service.ts` $\rightarrow$ Fungsi `getAtRiskHabitsToday()`
   * `src/components/habits/PredictionAlertBanner.tsx` $\rightarrow$ Tampilan kartu pop-up rekomendasi SPK SAW.
 
@@ -226,12 +226,12 @@ Jika saat sidang Dosen Penguji berkata: *"Coba buka VS Code kamu, tunjukkan di m
 
 | Fitur / Rumus yang Ditanyakan Dosen | Nama File yang Harus Dibuka | Nama Fungsi di Dalamnya |
 | :--- | :--- | :--- |
-| **Rumus Matematika SPK SAW (5 Kriteria $C_1$–$C_5$, Bobot, & Rekomendasi 2 Menit / Potong Target)** | `src/lib/algorithms/prediction.ts` | `predictHabitFailure()` & `getHourInTimezone()` |
+| **Rumus Matematika SPK SAW (5 Kriteria $C_1$–$C_5$, Bobot, & Rekomendasi 2 Menit / Potong Target)** | `src/lib/algorithms/prediction.ts` | `predictHabitFailureRisk()`, `isHabitEligibleForPrediction()`, & `getHourInTimezone()` |
 | **Pengambilan Data Database untuk SPK SAW** | `src/lib/services/prediction.service.ts` | `getAtRiskHabitsToday()` |
 | **Rumus *Non-Zero Day Global Daily Streak*** | `src/lib/algorithms/streak.ts` | `calculateGlobalDailyStreak()` |
 | **Rumus Konsistensi 30 Hari Terakhir** | `src/lib/algorithms/consistency.ts` | `calculateOverallConsistency()` |
 | **Rumus 5 Tahap Pertumbuhan Pohon Virtual** | `src/lib/algorithms/tree.ts` | `calculateTreeStage()` & `TREE_STAGES` |
-| **Rumus Perolehan XP & Kenaikan Level** | `src/lib/algorithms/xp.ts` & `src/lib/algorithms/level.ts` | `calculateCompletionXP()` & `calculateLevelInfo()` |
+| **Rumus Perolehan XP & Kenaikan Level** | `src/lib/algorithms/xp.ts` & `src/lib/algorithms/level.ts` | `calculateXP()` & `calculateLevel()` |
 | **Proses Centang Habit Paralel Super Cepat** | `src/lib/services/completion.service.ts` | `completeHabit()` |
 | **Tampilan Dashboard & Optimistic UI 0ms** | `src/app/app/dashboard/page.tsx` | `DashboardPage()` & `completeMutation` |
 | **Pop-up Kartu Peringatan SPK SAW di Layar** | `src/components/habits/PredictionAlertBanner.tsx` | `PredictionAlertBanner()` |

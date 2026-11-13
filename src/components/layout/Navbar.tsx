@@ -59,6 +59,8 @@ export function Navbar() {
         setCurrentDateStr(nowDateStr);
         queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
         queryClient.invalidateQueries({ queryKey: ['habits'] });
+        queryClient.invalidateQueries({ queryKey: ['analytics-overview'] });
+        queryClient.invalidateQueries({ queryKey: ['analytics-performance'] });
         queryClient.invalidateQueries({ queryKey: ['calendar-activity'] });
         queryClient.invalidateQueries({ queryKey: ['calendar-day-detail'] });
       }
@@ -101,7 +103,8 @@ export function Navbar() {
       queryClient.prefetchQuery({
         queryKey: ['analytics-overview', '7'],
         queryFn: async () => {
-          const res = await fetch('/api/analytics/weekly?range=7');
+          const localDate = toDateString(new Date());
+          const res = await fetch(`/api/analytics/weekly?range=7&date=${localDate}`);
           const json = await res.json();
           return json.data || [];
         },
@@ -110,7 +113,8 @@ export function Navbar() {
       queryClient.prefetchQuery({
         queryKey: ['analytics-performance'],
         queryFn: async () => {
-          const res = await fetch('/api/analytics/performance');
+          const localDate = toDateString(new Date());
+          const res = await fetch(`/api/analytics/performance?date=${localDate}`);
           const json = await res.json();
           return json.data || { items: [], bestHabit: null, needsAttentionHabit: null };
         },

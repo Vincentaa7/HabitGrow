@@ -28,6 +28,7 @@ import {
   Percent,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toDateString } from '@/lib/algorithms/schedule';
 
 export default function StatisticsPage() {
   // State: Chart Model Selection ('bar' = Gambar 1, 'line' = Gambar 2)
@@ -37,21 +38,23 @@ export default function StatisticsPage() {
   // State: Toggle for showing data labels (%) directly above points (like Gambar 2)
   const [showPercentages, setShowPercentages] = useState<boolean>(true);
 
-  // 1. Fetch Chart Overview Data (supports 7 days and 30 days)
+  // 1. Fetch Chart Overview Data (supports 7 days and 30 days, synced to client local date)
   const { data: chartData = [], isLoading: isChartLoading } = useQuery({
     queryKey: ['analytics-overview', timeRange],
     queryFn: async () => {
-      const res = await fetch(`/api/analytics/weekly?range=${timeRange}`);
+      const localDate = toDateString(new Date());
+      const res = await fetch(`/api/analytics/weekly?range=${timeRange}&date=${localDate}`);
       const json = await res.json();
       return json.data || [];
     },
   });
 
-  // 2. Fetch Habit Performance Data
+  // 2. Fetch Habit Performance Data (synced to client local date)
   const { data: performanceData, isLoading: isPerfLoading } = useQuery({
     queryKey: ['analytics-performance'],
     queryFn: async () => {
-      const res = await fetch('/api/analytics/performance');
+      const localDate = toDateString(new Date());
+      const res = await fetch(`/api/analytics/performance?date=${localDate}`);
       const json = await res.json();
       return json.data || { items: [], bestHabit: null, needsAttentionHabit: null };
     },

@@ -106,12 +106,11 @@ export async function GET(request: Request) {
     let maxStreakInYear = 0;
     let tempStreak = 0;
 
-    // Check consecutive days across the year
+    // Check consecutive days across the year (activities only contains dates with actual recorded completions)
     const dIter = new Date(selectedYear, 0, 1);
     const endIter = new Date(selectedYear, 11, 31);
-    const today = new Date();
 
-    while (dIter <= endIter && dIter <= today) {
+    while (dIter <= endIter) {
       const dStr = toDateString(dIter);
       if (activities[dStr] && activities[dStr].count > 0) {
         tempStreak++;

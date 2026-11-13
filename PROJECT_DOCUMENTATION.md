@@ -1085,7 +1085,7 @@ Misalkan hari evaluasi adalah hari **Rabu**, dan sistem mengevaluasi kebiasaan *
 
 1. **Pengumpulan Data Mentah & Normalisasi ($C_1 \dots C_5$):**
    * **$C_1$ (Miss Rate 14 Hari):** Dalam 14 hari terakhir, pengguna bolong 4 kali dari 14 jadwal.  
-     $$C_1 = \frac{4}{14} = 0.2857 \approx \mathbf{0.28}$$
+     $$C_1 = \frac{4}{14} = \mathbf{0.2857}\text{ (atau } 29\% \text{ pada rincian persentase)}$$
    * **$C_2$ (Kerentanan Hari Rabu):** Dalam 14 hari terakhir ada 2 kali hari Rabu. Pengguna bolong 1 kali pada hari Rabu.  
      $$C_2 = \frac{1}{2} = \mathbf{0.50}$$
    * **$C_3$ (Beban Kesulitan Harian):** Pengguna memiliki 4 jadwal kebiasaan hari ini dengan tingkat kesulitan: Minum Air (`EASY` = 1), Baca Buku (`MEDIUM` = 2), Belajar Coding (`HARD` = 3), dan Olahraga (`MEDIUM` = 2). Total kesulitan $= 1 + 2 + 3 + 2 = 8$ poin dari ambang batas lelah 16 poin:  
@@ -1098,17 +1098,17 @@ Misalkan hari evaluasi adalah hari **Rabu**, dan sistem mengevaluasi kebiasaan *
 
 | Kriteria ($j$) | Deskripsi Indikator | Nilai Normalisasi ($R_{ij}$) | Bobot Kriteria ($W_j$) | Nilai Terbobot ($W_j \times R_{ij}$) |
 | :---: | :--- | :---: | :---: | :---: |
-| **$C_1$** | Tingkat Terlewat 14 Hari | $0.28$ | $0.30$ | **$0.084$** |
-| **$C_2$** | Kerentanan Hari Serupa (Rabu) | $0.50$ | $0.25$ | **$0.125$** |
-| **$C_3$** | Beban Kognitif Hari Ini | $0.50$ | $0.15$ | **$0.075$** |
-| **$C_4$** | Kerentanan Usia Kebiasaan | $0.35$ | $0.15$ | **$0.052$** |
-| **$C_5$** | Pola Penundaan Larut Malam | $0.85$ | $0.15$ | **$0.128$** |
-| **TOTAL** | **Nilai Preferensi Alternatif ($V_i$)** | — | **$1.00$** | **$0.464$ (Skor: $46\%$)** |
+| **$C_1$** | Tingkat Terlewat 14 Hari | $0.2857$ ($4/14$) | $0.30$ | **$0.0857$** |
+| **$C_2$** | Kerentanan Hari Serupa (Rabu) | $0.5000$ ($1/2$) | $0.25$ | **$0.1250$** |
+| **$C_3$** | Beban Kognitif Hari Ini | $0.5000$ ($8/16$) | $0.15$ | **$0.0750$** |
+| **$C_4$** | Kerentanan Usia Kebiasaan | $0.3500$ | $0.15$ | **$0.0525$** |
+| **$C_5$** | Pola Penundaan Larut Malam | $0.8500$ | $0.15$ | **$0.1275$** |
+| **TOTAL** | **Nilai Preferensi Alternatif ($V_i$)** | — | **$1.00$** | **$0.4657$ (Skor: $47\%$)** |
 
 3. **Pengambilan Keputusan:**
-   * Skor Risiko $= 0.464 \times 100\% = \mathbf{46\%}$.
+   * Skor Risiko $= \text{round}(0.4657 \times 100\%) = \mathbf{47\%}$.
    * Karena skor $< 50\%$, status dikategorikan sebagai **LOW (AMAN)**, sehingga banner intervensi tidak perlu dimunculkan agar tidak mengganggu fokus pengguna.
-   * **Skenario Risiko Tinggi:** Seandainya $C_1$ bolong 7 hari ($C_1 = 7/14 = 0.50$), maka total $V_i$ melonjak menjadi **$0.530$ ($53\%$)**. Sistem seketika mengaktifkan status **MODERATE RISK**, mendeteksi $C_5$ dan $C_1$ sebagai faktor dominan, dan menerbitkan rekomendasi adaptif.
+   * **Skenario Risiko Tinggi:** Seandainya $C_1$ bolong 7 hari ($C_1 = 7/14 = 0.50$), maka kontribusi $C_1$ naik menjadi $0.1500$ dan total $V_i$ melonjak menjadi **$0.5300$ ($53\%$)**. Sistem seketika mengaktifkan status **MODERATE RISK**, mendeteksi $C_1$ ($0.1500$) sebagai faktor dominan, dan menerbitkan rekomendasi adaptif.
 
 #### Landasan Ilmiah Pemilihan Jendela 14 Hari & Cold-Start Guard:
 Penetapan jendela observasi dan ambang batas aktivasi model prediktif pada **14 hari (2 minggu)** didasarkan pada tiga pertimbangan metodologis dan psikologis:
@@ -1187,7 +1187,7 @@ Pada arsitektur awal sebelum dilakukan rekayasa performa masif, sistem mengalami
 * **Pilar 2 — *Zero-Latency Optimistic UI* (0ms), Direct Cache Injection & Detektor Pergantian Hari Otomatis:**
   * **0ms Optimistic Update di Dashboard & Banner SPK SAW:** Baik saat mencentang kartu kebiasaan di `DashboardPage` maupun menekan tombol *"Selesaikan Versi Ringan (2 Menit)"* di `PredictionAlertBanner`, sistem langsung menghitung `alreadyCompletedTodayCount`. Jika bernilai `0` (kebiasaan pertama yang diselesaikan setelah pergantian hari), angka **Global Streak 🔥 di Navbar**, **Total XP**, dan **Progres Harian** langsung melonjak $+1$ dalam **0 milidetik** di layar sebelum server merespons.
   * **Direct Server-to-Cache Injection (`onSuccess`):** Ketika respons `POST /api/habits/[id]/complete` kembali dari server, nilai otoritatif (`currentStreak`, `longestStreak`, `level`, `totalXp`, `treeStage`, `treeHealth`, `consistencyScore`) langsung disuntikkan ke memori React Query `['dashboard-summary']` tanpa harus menunggu antrian *refetch* GET kedua.
-  * **Automatic Midnight Rollover Detector (`Navbar.tsx`):** Memantau pergantian tanggal lokal (`toDateString(new Date())`) setiap 60 detik serta pada event `focus` dan `visibilitychange`. Begitu waktu melewati pukul `00:00` lokal, cache hari sebelumnya otomatis di-invalidasi sehingga daftar habit ter-reset seketika tanpa perlu *refresh* manual (F5).
+  * **Automatic Midnight Rollover Detector (`Navbar.tsx`):** Memantau pergantian tanggal lokal (`toDateString(new Date())`) setiap 30 detik serta pada event `focus` dan `visibilitychange`. Begitu waktu melewati pukul `00:00` lokal, cache hari sebelumnya otomatis di-invalidasi sehingga daftar habit ter-reset seketika tanpa perlu *refresh* manual (F5).
 
 * **Pilar 3 — *Background Tab Data Prefetching* untuk Navigasi Instan (~0ms):**
   * Saat pengguna berada di aplikasi, `Navbar.tsx` secara otomatis menjalankan `queryClient.prefetchQuery` di latar belakang (dengan *delay* halus 350ms agar tidak mengganggu *render* utama) untuk seluruh query kunci: `['habits', 'active', 'all']`, `['categories']`, `['achievements']`, `['analytics-overview', '7']`, `['analytics-performance']`, dan `['calendar-activity', year]`.
@@ -1221,7 +1221,7 @@ Seluruh endpoint menerima header `Content-Type: application/json` dan cookie ses
 
 | Method | Endpoint URI | Fungsi & Deskripsi | Request Body / Query | Format Response Utama | Status Code |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **POST** | `/api/auth/register` | Mendaftarkan akun pengguna baru | `{ email, password, full_name }` | `{ success: true, user }` | `201 Created` |
+| **POST** | `/api/auth/register` | Mendaftarkan akun pengguna baru | `{ email, password, display_name }` | `{ success: true, data: { user, session } }` | `200 OK` |
 | **POST** | `/api/auth/login` | Masuk ke sistem | `{ email, password }` | `{ success: true, session }` | `200 OK` |
 | **POST** | `/api/auth/logout` | Menghapus sesi otentikasi | *-* | `{ success: true }` | `200 OK` |
 | **GET** | `/api/dashboard/summary` | Mengambil data agregasi dashboard (mendukung zona waktu lokal) | `?date=YYYY-MM-DD` | `{ success: true, data: DashboardSummary }` | `200 OK` |
@@ -1492,13 +1492,13 @@ HabitGrow/
 │   │   │   ├── level.ts                    # Logika Threshold & Progresi XP
 │   │   │   ├── xp.ts                       # Multiplier XP Berdasarkan Kesulitan
 │   │   │   ├── prediction.ts               # Decision Support System (DSS) Metode SAW 5 Kriteria
-│   │   │   └── __tests__/                  # Unit Tests (41 Test Cases Passing)
+│   │   │   └── __tests__/                  # Unit Tests (38 Algoritma / 45 Total Test Cases Passing)
 │   │   │       ├── streak.test.ts
 │   │   │       ├── tree.test.ts
 │   │   │       ├── level.test.ts
 │   │   │       ├── xp.test.ts
 │   │   │       ├── consistency.test.ts
-│   │   │       └── prediction.test.ts      # 10 Skenario Evaluasi DSS SAW & Nudge Preskriptif
+│   │   │       └── prediction.test.ts      # 12 Skenario Evaluasi DSS SAW & Nudge Preskriptif
 │   │   ├── services/                       # Lapisan Layanan Bisnis Database
 │   │   │   ├── habit.service.ts
 │   │   │   ├── streak.service.ts
@@ -1508,7 +1508,7 @@ HabitGrow/
 │   │   │   ├── web-push.service.ts         # Layanan Enkripsi VAPID & Dispatch Push Server
 │   │   │   ├── browser-notification.service.ts # Service Worker & PushManager Bridge
 │   │   │   └── __tests__/
-│   │   │       └── web-push.test.ts        # Unit Tests Web Push Service (6 Tests Passing)
+│   │   │       └── web-push.test.ts        # Unit Tests Web Push Service (7 Tests Passing)
 │   │   ├── supabase/                       # Klien Supabase (Client, Server, Admin)
 │   │   ├── validators/                     # Zod Schemas
 │   │   └── utils.ts                        # Helper Format Tanggal Indonesia & Greeting

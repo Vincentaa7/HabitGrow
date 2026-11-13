@@ -65,7 +65,8 @@ export default function ProfilePage() {
     queryKey: ['dashboard-summary'],
     queryFn: async () => {
       const localDate = toDateString(new Date());
-      const res = await fetch(`/api/dashboard/summary?date=${localDate}`);
+      const userTz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Jakarta';
+      const res = await fetch(`/api/dashboard/summary?date=${localDate}&tz=${encodeURIComponent(userTz)}`);
       const json = await res.json();
       return json.data;
     },

@@ -88,6 +88,14 @@ export default function HabitsPage() {
     },
   });
 
+  const invalidateAllHabitCaches = () => {
+    queryClient.invalidateQueries({ queryKey: ['habits'] });
+    queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+    queryClient.invalidateQueries({ queryKey: ['analytics-overview'] });
+    queryClient.invalidateQueries({ queryKey: ['analytics-performance'] });
+    queryClient.invalidateQueries({ queryKey: ['calendar-day-detail'] });
+  };
+
   // 3. Archive Mutation
   const archiveMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -95,7 +103,7 @@ export default function HabitsPage() {
       const json = await res.json();
       if (!json.success) throw new Error(json.error?.message);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['habits'] }),
+    onSuccess: invalidateAllHabitCaches,
   });
 
   // 4. Restore Mutation
@@ -105,7 +113,7 @@ export default function HabitsPage() {
       const json = await res.json();
       if (!json.success) throw new Error(json.error?.message);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['habits'] }),
+    onSuccess: invalidateAllHabitCaches,
   });
 
   // 5. Delete Mutation
@@ -116,8 +124,7 @@ export default function HabitsPage() {
       if (!json.success) throw new Error(json.error?.message);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['habits'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+      invalidateAllHabitCaches();
       setDeletingHabit(null);
     },
   });
@@ -326,10 +333,7 @@ export default function HabitsPage() {
           setIsCreateModalOpen(false);
           setEditingHabit(null);
         }}
-        onSubmitSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['habits'] });
-          queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
-        }}
+        onSubmitSuccess={invalidateAllHabitCaches}
         categories={categories}
       />
 

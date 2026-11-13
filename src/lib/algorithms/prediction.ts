@@ -76,6 +76,40 @@ export function getHourInTimezone(isoTimestamp: string, timeZone: string = 'Asia
   }
 }
 
+/**
+ * Mengekstrak tanggal kalender lokal (00:00:00) dari timestamp ISO berdasarkan zona waktu pengguna.
+ * Menjamin perhitungan usia kebiasaan (daysSinceCreation) konsisten antara server UTC dan klien WIB/WITA/WIT.
+ */
+export function getDateInTimezone(isoTimestamp: string, timeZone: string = 'Asia/Jakarta'): Date {
+  const d = new Date(isoTimestamp);
+  if (isNaN(d.getTime())) {
+    const fallback = parseDateString(isoTimestamp);
+    fallback.setHours(0, 0, 0, 0);
+    return fallback;
+  }
+
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(d);
+    const year = Number(parts.find((p) => p.type === 'year')?.value);
+    const month = Number(parts.find((p) => p.type === 'month')?.value);
+    const day = Number(parts.find((p) => p.type === 'day')?.value);
+    if (year && month && day) {
+      return new Date(year, month - 1, day, 0, 0, 0, 0);
+    }
+  } catch {
+    // Fallback to local Date midnight
+  }
+
+  const fallback = new Date(d);
+  fallback.setHours(0, 0, 0, 0);
+  return fallback;
+}
+
 export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPrediction {
   const {
     habit,
@@ -149,7 +183,9 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
   // - 21 s/d 29 hari (< 30 hari): 0.65 (Fase Adaptasi Menengah / Minggu ke-4)
   // - 30 s/d 59 hari (< 60 hari): 0.35 (Fase Penguatan Rutinitas / Bulan ke-2)
   // - >= 60 hari (2 bulan+):      0.12 (Fase Kebiasaan Mapan / Automaticity)
-  const createdDate = habit.created_at ? new Date(habit.created_at) : new Date(startDate);
+  const createdDate = habit.created_at
+    ? getDateInTimezone(habit.created_at, timezone)
+    : new Date(startDate);
   createdDate.setHours(0, 0, 0, 0);
   const daysSinceCreation = Math.max(
     0,
@@ -297,15 +333,15 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
  */
 export function isHabitEligibleForPrediction(
   habit: Pick<Habit, 'created_at' | 'start_date'>,
-  evaluationDate: Date = new Date()
+  evaluationDate: Date = new Date(),
+  timezone: string = 'Asia/Jakarta'
 ): boolean {
   const evalDate = new Date(evaluationDate);
   evalDate.setHours(0, 0, 0, 0);
 
-  const createdDate = habit.created_at
-    ? new Date(habit.created_at)
+  const createdDay = habit.created_at
+    ? getDateInTimezone(habit.created_at, timezone)
     : parseDateString(habit.start_date);
-  const createdDay = new Date(createdDate);
   createdDay.setHours(0, 0, 0, 0);
 
   const daysSinceCreation = Math.max(
