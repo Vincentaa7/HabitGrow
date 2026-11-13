@@ -146,6 +146,11 @@ export default function ProfilePage() {
   }
 
   const { profile, user_level, streak, tree } = summary;
+  const completedTodayCount =
+    summary.completed_count ??
+    summary.today_habits?.filter((h) => h.is_completed_today).length ??
+    0;
+  const isStreakLitToday = completedTodayCount > 0;
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -167,8 +172,27 @@ export default function ProfilePage() {
               <Zap className="w-3.5 h-3.5 fill-emerald-500 dark:fill-[#aff33e]" />
               Level {user_level.level} ({user_level.total_xp} XP)
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100 dark:bg-[#1e293b] text-amber-700 dark:text-amber-400 border border-transparent dark:border-amber-500/30 text-xs font-bold">
-              <Flame className="w-3.5 h-3.5 fill-amber-500" />
+            <span
+              className={cn(
+                'inline-flex items-center gap-1.5 px-3 py-1 rounded-xl border text-xs font-bold transition-colors duration-300',
+                isStreakLitToday
+                  ? 'bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 border-orange-200/80 dark:border-orange-900/60'
+                  : 'bg-slate-100 dark:bg-slate-800/70 text-slate-500 dark:text-slate-400 border-slate-200/90 dark:border-slate-700/80'
+              )}
+              title={
+                isStreakLitToday
+                  ? 'Api streak menyala hari ini!'
+                  : 'Selesaikan minimal 1 kebiasaan hari ini untuk menyalakan api streak'
+              }
+            >
+              <Flame
+                className={cn(
+                  'w-3.5 h-3.5 transition-colors duration-300',
+                  isStreakLitToday
+                    ? 'text-orange-500 fill-orange-500'
+                    : 'text-slate-400 fill-slate-400 dark:text-slate-500 dark:fill-slate-500'
+                )}
+              />
               {streak.current_streak} Hari Streak
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-teal-100 dark:bg-[#1e293b] text-teal-700 dark:text-teal-300 border border-transparent dark:border-teal-500/30 text-xs font-bold">
