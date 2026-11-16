@@ -28,6 +28,22 @@ describe('calculateTreeStage Algorithm', () => {
     expect(calculateTreeStage(100)).toBe('Mature Tree');
   });
 
+  it('enforces progression gate (minimum active completed days) on early days', () => {
+    // Day 1-2 with 100% consistency -> capped at Sprout
+    expect(calculateTreeStage(100, 1)).toBe('Sprout');
+    expect(calculateTreeStage(100, 2)).toBe('Sprout');
+    // Day 3-6 with 100% consistency -> capped at Young Tree
+    expect(calculateTreeStage(100, 3)).toBe('Young Tree');
+    expect(calculateTreeStage(100, 6)).toBe('Young Tree');
+    // Day 7-13 with 100% consistency -> capped at Healthy Tree
+    expect(calculateTreeStage(100, 7)).toBe('Healthy Tree');
+    expect(calculateTreeStage(100, 13)).toBe('Healthy Tree');
+    // Day 14+ with 85%+ consistency -> reaches Mature Tree
+    expect(calculateTreeStage(100, 14)).toBe('Mature Tree');
+    // Still shrinks immediately if consistency score drops even after 20+ active days
+    expect(calculateTreeStage(50, 20)).toBe('Young Tree');
+  });
+
   it('calculates health score within bounds', () => {
     expect(calculateTreeHealth(87.4)).toBe(87);
     expect(calculateTreeHealth(0)).toBe(0);

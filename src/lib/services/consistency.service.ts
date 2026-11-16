@@ -37,6 +37,7 @@ export class ConsistencyService {
     const habitStats: Array<{ scheduledCount: number; completedCount: number }> = [];
     let totalPastScheduled = 0;
     let totalCompleted = 0;
+    const activeCompletedDates = new Set<string>();
 
     for (const habitItem of habitsData) {
       const habit = habitItem as unknown as Habit;
@@ -58,6 +59,7 @@ export class ConsistencyService {
           const curStr = toDateString(cur);
           if (completedSet.has(curStr)) {
             completedCount += 1;
+            activeCompletedDates.add(curStr);
           }
           if (cur < today) {
             totalPastScheduled += 1;
@@ -71,7 +73,7 @@ export class ConsistencyService {
     }
 
     let overallConsistency = calculateOverallConsistency(habitStats);
-    let treeStage = calculateTreeStage(overallConsistency);
+    let treeStage = calculateTreeStage(overallConsistency, activeCompletedDates.size);
     let health = calculateTreeHealth(overallConsistency);
 
     if (totalPastScheduled === 0 && totalCompleted === 0) {

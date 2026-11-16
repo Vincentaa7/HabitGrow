@@ -118,14 +118,15 @@ $$V_i = (0.30 \times C_1) + (0.25 \times C_2) + (0.15 \times C_3) + (0.15 \times
   Pohon Virtual adalah **"Rapor Bulanan"** Anda. Sistem melihat ke belakang selama **30 hari terakhir** (`Rolling 30-Day Window`).
   * Misalkan dalam 30 hari terakhir total jadwal yang harusnya Anda kerjakan adalah **50 tugas**, dan Anda berhasil menyelesaikan **40 tugas**.
   * Maka **Skor Konsistensi** Anda = $(40 / 50) \times 100\% = \mathbf{80\%}$.
-  * Skor $80\%$ ini langsung menentukan wujud pohon Anda:
-    * $0\% - 19\%$ = **Seed (Benih)** 🌰
-    * $20\% - 39\%$ = **Sprout (Tunas)** 🌱
-    * $40\% - 59\%$ = **Young Tree (Pohon Muda)** 🌿
-    * $60\% - 79\%$ = **Healthy Tree (Pohon Sehat)** 🌳
-    * $80\% - 100\%$ = **Mature Tree (Pohon Rindang Dewasa)** 🌲✨
-* **Kenapa Hanya Menghitung 30 Hari Terakhir, Bukan Sejak Awal Buat Akun?**
-  Supaya kalau pengguna sempat sibuk ujian dan bolong sebulan penuh di masa lalu, dia tidak dihukum selamanya! Dengan jendela bergulir 30 hari, begitu dia rajin lagi bulan ini, pohonnya bisa sehat dan tumbuh besar kembali.
+  * Skor konsistensi ini dikombinasikan dengan **Syarat Minimal Hari Aktif (*Progression Gate*)** agar pengguna baru di hari pertama tidak langsung melompat ke Pohon Dewasa hanya dengan 1 klik, melainkan tumbuh bertahap:
+    * $0\% - 19\%$ (Min. 0 hari aktif) = **Seed (Benih)** 🌰
+    * $\ge 20\%$ (**Min. 1 hari aktif**) = **Sprout (Tunas Baru)** 🌱
+    * $\ge 40\%$ (**Min. 3 hari aktif**) = **Young Tree (Pohon Muda)** 🌿
+    * $\ge 60\%$ (**Min. 7 hari aktif / 1 minggu**) = **Healthy Tree (Pohon Sehat)** 🌳
+    * $\ge 80\%$ (**Min. 14 hari aktif / 2 minggu**) = **Mature Tree (Pohon Rindang Dewasa)** 🌲✨
+* **Kenapa Menggabungkan Persentase 30 Hari Terakhir + Syarat Minimal Hari Aktif?**
+  1. **Mencegah Lompatan Instan di Hari Pertama (*Small-Sample Guard*):** Pengguna baru yang mencentang 1 habit di hari pertama (skor 100%) akan tumbuh menjadi **Tunas Baru** terlebih dahulu, lalu naik bertahap di hari ke-3, ke-7, dan ke-14.
+  2. **Pohon Tetap Bisa Menyusut Saat Malas (*Anti-Stuck*):** Berbeda dengan sistem tabungan EXP yang akan *stuck* di atas, jika pengguna yang sudah mencapai Pohon Dewasa mulai sering bolong hingga skor 30 harinya turun ke 50%, pohonnya otomatis langsung menyusut kembali ke **Pohon Muda**.
 * **File Kodingan yang Bekerja:**
   * `src/lib/algorithms/consistency.ts` $\rightarrow$ `calculateOverallConsistency()`
   * `src/lib/algorithms/tree.ts` $\rightarrow$ `calculateTreeStage()`

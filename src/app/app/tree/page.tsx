@@ -99,14 +99,15 @@ export default function TreePage() {
             Peta Tahap Pertumbuhan
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Pertahankan skor konsistensimu untuk menembus ambang batas tahap berikutnya.
+            Pertahankan skor konsistensi dan jumlah hari aktifmu untuk menembus tahap berikutnya.
           </p>
         </div>
 
         <div className="space-y-4">
-          {TREE_STAGES.map((stageItem) => {
+          {TREE_STAGES.map((stageItem, idx) => {
+            const currentStageIndex = TREE_STAGES.findIndex((s) => s.stage === tree.stage);
             const isCurrent = stageItem.stage === tree.stage;
-            const isUnlocked = tree.consistency_score >= stageItem.minScore;
+            const isUnlocked = idx <= (currentStageIndex === -1 ? 0 : currentStageIndex);
 
             return (
               <div
@@ -137,6 +138,7 @@ export default function TreePage() {
                     </div>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                       Syarat Konsistensi: {stageItem.minScore}% – {Math.floor(stageItem.maxScore)}%
+                      {stageItem.minActiveDays > 0 && ` • Min. ${stageItem.minActiveDays} hari aktif`}
                     </p>
                   </div>
                 </div>

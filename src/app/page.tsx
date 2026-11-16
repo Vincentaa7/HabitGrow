@@ -16,10 +16,10 @@ import {
 
 const TREE_STAGES_DATA: { stage: TreeStage; name: string; range: string; desc: string }[] = [
   { stage: 'Seed', name: 'Benih', range: '0–19%', desc: 'Awal mula kebiasaan baru ditanam' },
-  { stage: 'Sprout', name: 'Tunas', range: '20–39%', desc: 'Mulai berakar melalui konsistensi awal' },
-  { stage: 'Young Tree', name: 'Pohon Muda', range: '40–59%', desc: 'Batang mulai menguat dengan jadwal teratur' },
-  { stage: 'Healthy Tree', name: 'Pohon Sehat', range: '60–79%', desc: 'Daun rimbun dari rutinitas yang stabil' },
-  { stage: 'Mature Tree', name: 'Pohon Dewasa', range: '80–100%', desc: 'Puncak konsistensi kebiasaan jangka panjang' },
+  { stage: 'Sprout', name: 'Tunas', range: '20–39% • ≥1 Hari', desc: 'Mulai berakar melalui konsistensi awal' },
+  { stage: 'Young Tree', name: 'Pohon Muda', range: '40–59% • ≥3 Hari', desc: 'Batang mulai menguat dengan jadwal teratur' },
+  { stage: 'Healthy Tree', name: 'Pohon Sehat', range: '60–79% • ≥7 Hari', desc: 'Daun rimbun dari rutinitas yang stabil' },
+  { stage: 'Mature Tree', name: 'Pohon Dewasa', range: '80–100% • ≥14 Hari', desc: 'Puncak konsistensi kebiasaan jangka panjang' },
 ];
 
 export default function LandingPage() {

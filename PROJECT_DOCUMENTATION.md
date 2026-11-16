@@ -592,40 +592,39 @@ flowchart TD
 
 ---
 
-#### 3.10.3 Flowchart 3: Alur Mesin Pertumbuhan Pohon Virtual (*Tree Growth Engine & Rolling Consistency*)
+#### 3.10.3 Flowchart 3: Alur Mesin Pertumbuhan Pohon Virtual (*Tree Growth Engine, Rolling Consistency & Progression Gate*)
 
-Bagan alir logika gamifikasi botanical pertumbuhan pohon virtual dengan batas jendela geser 30 hari (*rolling 30-day window*) dan perlindungan hari pertama (*graceful first day*):
+Bagan alir logika gamifikasi botanical pertumbuhan pohon virtual dengan batas jendela geser 30 hari (*rolling 30-day window*), syarat minimal hari aktif (*Progression Gate* 1/3/7/14 hari), dan perlindungan hari pertama (*graceful first day*):
 
 ```mermaid
 flowchart TD
     Start([Mulai: Mutasi Checklist atau Pembukaan Dashboard]) --> FetchWindow[/Ambil Riwayat Checklist Selama 30 Hari Terakhir/]
-    FetchWindow --> CheckNewUser{Pengguna Baru / Hari Pertama<br/>Tanpa Riwayat Bolong Lampau?}
+    FetchWindow --> CheckNewUser{Pengguna Baru / Hari Pertama<br/>Tanpa Riwayat Selesai?}
     
-    CheckNewUser -- Ya --> SetGraceful[Tetapkan Status Benih Sehat Awal:<br/>Tahap = Seed, Skor Konsistensi = 100%, Kesehatan = 100%]
+    CheckNewUser -- Ya --> SetGraceful[Tetapkan Status Benih Sehat Awal:<br/>Tahap = Seed, Skor Konsistensi = 0%, Kesehatan = 100%]
     SetGraceful --> PersistDB[(Update Tabel user_trees)]
 
-    CheckNewUser -- Tidak --> CalcTotalSched[Hitung Total Hari Terjadwal Seluruh Kebiasaan dalam Jendela 30 Hari]
-    CalcTotalSched --> CalcTotalDone[Hitung Total Hari Berhasil Dicentang Selesai]
-    CalcTotalDone --> CheckZeroSched{Total Terjadwal == 0?}
+    CheckNewUser -- Tidak --> CalcTotalSched[Hitung Total Jadwal, Total Selesai & Jumlah Hari Aktif Unik D_active dalam 30 Hari]
+    CalcTotalSched --> CheckZeroSched{Total Terjadwal == 0?}
     
     CheckZeroSched -- Ya --> SetDefaultSeed[Konsistensi = 0%, Tahap = Seed]
     CheckZeroSched -- Tidak --> CalcScore[Hitung Skor Konsistensi:<br/>CR = Total Selesai / Total Terjadwal * 100%]
 
-    CalcScore --> CheckMature{CR >= 80%?}
+    CalcScore --> CheckMature{CR >= 80% DAN D_active >= 14 Hari?}
     CheckMature -- Ya --> StageMature[Tahap: Mature Tree / Pohon Rimbun Dewasa]
     
-    CheckMature -- Tidak --> CheckHealthy{CR >= 60%?}
+    CheckMature -- Tidak --> CheckHealthy{CR >= 60% DAN D_active >= 7 Hari?}
     CheckHealthy -- Ya --> StageHealthy[Tahap: Healthy Tree / Pohon Sehat Berbunga]
     
-    CheckHealthy -- Tidak --> CheckYoung{CR >= 40%?}
+    CheckHealthy -- Tidak --> CheckYoung{CR >= 40% DAN D_active >= 3 Hari?}
     CheckYoung -- Ya --> StageYoung[Tahap: Young Tree / Pohon Muda Berdaun]
     
-    CheckYoung -- Tidak --> CheckSprout{CR >= 20%?}
+    CheckYoung -- Tidak --> CheckSprout{CR >= 20% DAN D_active >= 1 Hari?}
     CheckSprout -- Ya --> StageSprout[Tahap: Sprout / Tunas Kecil Bertumbuh]
     
     CheckSprout -- Tidak --> StageSeed[Tahap: Seed / Benih Baru Tertanam]
 
-    StageMature --> CalcHealth[Hitung Nilai Kesehatan Pohon: Min 100, Math.round CR]
+    StageMature --> CalcHealth[Hitung Nilai Kesehatan Pohon: Math.round CR]
     StageHealthy --> CalcHealth
     StageYoung --> CalcHealth
     StageSprout --> CalcHealth
@@ -952,19 +951,21 @@ $$C = \left( \frac{\sum_{i=1}^{N} \min(\text{Completed}_i, \text{Scheduled}_i)}{
 
 ---
 
-### 5.4 Algoritma Siklus Hidup Pohon Virtual (*Tree Growth & Health Lifecycle*)
-*Berkas Implementasi:* `src/lib/algorithms/tree.ts` $\rightarrow$ `calculateTreeStage()`
+### 5.4 Algoritma Siklus Hidup Pohon Virtual (*Tree Growth, Health Lifecycle & Progression Gate*)
+*Berkas Implementasi:* `src/lib/algorithms/tree.ts` $\rightarrow$ `calculateTreeStage(consistencyScore, activeCompletedDays)`
 
-#### Aturan Ambang Batas (*Thresholds*):
-Tahap visual pohon ($S$) dipetakan secara deterministik berdasarkan skor konsistensi $C$:
+#### Aturan Ambang Batas Ganda (*Consistency Thresholds + Progression Gate*):
+Untuk mencegah anomali ukuran sampel kecil (*Small-Sample Instant Jump*) pada pengguna baru di hari pertama sekaligus mempertahankan mekanisme penyusutan pohon (*tree shrinking*) ketika pengguna tidak konsisten, tahap visual pohon ($S$) ditentukan oleh kombinasi **Skor Konsistensi 30 Hari ($C$)** dan **Jumlah Hari Aktif Unik Menyelesaikan Kebiasaan ($D_{\text{active}}$)** dalam jendela 30 hari:
 
-$$S(C) = \begin{cases} 
-\text{Seed (Benih)} & 0.00 \le C < 20.00 \\
-\text{Sprout (Tunas)} & 20.00 \le C < 40.00 \\
-\text{Young Tree (Pohon Muda)} & 40.00 \le C < 60.00 \\
-\text{Healthy Tree (Pohon Sehat)} & 60.00 \le C < 80.00 \\
-\text{Mature Tree (Pohon Dewasa)} & 80.00 \le C \le 100.00
-\end{cases}$$
+| Tahap Pohon ($S$) | Syarat Skor Konsistensi ($C$) | Syarat Minimal Hari Aktif ($D_{\text{active}}$) | Makna Progresi Gamifikasi |
+| :--- | :--- | :--- | :--- |
+| **Seed (Benih)** | $0.00\% \le C < 20.00\%$ | $\ge 0$ hari | Fase awal penanaman atau peluruhan akibat inaktif |
+| **Sprout (Tunas Baru)** | $C \ge 20.00\%$ | $\ge 1$ hari aktif | Benih pecah bertunas sejak hari pertama menyelesaikan habit |
+| **Young Tree (Pohon Muda)** | $C \ge 40.00\%$ | $\ge 3$ hari aktif | Batang mulai menguat setelah minimal 3 hari konsisten |
+| **Healthy Tree (Pohon Sehat)** | $C \ge 60.00\%$ | $\ge 7$ hari aktif | Pohon rimbun setelah minimal 1 minggu (7 hari) aktif |
+| **Mature Tree (Pohon Dewasa)** | $C \ge 80.00\%$ | $\ge 14$ hari aktif | Puncak konsistensi setelah minimal 2 minggu (14 hari) aktif |
+
+*Pohon memilih tahap tertinggi yang kedua syaratnya ($C$ dan $D_{\text{active}}$) terpenuhi secara bersamaan. Apabila di kemudian hari pengguna sering melewatkan kebiasaan sehingga skor $C$ turun (misal dari $85\%$ ke $50\%$), tahap pohon secara otomatis langsung menyusut kembali ke tahap yang sesuai (**Young Tree**).*
 
 #### Rumus Poin Menuju Evolusi Berikutnya:
 $$\Delta C_{next} = \max(0, \text{Threshold}_{next} - C)$$
@@ -1492,7 +1493,7 @@ HabitGrow/
 │   │   │   ├── level.ts                    # Logika Threshold & Progresi XP
 │   │   │   ├── xp.ts                       # Multiplier XP Berdasarkan Kesulitan
 │   │   │   ├── prediction.ts               # Decision Support System (DSS) Metode SAW 5 Kriteria
-│   │   │   └── __tests__/                  # Unit Tests (38 Algoritma / 45 Total Test Cases Passing)
+│   │   │   └── __tests__/                  # Unit Tests (39 Algoritma / 46 Total Test Cases Passing)
 │   │   │       ├── streak.test.ts
 │   │   │       ├── tree.test.ts
 │   │   │       ├── level.test.ts
