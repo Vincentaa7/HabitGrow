@@ -42,3 +42,8 @@ yarn-error.log*
 next-env.d.ts
 testsprite_tests/tmp/
 testsprite_tests/tmp/config.json
+
+# private documentation & thesis prep
+PANDUAN_SIDANG_HABITGROW.md
+prd.md
+PROJECT_DOCUMENTATION.md
