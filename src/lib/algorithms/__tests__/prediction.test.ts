@@ -279,6 +279,27 @@ describe('predictHabitFailureRisk', () => {
       totalDifficultyPointsToday: 4,
     });
     expect(justAfterMidnightWib.factor_breakdown.late_hour_score).toBe(15);
+
+    // Case D: Mixed early morning (3x 07:00 WIB -> 0.15) and late night (3x 23:00 WIB -> 0.85)
+    // Per-Completion Penalty averages the penalty scores: (0.15*3 + 0.85*3) / 6 = 0.50 (50%),
+    // instead of averaging raw hours to 15:00 afternoon (15%).
+    const mixedMorningAndNight = predictHabitFailureRisk({
+      habit: baseHabit,
+      schedules,
+      completions: [
+        { habit_id: 'habit-1', date: '2026-09-24', completed_at: '2026-09-24T07:00:00+07:00', value: 20 },
+        { habit_id: 'habit-1', date: '2026-09-23', completed_at: '2026-09-23T07:00:00+07:00', value: 20 },
+        { habit_id: 'habit-1', date: '2026-09-22', completed_at: '2026-09-22T07:00:00+07:00', value: 20 },
+        { habit_id: 'habit-1', date: '2026-09-21', completed_at: '2026-09-21T23:00:00+07:00', value: 20 },
+        { habit_id: 'habit-1', date: '2026-09-20', completed_at: '2026-09-20T23:00:00+07:00', value: 20 },
+        { habit_id: 'habit-1', date: '2026-09-19', completed_at: '2026-09-19T23:00:00+07:00', value: 20 },
+      ],
+      evaluationDate: evalDate,
+      timezone: 'Asia/Jakarta',
+      totalScheduledToday: 3,
+      totalDifficultyPointsToday: 4,
+    });
+    expect(mixedMorningAndNight.factor_breakdown.late_hour_score).toBe(50);
   });
 });
 

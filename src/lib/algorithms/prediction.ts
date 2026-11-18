@@ -204,6 +204,9 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
   }
 
   // --- Kriteria 5: Pola Penundaan Larut Malam (C5) ---
+  // Menggunakan metode Per-Completion Penalty: setiap riwayat penyelesaian dalam 14 hari terakhir
+  // dipetakan lebih dulu ke skor risiko jamnya (0.15 / 0.40 / 0.65 / 0.85), lalu dirata-ratakan.
+  // Hal ini mencegah distorsi rata-rata jam (misal: jam 07:00 pagi dan 23:00 malam saling menetralkan jadi 15:00 sore).
   const recentCompletions = completions.filter((c) => {
     const cDate = parseDateString(c.date);
     const diff = Math.round((evalDate.getTime() - cDate.getTime()) / (1000 * 3600 * 24));
@@ -215,19 +218,15 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
     // Model tenggat (deadline) harian: setiap centang dicatat pada tanggal lokal saat diklik,
     // dan tenggat kebiasaan untuk tanggal tersebut adalah pukul 23:59 di hari yang sama.
     // Maka jam 00:35 berarti kebiasaan hari itu dikerjakan PALING AWAL (sisa waktu ~23 jam),
-    // bukan penundaan. Jam 0-23 dipakai apa adanya: semakin besar jam, semakin dekat ke tenggat.
-    const hours = recentCompletions.map((c) => getHourInTimezone(c.completed_at, timezone));
-    const avgHour = hours.reduce((acc, h) => acc + h, 0) / hours.length;
-
-    if (avgHour >= 22) {
-      c5_lateHour = 0.85; // rata-rata dikerjakan < 2 jam sebelum tenggat tengah malam
-    } else if (avgHour >= 20) {
-      c5_lateHour = 0.65;
-    } else if (avgHour >= 16) {
-      c5_lateHour = 0.40;
-    } else {
-      c5_lateHour = 0.15; // dikerjakan jauh sebelum tenggat (dini hari / pagi / siang)
-    }
+    // bukan penundaan. Jam 0-23 dinilai per kejadian: semakin besar jam, semakin tinggi skor penundaannya.
+    const penaltyScores = recentCompletions.map((c) => {
+      const hour = getHourInTimezone(c.completed_at, timezone);
+      if (hour >= 22) return 0.85; // dikerjakan < 2 jam sebelum tenggat tengah malam
+      if (hour >= 20) return 0.65;
+      if (hour >= 16) return 0.40;
+      return 0.15; // dikerjakan jauh sebelum tenggat (dini hari / pagi / siang)
+    });
+    c5_lateHour = penaltyScores.reduce((acc, s) => acc + s, 0) / penaltyScores.length;
   }
 
   // --- Perhitungan Matriks Penjumlahan Terbobot Metode SAW (Simple Additive Weighting) ---
