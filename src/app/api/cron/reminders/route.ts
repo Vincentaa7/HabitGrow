@@ -7,6 +7,7 @@ import { WebPushService } from '@/lib/services/web-push.service';
 import { StreakService } from '@/lib/services/streak.service';
 import { HabitService } from '@/lib/services/habit.service';
 import { toDateString } from '@/lib/algorithms/schedule';
+import { hasAdminOrTestAccess, parseAllowedEmails } from '@/lib/auth/access';
 
 /**
  * Background Cron & On-Demand Endpoint for SPK SAW Smart Reminders
@@ -54,7 +55,7 @@ async function handleReminders(request: Request) {
         targetUserIds = Array.from(new Set(subscriptions.map((s) => s.user_id)));
       }
     } else {
-      // Allow authenticated user to trigger evaluation for their own account
+      // Allow only authorized admin / test user accounts to trigger on-demand evaluation manually
       const serverSupabase = await createClient();
       const {
         data: { user },
@@ -66,6 +67,33 @@ async function handleReminders(request: Request) {
           { status: 401 }
         );
       }
+
+      const { data: profile } = await serverSupabase
+        .from('profiles')
+        .select('display_name, role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const isAllowed = hasAdminOrTestAccess({
+        role: profile?.role,
+        displayName: profile?.display_name ?? null,
+        email: user.email,
+        allowedEmails: parseAllowedEmails(process.env.ADMIN_FEATURE_EMAILS),
+      });
+
+      if (!isAllowed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'FORBIDDEN',
+              message: 'Fitur evaluasi pengujian hanya tersedia untuk akun admin dan test user.',
+            },
+          },
+          { status: 403 }
+        );
+      }
+
       targetUserIds = [user.id];
     }
 

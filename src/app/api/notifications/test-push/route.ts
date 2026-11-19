@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { WebPushService } from '@/lib/services/web-push.service';
+import { hasAdminOrTestAccess, parseAllowedEmails } from '@/lib/auth/access';
 
 export async function POST(request: Request) {
   try {
@@ -29,6 +30,32 @@ export async function POST(request: Request) {
     }
 
     if (delaySeconds > 0) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name, role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const isAllowed = hasAdminOrTestAccess({
+        role: profile?.role,
+        displayName: profile?.display_name ?? null,
+        email: user.email,
+        allowedEmails: parseAllowedEmails(process.env.ADMIN_FEATURE_EMAILS),
+      });
+
+      if (!isAllowed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'FORBIDDEN',
+              message: 'Simulasi push pengujian hanya tersedia untuk akun admin dan test user.',
+            },
+          },
+          { status: 403 }
+        );
+      }
+
       await new Promise((resolve) => setTimeout(resolve, delaySeconds * 1000));
     }
 

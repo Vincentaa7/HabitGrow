@@ -7,7 +7,8 @@ import { ConsistencyService } from '@/lib/services/consistency.service';
 import { StreakService } from '@/lib/services/streak.service';
 import { PredictionService } from '@/lib/services/prediction.service';
 import { parseDateString, toDateString } from '@/lib/algorithms/schedule';
-import { DashboardSummary } from '@/types';
+import { hasAdminOrTestAccess, parseAllowedEmails } from '@/lib/auth/access';
+import { DashboardSummary, UserRole } from '@/types';
 
 export async function GET(request: Request) {
   try {
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
       { data: recentAchievements },
       atRiskHabits,
     ] = await Promise.all([
-      supabase.from('profiles').select('display_name, avatar_url').eq('id', user.id).maybeSingle(),
+      supabase.from('profiles').select('display_name, avatar_url, role').eq('id', user.id).maybeSingle(),
       HabitService.getTodayHabits(supabase, user.id, todayStr),
       supabase.from('user_levels').select('level, total_xp').eq('user_id', user.id).maybeSingle(),
       ConsistencyService.recalculateUserConsistencyAndTree(supabase, user.id, evalDate),
@@ -78,10 +79,20 @@ export async function GET(request: Request) {
         };
       });
 
+    const userRole: UserRole = profile?.role === 'ADMIN' ? 'ADMIN' : 'USER';
+    const hasAdminToolsAccess = hasAdminOrTestAccess({
+      role: userRole,
+      displayName: profile?.display_name ?? null,
+      email: user.email,
+      allowedEmails: parseAllowedEmails(process.env.ADMIN_FEATURE_EMAILS),
+    });
+
     const summary: DashboardSummary = {
       profile: {
         display_name: profile?.display_name || user.email?.split('@')[0] || 'Teman',
         avatar_url: profile?.avatar_url || null,
+        role: userRole,
+        has_admin_tools_access: hasAdminToolsAccess,
       },
       today_habits: todayHabits,
       completed_count: completedCount,

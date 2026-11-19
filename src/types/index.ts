@@ -1,4 +1,5 @@
 // src/types/index.ts
+import type { UserRole } from './database';
 export * from './database';
 
 export interface ApiResponse<T = unknown> {
@@ -32,6 +33,8 @@ export interface DashboardSummary {
   profile: {
     display_name: string | null;
     avatar_url: string | null;
+    role?: UserRole;
+    has_admin_tools_access?: boolean;
   };
   today_habits: TodayHabitItem[];
   completed_count: number;
