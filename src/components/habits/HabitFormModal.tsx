@@ -373,6 +373,9 @@ export function HabitFormModal({
                   );
                 })}
               </div>
+              {errors.selected_days && (
+                <p className="text-xs text-red-500 mt-2">{String(errors.selected_days.message)}</p>
+              )}
             </div>
           )}
 

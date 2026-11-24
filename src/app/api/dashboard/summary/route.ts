@@ -42,7 +42,7 @@ export async function GET(request: Request) {
       { data: recentAchievements },
       atRiskHabits,
     ] = await Promise.all([
-      supabase.from('profiles').select('display_name, avatar_url, role').eq('id', user.id).maybeSingle(),
+      supabase.from('profiles').select('display_name, avatar_url, role, timezone').eq('id', user.id).maybeSingle(),
       HabitService.getTodayHabits(supabase, user.id, todayStr),
       supabase.from('user_levels').select('level, total_xp').eq('user_id', user.id).maybeSingle(),
       ConsistencyService.recalculateUserConsistencyAndTree(supabase, user.id, evalDate),
@@ -79,6 +79,14 @@ export async function GET(request: Request) {
         };
       });
 
+    // Keep profile timezone in sync with the user's browser timezone so background cron reminders evaluate accurately
+    if (tzParam && tzParam !== 'UTC' && profile && profile.timezone !== tzParam) {
+      await supabase
+        .from('profiles')
+        .update({ timezone: tzParam, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+    }
+
     const userRole: UserRole = profile?.role === 'ADMIN' ? 'ADMIN' : 'USER';
     const hasAdminToolsAccess = hasAdminOrTestAccess({
       role: userRole,
@@ -114,9 +122,9 @@ export async function GET(request: Request) {
         health: treeData.health,
         consistency_score: treeData.consistencyScore,
         growth_points: 0,
+        active_days: treeData.activeCompletedDays,
       },
       recent_achievements: formattedAchievements,
-      broken_streaks: [],
       at_risk_habits: atRiskHabits,
     };
 

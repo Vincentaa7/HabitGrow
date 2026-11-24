@@ -1,11 +1,12 @@
 // src/lib/services/achievement.service.ts
 import { SupabaseClient } from '@supabase/supabase-js';
-import { calculateLevel } from '../algorithms/level';
 
 export class AchievementService {
   /**
    * Evaluates all locked achievements for a user and unlocks any whose conditions are met.
    * Server-side only per PRD Section 32.
+   * Note: Does NOT upsert `user_levels` directly to eliminate race conditions with CompletionService;
+   * callers accumulate `xp_reward` from the returned list and perform a single authoritative `user_levels` write.
    */
   static async evaluateAchievements(
     supabase: SupabaseClient,
@@ -13,7 +14,8 @@ export class AchievementService {
     currentStreak: number,
     consistencyScore: number,
     treeStage: string,
-    knownTotalCompletions?: number
+    knownTotalCompletions?: number,
+    activeCompletedDays: number = 14
   ): Promise<Array<{ id: string; name: string; xp_reward: number }>> {
     // 1. Fetch unlocked achievements, active achievements, and total completions concurrently
     const [{ data: unlockedData }, { data: allAchievements }, countRes] = await Promise.all([
@@ -65,7 +67,10 @@ export class AchievementService {
           if (totalCompletions >= achievement.condition_value) conditionMet = true;
           break;
         case 'consistency_rate':
-          if (consistencyScore >= achievement.condition_value) conditionMet = true;
+          // Require at least 7 active completed days so brand-new Day-1 users don't unlock 80%/90% trophies on click #1
+          if (consistencyScore >= achievement.condition_value && activeCompletedDays >= 7) {
+            conditionMet = true;
+          }
           break;
         case 'tree_stage':
           if (currentStageRank >= achievement.condition_value) conditionMet = true;
@@ -86,16 +91,7 @@ export class AchievementService {
             xp_reward: achievement.xp_reward,
           });
 
-          const { data: levelRecord } = await supabase
-            .from('user_levels')
-            .select('total_xp')
-            .eq('user_id', userId)
-            .maybeSingle();
-
-          const newTotalXp = (levelRecord?.total_xp ?? 0) + achievement.xp_reward;
-          const { level } = calculateLevel(newTotalXp);
-
-          // Execute achievement reward transactions in parallel
+          // Log XP transaction and audit log concurrently (user_levels is updated authoritatively by caller)
           await Promise.all([
             supabase.from('xp_transactions').insert({
               user_id: userId,
@@ -103,12 +99,6 @@ export class AchievementService {
               source_id: achievement.id,
               amount: achievement.xp_reward,
               description: `Unlocked achievement: ${achievement.name}`,
-            }),
-            supabase.from('user_levels').upsert({
-              user_id: userId,
-              level,
-              total_xp: newTotalXp,
-              updated_at: new Date().toISOString(),
             }),
             supabase.from('activity_logs').insert({
               user_id: userId,

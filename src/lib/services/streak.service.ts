@@ -71,8 +71,8 @@ export class StreakService {
     const activeDatesSet = new Set<string>(completions.map((c) => c.date));
     const result = calculateGlobalDailyStreak(activeDatesSet, evalDate);
 
-    // Non-blocking background sync to user_streaks table
-    void this.syncGlobalStreakToDb(supabase, userId, result);
+    // Await sync so serverless runtimes (Vercel) never terminate before user_streaks is persisted
+    await this.syncGlobalStreakToDb(supabase, userId, result);
 
     return result;
   }

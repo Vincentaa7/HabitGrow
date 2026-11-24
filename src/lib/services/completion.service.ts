@@ -16,9 +16,13 @@ export interface CompletionResult {
   longestStreak: number;
   totalXp: number;
   level: number;
+  currentLevelXp: number;
+  nextLevelXp: number;
+  progressPercentage: number;
   consistencyScore: number;
   treeStage: string;
   treeHealth: number;
+  activeCompletedDays: number;
   newAchievements: Array<{ id: string; name: string; xp_reward: number }>;
 }
 
@@ -35,6 +39,14 @@ export class CompletionService {
     note?: string
   ): Promise<CompletionResult> {
     const todayStr = dateStr || toDateString(new Date());
+
+    // Prevent completing habits on future dates (allow +1 day UTC margin for UTC+14 timezones)
+    const maxAllowedDate = new Date();
+    maxAllowedDate.setUTCDate(maxAllowedDate.getUTCDate() + 1);
+    const maxAllowedDateStr = maxAllowedDate.toISOString().split('T')[0];
+    if (todayStr > maxAllowedDateStr) {
+      throw new Error('Tidak dapat menyelesaikan kebiasaan untuk tanggal di masa depan.');
+    }
 
     // 1. Parallel Read Batch: Fetch user's habits, completions, and current XP in a single round-trip
     const [
@@ -113,40 +125,30 @@ export class CompletionService {
       { id: insertedCompletion.id, habit_id: habitId, date: todayStr, xp_earned: xpReward },
     ];
 
-    const newTotalXp = (currentLevelRecord?.total_xp ?? 0) + xpReward;
-    const levelInfo = calculateLevel(newTotalXp);
+    const baseTotalXp = (currentLevelRecord?.total_xp ?? 0) + xpReward;
 
     const activeDatesSet = new Set<string>(updatedCompletions.map((c) => c.date));
-    const globalStreak = calculateGlobalDailyStreak(
-      activeDatesSet,
-      new Date(todayStr + 'T12:00:00')
-    );
+    const evalDate = parseDateString(todayStr);
+    const globalStreak = calculateGlobalDailyStreak(activeDatesSet, evalDate);
 
     const activeUnarchivedHabits = (allHabitsData || []).filter(
       (h) => h.is_active && !h.is_archived
     );
-    const evalDate = parseDateString(todayStr);
-    const { consistencyScore, treeStage, health } =
+    const { consistencyScore, treeStage, health, activeCompletedDays } =
       ConsistencyService.computeConsistencyFromData(
         activeUnarchivedHabits,
         updatedCompletions,
         evalDate
       );
 
-    // 7. Parallel Write Batch: Update all related tables & evaluate achievements concurrently
-    const [, , , , newAchievements] = await Promise.all([
+    // 7. Parallel Write Batch: Persist independent tables & evaluate achievements concurrently
+    const [, , , newAchievements] = await Promise.all([
       supabase.from('xp_transactions').insert({
         user_id: userId,
         source_type: 'habit_completion',
         source_id: insertedCompletion.id,
         amount: xpReward,
         description: `Menyelesaikan habit: ${habit.name}`,
-      }),
-      supabase.from('user_levels').upsert({
-        user_id: userId,
-        level: levelInfo.level,
-        total_xp: newTotalXp,
-        updated_at: new Date().toISOString(),
       }),
       StreakService.syncGlobalStreakToDb(supabase, userId, globalStreak),
       supabase.from('user_trees').upsert({
@@ -162,7 +164,8 @@ export class CompletionService {
         globalStreak.currentStreak,
         consistencyScore,
         treeStage,
-        updatedCompletions.length
+        updatedCompletions.length,
+        activeCompletedDays
       ),
       supabase.from('activity_logs').insert({
         user_id: userId,
@@ -178,16 +181,32 @@ export class CompletionService {
       }),
     ]);
 
+    // 8. Single authoritative user_levels write (combines habit XP + any unlocked achievement XP with zero race condition)
+    const achievementBonusXp = newAchievements.reduce((sum, a) => sum + (a.xp_reward || 0), 0);
+    const finalTotalXp = baseTotalXp + achievementBonusXp;
+    const finalLevelInfo = calculateLevel(finalTotalXp);
+
+    await supabase.from('user_levels').upsert({
+      user_id: userId,
+      level: finalLevelInfo.level,
+      total_xp: finalTotalXp,
+      updated_at: new Date().toISOString(),
+    });
+
     return {
       completionId: insertedCompletion.id,
-      xpEarned: xpReward,
+      xpEarned: xpReward + achievementBonusXp,
       currentStreak: globalStreak.currentStreak,
       longestStreak: globalStreak.longestStreak,
-      totalXp: newTotalXp,
-      level: levelInfo.level,
+      totalXp: finalTotalXp,
+      level: finalLevelInfo.level,
+      currentLevelXp: finalLevelInfo.xpInCurrentLevel,
+      nextLevelXp: finalLevelInfo.nextLevelXp,
+      progressPercentage: finalLevelInfo.progressPercentage,
       consistencyScore,
       treeStage,
       treeHealth: health,
+      activeCompletedDays,
       newAchievements,
     };
   }

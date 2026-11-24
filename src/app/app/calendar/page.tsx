@@ -68,6 +68,9 @@ export default function CalendarPage() {
         queryClient.invalidateQueries({ queryKey: ['calendar-day-detail'] });
         queryClient.invalidateQueries({ queryKey: ['calendar-activity'] });
         queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
+        queryClient.invalidateQueries({ queryKey: ['analytics-overview'] });
+        queryClient.invalidateQueries({ queryKey: ['analytics-performance'] });
+        queryClient.invalidateQueries({ queryKey: ['achievements'] });
       }
     } catch (err) {
       console.error('Error completing habit from calendar:', err);

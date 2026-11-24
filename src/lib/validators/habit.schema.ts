@@ -1,7 +1,7 @@
 // src/lib/validators/habit.schema.ts
 import { z } from 'zod';
 
-export const habitCreateSchema = z.object({
+const habitBaseSchema = z.object({
   name: z.string().min(1, 'Nama kebiasaan wajib diisi').max(100, 'Maksimal 100 karakter'),
   description: z.string().max(500, 'Deskripsi maksimal 500 karakter').optional().nullable(),
   category_id: z.string().uuid().optional().nullable(),
@@ -17,10 +17,45 @@ export const habitCreateSchema = z.object({
   selected_days: z.array(z.number().int().min(0).max(6)).optional(),
 });
 
-export const habitUpdateSchema = habitCreateSchema.partial().extend({
-  is_active: z.boolean().optional(),
-  is_archived: z.boolean().optional(),
+export const habitCreateSchema = habitBaseSchema.superRefine((data, ctx) => {
+  if (data.frequency_type === 'SELECTED_DAYS' && (!data.selected_days || data.selected_days.length === 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['selected_days'],
+      message: 'Pilih minimal 1 hari untuk jadwal Hari Tertentu',
+    });
+  }
+  if (data.end_date && data.start_date && data.end_date < data.start_date) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['end_date'],
+      message: 'Tanggal berakhir tidak boleh lebih awal dari tanggal mulai',
+    });
+  }
 });
+
+export const habitUpdateSchema = habitBaseSchema
+  .partial()
+  .extend({
+    is_active: z.boolean().optional(),
+    is_archived: z.boolean().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.frequency_type === 'SELECTED_DAYS' && data.selected_days !== undefined && data.selected_days.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['selected_days'],
+        message: 'Pilih minimal 1 hari untuk jadwal Hari Tertentu',
+      });
+    }
+    if (data.end_date && data.start_date && data.end_date < data.start_date) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['end_date'],
+        message: 'Tanggal berakhir tidak boleh lebih awal dari tanggal mulai',
+      });
+    }
+  });
 
 export type HabitCreateInput = z.infer<typeof habitCreateSchema>;
 export type HabitUpdateInput = z.infer<typeof habitUpdateSchema>;

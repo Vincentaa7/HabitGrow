@@ -66,15 +66,30 @@ export default function StatisticsPage() {
 
   const { items = [], bestHabit, needsAttentionHabit } = performanceData || {};
 
-  // Summary Metrics from current chart data
-  const totalCompleted = chartData.reduce((acc: number, d: any) => acc + (d.completed || 0), 0);
-  const totalScheduled = chartData.reduce((acc: number, d: any) => acc + (d.scheduled || 0), 0);
+  // Summary Metrics from elapsed days only (exclude upcoming future days in the 7-day weekly view)
+  const elapsedChartData = chartData.filter((d: any) => !d.isFuture);
+  const totalCompleted = elapsedChartData.reduce((acc: number, d: any) => acc + (d.completed || 0), 0);
+  const totalScheduled = elapsedChartData.reduce((acc: number, d: any) => acc + (d.scheduled || 0), 0);
   const avgConsistency = totalScheduled > 0 ? Math.round((totalCompleted / totalScheduled) * 100) : 0;
 
-  // Custom Dot for Line Chart (matches Gambar 2: with red 'X' indicator when habit was missed)
+  // Custom Dot for Line Chart (matches Gambar 2: with red 'X' indicator when habit was missed; muted dot for future days)
   const CustomizedDot = (props: any) => {
     const { cx, cy, payload } = props;
     if (!cx || !cy) return null;
+
+    if (payload.isFuture) {
+      return (
+        <circle
+          cx={cx}
+          cy={cy}
+          r={3}
+          fill="#cbd5e1"
+          stroke="#ffffff"
+          strokeWidth={1.5}
+          opacity={0.7}
+        />
+      );
+    }
 
     if (payload.isMissed) {
       // Red dot with cross 'X' just like the handwritten 'X' in Gambar 2
@@ -99,18 +114,44 @@ export default function StatisticsPage() {
     );
   };
 
+  // Custom Label renderer so future days never show '✕'
+  const renderTrendLabel = (props: any) => {
+    const { x, y, value, index } = props;
+    const item = chartData[index];
+    if (!item || item.isFuture || x === undefined || y === undefined) return null;
+    const isZero = Number(value) <= 0;
+    const labelText = isZero ? (item.isMissed ? '✕' : '0%') : `${value}%`;
+    return (
+      <text
+        x={x}
+        y={Number(y) - 10}
+        textAnchor="middle"
+        fill={isZero && item.isMissed ? '#ef4444' : '#10b981'}
+        fontSize={timeRange === '30' ? 9 : 11}
+        fontWeight="bold"
+      >
+        {labelText}
+      </text>
+    );
+  };
+
   // Custom Tooltip for Recharts
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const isMissed = data.isMissed;
+      const isFuture = data.isFuture;
       return (
         <div className="p-3.5 rounded-2xl bg-slate-900/95 dark:bg-[#0f172a]/95 backdrop-blur-md border border-slate-700/80 dark:border-[#1e293b] shadow-2xl text-white text-xs space-y-2 min-w-[190px]">
           <div className="flex items-center justify-between border-b border-slate-700/60 pb-1.5">
             <span className="font-bold text-slate-200">
               {data.day} <span className="text-slate-400 font-normal">({data.date})</span>
             </span>
-            {isMissed ? (
+            {isFuture ? (
+              <span className="px-1.5 py-0.5 rounded-md bg-slate-700/60 text-slate-300 font-bold text-[10px]">
+                Mendatang
+              </span>
+            ) : isMissed ? (
               <span className="px-1.5 py-0.5 rounded-md bg-rose-500/20 text-rose-400 font-extrabold text-[10px] flex items-center gap-1">
                 ✕ Terlewat
               </span>
@@ -385,18 +426,11 @@ export default function StatisticsPage() {
                   activeDot={{ r: 6, fill: '#10b981', stroke: '#ffffff', strokeWidth: 2 }}
                   name="Selesai"
                 >
-                  {/* Label persentase di atas titik seperti tulisan angka di Gambar 2 */}
+                  {/* Label persentase di atas titik seperti tulisan angka di Gambar 2 (hari mendatang disembunyikan) */}
                   {showPercentages && (
                     <LabelList
                       dataKey="percentage"
-                      position="top"
-                      offset={10}
-                      formatter={(val: any) => (Number(val) > 0 ? `${val}%` : '✕')}
-                      style={{
-                        fontSize: timeRange === '30' ? '9px' : '11px',
-                        fontWeight: 'bold',
-                        fill: '#10b981',
-                      }}
+                      content={renderTrendLabel}
                     />
                   )}
                 </Line>

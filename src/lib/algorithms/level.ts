@@ -56,12 +56,13 @@ export function calculateLevel(totalXp: number): LevelInfo {
     }
   }
 
-  // Beyond defined thresholds: formulaic scaling for high levels
+  // Beyond defined thresholds: formulaic scaling for high levels (1,000 XP per level starting at Level 16 = 7,800 XP)
   const lastTier = LEVEL_THRESHOLDS[LEVEL_THRESHOLDS.length - 1];
-  const excessXp = safeXp - lastTier.minXp;
+  const overflowBaseXp = lastTier.maxXp + 1;
+  const excessXp = safeXp - overflowBaseXp;
   const extraLevels = Math.floor(excessXp / 1000);
-  const currentLevel = lastTier.level + extraLevels;
-  const currentMin = lastTier.minXp + extraLevels * 1000;
+  const currentLevel = lastTier.level + 1 + extraLevels;
+  const currentMin = overflowBaseXp + extraLevels * 1000;
   const nextMin = currentMin + 1000;
   const xpInLevel = safeXp - currentMin;
 

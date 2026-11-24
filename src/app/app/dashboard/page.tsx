@@ -17,6 +17,7 @@ import {
   cn,
 } from '@/lib/utils';
 import { toDateString } from '@/lib/algorithms/schedule';
+import { TREE_STAGES } from '@/lib/algorithms/tree';
 import Link from 'next/link';
 import {
   Flame,
@@ -156,12 +157,16 @@ export default function DashboardPage() {
             ...currentSummary.user_level,
             level: result.level,
             total_xp: result.totalXp,
+            current_level_xp: result.currentLevelXp ?? currentSummary.user_level.current_level_xp,
+            next_level_xp: result.nextLevelXp ?? currentSummary.user_level.next_level_xp,
+            progress_percentage: result.progressPercentage ?? currentSummary.user_level.progress_percentage,
           },
           tree: {
             ...currentSummary.tree,
             stage: result.treeStage as any,
             health: result.treeHealth,
             consistency_score: result.consistencyScore,
+            active_days: result.activeCompletedDays ?? currentSummary.tree.active_days,
           },
           today_habits: currentSummary.today_habits.map((h) =>
             h.id === habitId
@@ -169,6 +174,10 @@ export default function DashboardPage() {
               : h
           ),
         });
+      }
+      // Refresh dashboard summary when a new achievement unlocks so Recent Achievements updates immediately
+      if (result?.newAchievements && result.newAchievements.length > 0) {
+        queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] });
       }
       // Invalidate secondary tab caches so statistics/calendar/achievements update in background
       queryClient.invalidateQueries({ queryKey: ['analytics-overview'] });
@@ -237,17 +246,26 @@ export default function DashboardPage() {
   const pendingCount = total_scheduled_today - completed_count;
   const isAllCompleted = total_scheduled_today > 0 && completed_count === total_scheduled_today;
 
-  // Next tree evolution milestone calculation
-  const stageThresholds = [
-    { stage: 'Seed', min: 0, nextMin: 20, nextName: 'Tunas' },
-    { stage: 'Sprout', min: 20, nextMin: 40, nextName: 'Pohon Muda' },
-    { stage: 'Young Tree', min: 40, nextMin: 60, nextName: 'Pohon Sehat' },
-    { stage: 'Healthy Tree', min: 60, nextMin: 80, nextName: 'Pohon Dewasa' },
-    { stage: 'Mature Tree', min: 80, nextMin: 100, nextName: 'Tingkat Maksimal' },
-  ];
-  const currentThreshold = stageThresholds.find((t) => t.stage === tree.stage) || stageThresholds[1];
-  const pointsToNext = Math.max(0, Math.round(currentThreshold.nextMin - tree.consistency_score));
+  // Next tree evolution milestone calculation (respects both Consistency % AND Progression Gate active days)
+  const currentStageIndex = Math.max(
+    0,
+    TREE_STAGES.findIndex((t) => t.stage === tree.stage)
+  );
+  const nextStage = TREE_STAGES[currentStageIndex + 1];
   const currentStageIndonesian = STAGE_NAMES_ID[tree.stage] || tree.stage;
+
+  let nextMilestoneLabel = 'Fase Maksimal 🌟';
+  if (nextStage) {
+    const scoreGap = Math.max(0, Math.ceil(nextStage.minScore - tree.consistency_score));
+    const daysGap = Math.max(0, nextStage.minActiveDays - (tree.active_days ?? 0));
+    if (scoreGap > 0 && daysGap > 0) {
+      nextMilestoneLabel = `+${scoreGap}% & ${daysGap} hari lagi ke ${nextStage.displayName}`;
+    } else if (daysGap > 0) {
+      nextMilestoneLabel = `${daysGap} hari aktif lagi ke ${nextStage.displayName}`;
+    } else {
+      nextMilestoneLabel = `+${scoreGap}% ke ${nextStage.displayName}`;
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -312,16 +330,14 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-[#94a3b8] font-medium">
                   <span>Skor Konsistensi: {Math.round(tree.consistency_score)}%</span>
                   <span className="text-emerald-600 dark:text-[#aff33e] font-semibold">
-                    {tree.stage === 'Mature Tree'
-                      ? 'Fase Maksimal 🌟'
-                      : `+${pointsToNext}% ke ${currentThreshold.nextName}`}
+                    {nextMilestoneLabel}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-5 gap-1.5">
-                  {stageThresholds.map((stg, idx) => {
+                  {TREE_STAGES.map((stg, idx) => {
                     const isCurrent = stg.stage === tree.stage;
-                    const isPassed = tree.consistency_score >= stg.min;
+                    const isPassed = idx <= currentStageIndex;
 
                     return (
                       <div
@@ -334,7 +350,7 @@ export default function DashboardPage() {
                             ? 'bg-emerald-400/70 dark:bg-[#aff33e]/50'
                             : 'bg-slate-200 dark:bg-[#1e293b]'
                         )}
-                        title={`Tahap ${idx + 1}: ${STAGE_NAMES_ID[stg.stage] || stg.stage}`}
+                        title={`Tahap ${idx + 1}: ${stg.displayName}`}
                       />
                     );
                   })}

@@ -14,9 +14,9 @@ export class ConsistencyService {
     habitsData: Array<any>,
     completionsData: Array<{ habit_id: string; date: string }>,
     evalDate: Date | string = new Date()
-  ): { consistencyScore: number; treeStage: string; health: number } {
+  ): { consistencyScore: number; treeStage: string; health: number; activeCompletedDays: number } {
     if (!habitsData || habitsData.length === 0) {
-      return { consistencyScore: 0, treeStage: 'Seed', health: 100 };
+      return { consistencyScore: 0, treeStage: 'Seed', health: 100, activeCompletedDays: 0 };
     }
 
     const completionsByHabit = new Map<string, Set<string>>();
@@ -30,8 +30,9 @@ export class ConsistencyService {
     const today = typeof evalDate === 'string' ? parseDateString(evalDate) : new Date(evalDate);
     today.setHours(0, 0, 0, 0);
 
+    // Exact 30-day rolling window inclusive: [today - 29 days .. today] = 30 calendar days
     const thirtyDaysAgo = new Date(today);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
     thirtyDaysAgo.setHours(0, 0, 0, 0);
 
     const habitStats: Array<{ scheduledCount: number; completedCount: number }> = [];
@@ -82,7 +83,12 @@ export class ConsistencyService {
       overallConsistency = 0;
     }
 
-    return { consistencyScore: overallConsistency, treeStage, health };
+    return {
+      consistencyScore: overallConsistency,
+      treeStage,
+      health,
+      activeCompletedDays: activeCompletedDates.size,
+    };
   }
 
   /**
@@ -93,7 +99,7 @@ export class ConsistencyService {
     supabase: SupabaseClient,
     userId: string,
     evalDate: Date | string = new Date()
-  ): Promise<{ consistencyScore: number; treeStage: string; health: number }> {
+  ): Promise<{ consistencyScore: number; treeStage: string; health: number; activeCompletedDays: number }> {
     // 1. Fetch user's active habits and all completions in parallel (Zero Sequential Blocking)
     const [{ data: habitsData, error: habitsError }, { data: completionsData }] = await Promise.all([
       supabase
@@ -116,7 +122,7 @@ export class ConsistencyService {
         consistency_score: 0.0,
         updated_at: new Date().toISOString(),
       });
-      return { consistencyScore: 0, treeStage: 'Seed', health: 100 };
+      return { consistencyScore: 0, treeStage: 'Seed', health: 100, activeCompletedDays: 0 };
     }
 
     const result = this.computeConsistencyFromData(habitsData, completionsData || [], evalDate);

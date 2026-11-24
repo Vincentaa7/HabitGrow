@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const { email, password, display_name } = validation.data;
     const supabase = await createClient();
 
-    const origin = request.headers.get('origin') || 'https://habitsgrow.vercel.app';
+    const origin = request.headers.get('origin') || 'https://habitgrow.my.id';
 
     const { data, error } = await supabase.auth.signUp({
       email,

@@ -56,6 +56,7 @@ export interface DashboardSummary {
     health: number;
     consistency_score: number;
     growth_points: number;
+    active_days?: number;
   };
   recent_achievements: Array<{
     id: string;
@@ -64,17 +65,7 @@ export interface DashboardSummary {
     icon: string;
     unlocked_at: string;
   }>;
-  broken_streaks?: BrokenStreakInfo[];
   at_risk_habits?: HabitRiskPrediction[];
-}
-
-export interface BrokenStreakInfo {
-  habit_id: string;
-  habit_name: string;
-  icon: string;
-  color: string;
-  lost_streak: number;
-  missed_date: string;
 }
 
 export interface HabitRiskPrediction {

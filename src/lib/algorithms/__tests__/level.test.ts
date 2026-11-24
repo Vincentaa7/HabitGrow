@@ -26,6 +26,23 @@ describe('calculateLevel Algorithm', () => {
     expect(res.level).toBe(3);
   });
 
+  it('scales cleanly beyond Level 15 without off-by-one overlap at 7800 XP', () => {
+    const endOfLvl15 = calculateLevel(7799);
+    expect(endOfLvl15.level).toBe(15);
+    expect(endOfLvl15.nextLevelXp).toBe(7800);
+
+    const startOfLvl16 = calculateLevel(7800);
+    expect(startOfLvl16.level).toBe(16);
+    expect(startOfLvl16.currentLevelMinXp).toBe(7800);
+    expect(startOfLvl16.xpInCurrentLevel).toBe(0);
+    expect(startOfLvl16.nextLevelXp).toBe(8800);
+    expect(startOfLvl16.progressPercentage).toBe(0);
+
+    const startOfLvl17 = calculateLevel(8800);
+    expect(startOfLvl17.level).toBe(17);
+    expect(startOfLvl17.xpInCurrentLevel).toBe(0);
+  });
+
   it('handles large XP gracefully', () => {
     const res = calculateLevel(50000);
     expect(res.level).toBeGreaterThan(15);

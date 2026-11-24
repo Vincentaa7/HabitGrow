@@ -7,6 +7,7 @@ import { WebPushService } from '@/lib/services/web-push.service';
 import { StreakService } from '@/lib/services/streak.service';
 import { HabitService } from '@/lib/services/habit.service';
 import { toDateString } from '@/lib/algorithms/schedule';
+import { getDateInTimezone } from '@/lib/algorithms/prediction';
 import { hasAdminOrTestAccess, parseAllowedEmails } from '@/lib/auth/access';
 
 /**
@@ -25,21 +26,14 @@ async function handleReminders(request: Request) {
   try {
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
-    const userAgent = request.headers.get('user-agent') || '';
-    const isVercelCronUserAgent = userAgent.includes('vercel-cron');
-    const isVercelCronHeader = request.headers.get('x-vercel-cron') === '1';
 
     const url = new URL(request.url);
     const querySecret = url.searchParams.get('secret') || url.searchParams.get('cron_secret');
 
-    // Check if triggered by automated cron (with CRON_SECRET or Vercel cron headers)
-    let isCronAuth = false;
-    if (cronSecret && (authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret)) {
-      isCronAuth = true;
-    } else if (isVercelCronUserAgent || isVercelCronHeader) {
-      // Automatic Vercel Cron invocation (allows automated execution even if CRON_SECRET is not yet added to Vercel env)
-      isCronAuth = true;
-    }
+    // Strictly verify automated cron calls using CRON_SECRET (never trust spoofable User-Agent / x-vercel-cron headers)
+    const isCronAuth = Boolean(
+      cronSecret && (authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret)
+    );
 
     const adminSupabase = createAdminClient();
     let targetUserIds: string[] = [];
@@ -105,15 +99,35 @@ async function handleReminders(request: Request) {
       });
     }
 
-    const today = new Date();
-    const todayStr = toDateString(today);
+    // Fetch timezones for all target users in a single query
+    const { data: userProfiles } = await adminSupabase
+      .from('profiles')
+      .select('id, timezone')
+      .in('id', targetUserIds);
+
+    const timezoneByUser = new Map<string, string>();
+    (userProfiles || []).forEach((p) => {
+      const tz = p.timezone && p.timezone !== 'UTC' ? p.timezone : 'Asia/Jakarta';
+      timezoneByUser.set(p.id, tz);
+    });
+
+    const nowIso = new Date().toISOString();
     let dispatchedCount = 0;
     const results: Array<{ userId: string; habitName?: string; type: string }> = [];
 
     for (const userId of targetUserIds) {
       try {
-        // 1. Evaluate SPK SAW churn risk
-        const atRiskHabits = await PredictionService.getAtRiskHabitsToday(adminSupabase, userId, today);
+        const userTz = timezoneByUser.get(userId) || 'Asia/Jakarta';
+        const userToday = getDateInTimezone(nowIso, userTz);
+        const userTodayStr = toDateString(userToday);
+
+        // 1. Evaluate SPK SAW churn risk in the user's local calendar date & timezone
+        const atRiskHabits = await PredictionService.getAtRiskHabitsToday(
+          adminSupabase,
+          userId,
+          userToday,
+          userTz
+        );
 
         if (atRiskHabits.length > 0) {
           const topRisk = atRiskHabits[0];
@@ -132,15 +146,16 @@ async function handleReminders(request: Request) {
           continue;
         }
 
-        // 2. If no high risk, evaluate streak defense
-        const globalStreak = await StreakService.calculateUserGlobalStreak(adminSupabase, userId, today);
-        const todayHabits = await HabitService.getTodayHabits(adminSupabase, userId, todayStr);
+        // 2. If no high risk, evaluate streak defense (ONLY if user has NOT completed any habit today yet!)
+        const globalStreak = await StreakService.calculateUserGlobalStreak(adminSupabase, userId, userToday);
+        const todayHabits = await HabitService.getTodayHabits(adminSupabase, userId, userTodayStr);
+        const completedTodayCount = todayHabits.filter((h) => h.is_completed_today).length;
         const pendingHabits = todayHabits.filter((h) => !h.is_completed_today);
 
-        if (globalStreak.currentStreak > 0 && pendingHabits.length > 0) {
+        if (globalStreak.currentStreak > 0 && completedTodayCount === 0 && pendingHabits.length > 0) {
           const pushRes = await WebPushService.sendPushToUser(adminSupabase, userId, {
             title: `🔥 Pertahankan Streak ${globalStreak.currentStreak} Hari!`,
-            body: `Tersisa ${pendingHabits.length} kebiasaan hari ini (${pendingHabits[0].name}). Lindungi pohon virtualmu sebelum pergantian hari!`,
+            body: `Belum ada kebiasaan yang selesai hari ini (${pendingHabits[0].name}). Selesaikan minimal 1 kebiasaan agar streak tetap menyala!`,
             url: '/app/dashboard',
             tag: 'habitgrow-streak-guard',
           });

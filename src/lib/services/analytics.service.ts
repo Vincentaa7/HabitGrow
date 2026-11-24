@@ -11,6 +11,7 @@ export interface WeeklyChartData {
   scheduled: number;
   percentage: number;
   isMissed: boolean;
+  isFuture: boolean;
 }
 
 export interface HabitPerformanceItem {
@@ -87,6 +88,7 @@ export class AnalyticsService {
 
     return dates.map((dateObj, idx) => {
       const dateStr = toDateString(dateObj);
+      const isFuture = dateObj > today;
       let scheduled = 0;
       let completed = 0;
 
@@ -101,14 +103,16 @@ export class AnalyticsService {
         }
       }
 
-      const percentage =
-        scheduled > 0
-          ? Math.round((completed / scheduled) * 100)
-          : completed > 0
-          ? 100
-          : 0;
+      const percentage = isFuture
+        ? 0
+        : scheduled > 0
+        ? Math.round((completed / scheduled) * 100)
+        : completed > 0
+        ? 100
+        : 0;
 
-      const isMissed = scheduled > 0 && completed === 0;
+      // Future days have not happened yet and must never be flagged as missed
+      const isMissed = !isFuture && scheduled > 0 && completed === 0;
 
       return {
         day: dayLabels[idx],
@@ -117,6 +121,7 @@ export class AnalyticsService {
         scheduled,
         percentage,
         isMissed,
+        isFuture,
       };
     });
   }
