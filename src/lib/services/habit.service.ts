@@ -1,7 +1,7 @@
 // src/lib/services/habit.service.ts
 import { SupabaseClient } from '@supabase/supabase-js';
 import { HabitCreateInput, HabitUpdateInput } from '../validators/habit.schema';
-import { isHabitScheduledOnDate, toDateString } from '../algorithms/schedule';
+import { didScheduleExpand, isHabitScheduledOnDate, toDateString } from '../algorithms/schedule';
 import { Habit, HabitSchedule } from '@/types/database';
 import { TodayHabitItem } from '@/types';
 import { calculateXP } from '../algorithms/xp';
@@ -161,14 +161,42 @@ export class HabitService {
     habitId: string,
     input: HabitUpdateInput
   ): Promise<Habit> {
-    const { selected_days, ...habitFields } = input;
+    const { selected_days, effective_date, ...habitFields } = input;
+    const updatePayload: Record<string, unknown> = {
+      ...habitFields,
+      updated_at: new Date().toISOString(),
+    };
+
+    const isSchedulePayloadIncluded =
+      habitFields.frequency_type !== undefined || selected_days !== undefined;
+    let resolvedFrequency: 'DAILY' | 'SELECTED_DAYS' | undefined = habitFields.frequency_type;
+
+    if (isSchedulePayloadIncluded) {
+      const { data: existing } = await supabase
+        .from('habits')
+        .select('frequency_type, habit_schedules(day_of_week)')
+        .eq('id', habitId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (existing) {
+        const oldFreq = existing.frequency_type as 'DAILY' | 'SELECTED_DAYS';
+        const oldDays = ((existing.habit_schedules || []) as Array<{ day_of_week: number | null }>)
+          .map((s) => s.day_of_week)
+          .filter((d): d is number => typeof d === 'number');
+        const newFreq = (habitFields.frequency_type ?? oldFreq) as 'DAILY' | 'SELECTED_DAYS';
+        const newDays = newFreq === 'DAILY' ? [] : (selected_days ?? oldDays);
+        resolvedFrequency = newFreq;
+
+        if (didScheduleExpand(oldFreq, oldDays, newFreq, newDays)) {
+          updatePayload.schedule_updated_at = effective_date || toDateString(new Date());
+        }
+      }
+    }
 
     const { data: updated, error } = await supabase
       .from('habits')
-      .update({
-        ...habitFields,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', habitId)
       .eq('user_id', userId)
       .select('*, category:habit_categories(*)')
@@ -178,8 +206,11 @@ export class HabitService {
       throw new Error(`Gagal update habit: ${error?.message}`);
     }
 
-    if (selected_days !== undefined) {
-      // Re-create schedule
+    if (resolvedFrequency === 'DAILY') {
+      // Clean up stale weekday rows when switching from SELECTED_DAYS -> DAILY
+      await supabase.from('habit_schedules').delete().eq('habit_id', habitId);
+    } else if (selected_days !== undefined) {
+      // Re-create schedule for SELECTED_DAYS
       await supabase.from('habit_schedules').delete().eq('habit_id', habitId);
       if (selected_days.length > 0) {
         await supabase.from('habit_schedules').insert(

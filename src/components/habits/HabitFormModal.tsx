@@ -191,7 +191,8 @@ export function HabitFormModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...data,
-          selected_days: data.frequency_type === 'SELECTED_DAYS' ? selectedDays : undefined,
+          selected_days: data.frequency_type === 'SELECTED_DAYS' ? selectedDays : [],
+          ...(initialHabit ? { effective_date: toDateString(new Date()) } : {}),
         }),
       });
 

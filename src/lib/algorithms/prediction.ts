@@ -23,6 +23,7 @@ export interface PredictionInput {
     | 'target_unit'
     | 'start_date'
     | 'end_date'
+    | 'schedule_updated_at'
     | 'is_active'
     | 'is_archived'
     | 'created_at'
@@ -131,6 +132,16 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
   const startDate = parseDateString(habit.start_date);
   startDate.setHours(0, 0, 0, 0);
 
+  // If schedule was expanded (e.g., SELECTED_DAYS -> DAILY), never count days prior to schedule_updated_at as phantom misses
+  let effectiveStartDate = new Date(startDate);
+  if (habit.schedule_updated_at) {
+    const schedUpdated = parseDateString(habit.schedule_updated_at);
+    schedUpdated.setHours(0, 0, 0, 0);
+    if (schedUpdated > effectiveStartDate) {
+      effectiveStartDate = schedUpdated;
+    }
+  }
+
   let past14ScheduledCount = 0;
   let past14MissedCount = 0;
 
@@ -138,7 +149,7 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
     const checkDate = new Date(evalDate);
     checkDate.setDate(checkDate.getDate() - i);
 
-    if (checkDate >= startDate && isHabitScheduledOnDate(habit, schedules, checkDate)) {
+    if (checkDate >= effectiveStartDate && isHabitScheduledOnDate(habit, schedules, checkDate)) {
       past14ScheduledCount += 1;
       const dateStr = toDateString(checkDate);
       if (!completionDatesSet.has(dateStr)) {
@@ -158,7 +169,7 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
     checkDate.setDate(checkDate.getDate() - i);
 
     if (
-      checkDate >= startDate &&
+      checkDate >= effectiveStartDate &&
       checkDate.getDay() === currentDayOfWeek &&
       isHabitScheduledOnDate(habit, schedules, checkDate)
     ) {
@@ -331,7 +342,7 @@ export function predictHabitFailureRisk(input: PredictionInput): HabitRiskPredic
  * predictive early-warning alerts.
  */
 export function isHabitEligibleForPrediction(
-  habit: Pick<Habit, 'created_at' | 'start_date'>,
+  habit: Pick<Habit, 'created_at' | 'start_date' | 'schedule_updated_at'>,
   evaluationDate: Date = new Date(),
   timezone: string = 'Asia/Jakarta'
 ): boolean {
@@ -348,6 +359,24 @@ export function isHabitEligibleForPrediction(
     Math.round((evalDate.getTime() - createdDay.getTime()) / (1000 * 3600 * 24))
   );
 
-  return daysSinceCreation >= 14;
+  if (daysSinceCreation < 14) {
+    return false;
+  }
+
+  // If schedule was expanded (e.g. SELECTED_DAYS -> DAILY), grant a fresh 14-day baseline
+  // on the new schedule so newly added weekdays do not trigger false alarms.
+  if (habit.schedule_updated_at) {
+    const schedUpdatedDay = parseDateString(habit.schedule_updated_at);
+    schedUpdatedDay.setHours(0, 0, 0, 0);
+    const daysSinceScheduleUpdate = Math.max(
+      0,
+      Math.round((evalDate.getTime() - schedUpdatedDay.getTime()) / (1000 * 3600 * 24))
+    );
+    if (daysSinceScheduleUpdate < 14) {
+      return false;
+    }
+  }
+
+  return true;
 }
 

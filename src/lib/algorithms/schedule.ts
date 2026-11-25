@@ -76,3 +76,28 @@ export function getScheduledDatesInRange(
 
   return result;
 }
+
+/**
+ * Determines whether updating a habit's schedule introduces new weekdays
+ * that were NOT previously scheduled (e.g. SELECTED_DAYS -> DAILY or adding new days
+ * to SELECTED_DAYS). Narrowing DAILY -> SELECTED_DAYS returns false because all chosen
+ * days already have genuine historical data.
+ */
+export function didScheduleExpand(
+  oldFrequency: 'DAILY' | 'SELECTED_DAYS',
+  oldDays: number[],
+  newFrequency: 'DAILY' | 'SELECTED_DAYS',
+  newDays: number[]
+): boolean {
+  if (oldFrequency === 'DAILY') {
+    return false;
+  }
+
+  if (newFrequency === 'DAILY') {
+    const oldSet = new Set(oldDays);
+    return oldSet.size < 7;
+  }
+
+  const oldSet = new Set(oldDays);
+  return newDays.some((day) => !oldSet.has(day));
+}

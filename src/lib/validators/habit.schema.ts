@@ -39,6 +39,7 @@ export const habitUpdateSchema = habitBaseSchema
   .extend({
     is_active: z.boolean().optional(),
     is_archived: z.boolean().optional(),
+    effective_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Format tanggal harus YYYY-MM-DD').optional(),
   })
   .superRefine((data, ctx) => {
     if (data.frequency_type === 'SELECTED_DAYS' && data.selected_days !== undefined && data.selected_days.length === 0) {

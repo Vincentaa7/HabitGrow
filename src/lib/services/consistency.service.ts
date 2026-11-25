@@ -48,6 +48,13 @@ export class ConsistencyService {
       const startDate = parseDateString(habit.start_date);
       startDate.setHours(0, 0, 0, 0);
 
+      const scheduleUpdatedDate = habit.schedule_updated_at
+        ? parseDateString(habit.schedule_updated_at)
+        : null;
+      if (scheduleUpdatedDate) {
+        scheduleUpdatedDate.setHours(0, 0, 0, 0);
+      }
+
       const windowStart = startDate > thirtyDaysAgo ? startDate : thirtyDaysAgo;
 
       let scheduledCount = 0;
@@ -55,9 +62,20 @@ export class ConsistencyService {
 
       const cur = new Date(windowStart);
       while (cur <= today) {
-        if (isHabitScheduledOnDate(habit, schedules, cur)) {
+        const curStr = toDateString(cur);
+        // Prior to a schedule expansion date, only preserve dates that were actually completed
+        // so newly added weekdays do not retroactively punish consistency / tree health.
+        if (scheduleUpdatedDate && cur < scheduleUpdatedDate) {
+          if (completedSet.has(curStr)) {
+            scheduledCount += 1;
+            completedCount += 1;
+            activeCompletedDates.add(curStr);
+            if (cur < today) {
+              totalPastScheduled += 1;
+            }
+          }
+        } else if (isHabitScheduledOnDate(habit, schedules, cur)) {
           scheduledCount += 1;
-          const curStr = toDateString(cur);
           if (completedSet.has(curStr)) {
             completedCount += 1;
             activeCompletedDates.add(curStr);
@@ -104,7 +122,7 @@ export class ConsistencyService {
     const [{ data: habitsData, error: habitsError }, { data: completionsData }] = await Promise.all([
       supabase
         .from('habits')
-        .select('id, frequency_type, start_date, end_date, is_active, is_archived, habit_schedules(*)')
+        .select('id, frequency_type, start_date, end_date, schedule_updated_at, is_active, is_archived, habit_schedules(*)')
         .eq('user_id', userId)
         .eq('is_active', true)
         .eq('is_archived', false),

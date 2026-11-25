@@ -51,6 +51,7 @@ export interface Habit {
   target_unit: string;
   start_date: string;
   end_date: string | null;
+  schedule_updated_at?: string | null;
   reminder_time: string | null;
   is_active: boolean;
   is_archived: boolean;

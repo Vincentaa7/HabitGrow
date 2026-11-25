@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { predictHabitFailureRisk, isHabitEligibleForPrediction } from '../prediction';
 import { Habit, HabitSchedule } from '@/types/database';
-import { toDateString } from '../schedule';
+import { didScheduleExpand, toDateString } from '../schedule';
 
 describe('predictHabitFailureRisk', () => {
   const baseHabit: Habit = {
@@ -360,6 +360,66 @@ describe('isHabitEligibleForPrediction', () => {
       start_date: '2026-09-01', // 24 days old (>= 14 days)
     };
     expect(isHabitEligibleForPrediction(habitOldStartDate, evalDate)).toBe(true);
+  });
+
+  it('re-engages 14-day cold-start guard when schedule_updated_at is within 14 days (schedule expansion)', () => {
+    const expandedRecently = {
+      created_at: '2026-08-01T00:00:00Z', // 55 days old
+      start_date: '2026-08-01',
+      schedule_updated_at: '2026-09-20', // expanded 5 days ago
+    };
+    expect(isHabitEligibleForPrediction(expandedRecently, evalDate)).toBe(false);
+
+    const expanded14DaysAgo = {
+      created_at: '2026-08-01T00:00:00Z',
+      start_date: '2026-08-01',
+      schedule_updated_at: '2026-09-11', // exactly 14 days ago
+    };
+    expect(isHabitEligibleForPrediction(expanded14DaysAgo, evalDate)).toBe(true);
+  });
+
+  it('prevents retroactive phantom misses in C1/C2 after schedule expansion and detects expansion accurately', () => {
+    // Narrowing never expands
+    expect(didScheduleExpand('DAILY', [], 'SELECTED_DAYS', [1, 3, 5])).toBe(false);
+    expect(didScheduleExpand('SELECTED_DAYS', [1, 3, 5], 'SELECTED_DAYS', [1, 5])).toBe(false);
+    // Expanding SELECTED_DAYS -> DAILY or adding new weekdays expands
+    expect(didScheduleExpand('SELECTED_DAYS', [6], 'DAILY', [])).toBe(true);
+    expect(didScheduleExpand('SELECTED_DAYS', [6], 'SELECTED_DAYS', [1, 3, 5, 6])).toBe(true);
+
+    // Saturday-only habit expanded to DAILY on Sept 25 should have 0% C1/C2 phantom misses
+    const expandedHabit: Habit = {
+      id: 'habit-sched-expand',
+      user_id: 'user-1',
+      category_id: null,
+      name: 'Beres-beres kamar',
+      description: null,
+      icon: 'sparkles',
+      color: '#10b981',
+      difficulty: 'MEDIUM',
+      frequency_type: 'DAILY',
+      target_value: 1,
+      target_unit: 'kali',
+      start_date: '2026-08-01',
+      end_date: null,
+      schedule_updated_at: '2026-09-25',
+      reminder_time: null,
+      is_active: true,
+      is_archived: false,
+      created_at: '2026-08-01T00:00:00Z',
+      updated_at: '2026-09-25T00:00:00Z',
+    };
+
+    const pred = predictHabitFailureRisk({
+      habit: expandedHabit,
+      schedules: [],
+      completions: [],
+      evaluationDate: evalDate,
+      timezone: 'Asia/Jakarta',
+      totalScheduledToday: 3,
+      totalDifficultyPointsToday: 4,
+    });
+    expect(pred.factor_breakdown.miss_rate_score).toBe(0);
+    expect(pred.factor_breakdown.weekday_vulnerability_score).toBe(0);
   });
 });
 

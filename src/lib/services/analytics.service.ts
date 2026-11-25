@@ -95,9 +95,16 @@ export class AnalyticsService {
       for (const h of habitsData || []) {
         const habit = h as unknown as Habit;
         const schedules = (h.habit_schedules || []) as unknown as HabitSchedule[];
-        if (isHabitScheduledOnDate(habit, schedules, dateStr)) {
+        const isCompletedOnDate = completionDatesSet.has(`${habit.id}_${dateStr}`);
+
+        if (habit.schedule_updated_at && dateStr < habit.schedule_updated_at) {
+          if (isCompletedOnDate) {
+            scheduled += 1;
+            completed += 1;
+          }
+        } else if (isHabitScheduledOnDate(habit, schedules, dateStr)) {
           scheduled += 1;
-          if (completionDatesSet.has(`${habit.id}_${dateStr}`)) {
+          if (isCompletedOnDate) {
             completed += 1;
           }
         }
@@ -177,14 +184,27 @@ export class AnalyticsService {
       const startDate = parseDateString(habit.start_date);
       startDate.setHours(0, 0, 0, 0);
 
+      const scheduleUpdatedDate = habit.schedule_updated_at
+        ? parseDateString(habit.schedule_updated_at)
+        : null;
+      if (scheduleUpdatedDate) {
+        scheduleUpdatedDate.setHours(0, 0, 0, 0);
+      }
+
       let scheduledCount = 0;
       let completedCount = 0;
 
       const cur = new Date(startDate);
       while (cur <= today) {
-        if (isHabitScheduledOnDate(habit, schedules, cur)) {
+        const curStr = toDateString(cur);
+        if (scheduleUpdatedDate && cur < scheduleUpdatedDate) {
+          if (completedSet.has(curStr)) {
+            scheduledCount += 1;
+            completedCount += 1;
+          }
+        } else if (isHabitScheduledOnDate(habit, schedules, cur)) {
           scheduledCount += 1;
-          if (completedSet.has(toDateString(cur))) {
+          if (completedSet.has(curStr)) {
             completedCount += 1;
           }
         }
